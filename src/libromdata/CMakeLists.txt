@@ -76,6 +76,7 @@ SET(libromdata_SRCS
 	PlayStationSave.cpp
 	VirtualBoy.cpp
 	Amiibo.cpp
+	TouhouReplay.cpp
 	data/MegaDrivePublishers.cpp
 	data/NintendoPublishers.cpp
 	data/AmiiboData.cpp
@@ -124,6 +125,7 @@ SET(libromdata_H
 	DreamcastSave.hpp
 	VirtualBoy.hpp
 	Amiibo.hpp
+	TouhouReplay.hpp
 	md_structs.h
 	gcn_structs.h
 	gcn_card.h
@@ -136,6 +138,7 @@ SET(libromdata_H
 	dc_structs.h
 	vb_structs.h
 	nfp_structs.h
+	th_structs.h
 	data/MegaDrivePublishers.hpp
 	data/NintendoPublishers.hpp
 	data/AmiiboData.hpp
