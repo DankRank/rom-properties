@@ -87,7 +87,7 @@ namespace LibRomData {
 
 		// First, read an unencrypted area as-is, and advance ptr, size and cpos
 		if (cpos < offset) {
-			count = file->read(ptr, std::min(offset, cpos + size) - cpos);
+			count = file->read(ptr, std::min((uint64_t)offset, cpos + size) - cpos);
 			*(char**)&ptr += count;
 			cpos += count;
 			size -= count;
@@ -97,7 +97,7 @@ namespace LibRomData {
 		if (size != 0) {
 			count2 = file->read(ptr, size);
 			
-			char k = key + 7 * (cpos - offset); // calculate key for our file position
+			uint8_t k = (uint8_t)( key + 7 * (cpos - offset) ); // calculate key for our file position
 			for (int i = 0; i<count2; i++) {
 				((uint8_t*)ptr)[i] -= k;
 				k += 7;
@@ -116,7 +116,7 @@ namespace LibRomData {
 		if (!isOpen()) return -1;
 		return file->tell();
 	}
-	int TouhouCryptFile::truncate(int64_t size = 0) {
+	int TouhouCryptFile::truncate(int64_t size) {
 		return -1; // read-only
 	}
 	int64_t TouhouCryptFile::fileSize(void) {
@@ -148,33 +148,53 @@ namespace LibRomData {
 
 
 	public:
-		int romType;		// ROM type.
-
+		enum TH_GameType {
+			TH_UNKNOWN = -1,
+			TH_06 = 0,
+			TH_07,
+			TH_08,
+			TH_09,
+			TH_095,
+			TH_10,
+			TH_11,
+			TH_12,
+			TH_125,
+			TH_128,
+			TH_13,
+			TH_14,
+			TH_143,
+			TH_15,
+			TH_LAST = TH_15
+		};
+		int gameType;		// Game type.
 	public:
-		// ROM header.
-		// TODO: rename this member -Egor
-		T6RP_Header romHeader;		// ROM header.
-		T6RP_Stage stageHeader[7]; // TODO: make this better -Egor
+		// THRP header.
+		T6RP_Header thrpHeader;		// ROM header.
+		T6RP_Stage stageHeader[7];
 	};
 
 	/** TouhouReplayPrivate **/
 
 	// ROM fields.
 	const struct RomFields::Desc TouhouReplayPrivate::th_fields[] = {
-		// TODO: fix me -Egor
+		{ _RP("Player Name"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Date"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Player"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Rank"), RomFields::RFT_STRING, nullptr },
+
 	};
 
 	TouhouReplayPrivate::TouhouReplayPrivate(TouhouReplay *q, IRpFile *file)
 		: super(q, file, th_fields, ARRAY_SIZE(th_fields))
-		, romType(0/* TODO: rom types -Egor */)
+		, gameType(TH_UNKNOWN)
 	{
 		// Clear the various structs.
-		memset(&romHeader, 0, sizeof(romHeader));
+		memset(&thrpHeader, 0, sizeof(thrpHeader));
 	}
 
 	/** Internal ROM data. **/
 
-	/** MegaDrive **/
+	/** TouhouReplay **/
 
 	/**
 	* Read a Touhou Replay.
@@ -193,7 +213,7 @@ namespace LibRomData {
 		: super(new TouhouReplayPrivate(this, file))
 	{
 		// TODO: completely rewrite this -Egor
-		// TODO: Only validate that this is an MD ROM here.
+		// TODO: Only validate that this is an TH replay here.
 		// Load fields elsewhere.
 		RP_D(TouhouReplay);
 		if (!d->file) {
@@ -205,7 +225,7 @@ namespace LibRomData {
 		d->file->rewind();
 
 		// Read the ROM header. [0x400 bytes]
-		uint8_t header[0x400];
+		uint8_t header[sizeof(T6RP_Header)];
 		size_t size = d->file->read(header, sizeof(header));
 		if (size != sizeof(header))
 			return;
@@ -215,82 +235,23 @@ namespace LibRomData {
 		info.header.addr = 0;
 		info.header.size = sizeof(header);
 		info.header.pData = header;
-		info.ext = nullptr;	// Not needed for MD.
-		info.szFile = 0;	// Not needed for MD.
-		d->romType = isRomSupported_static(&info);
+		info.ext = nullptr;	// Not needed for TH.
+		info.szFile = 0;	// Not needed for TH.
+		d->gameType = isRomSupported_static(&info);
 
-		if (d->romType >= 0) {
-			// Save the header for later.
-			// TODO (remove before committing): Does gcc/msvc optimize this into a jump table?
-			switch (d->romType & TouhouReplayPrivate::ROM_FORMAT_MASK) {
-			case TouhouReplayPrivate::ROM_FORMAT_CART_BIN:
-				d->fileType = FTYPE_ROM_IMAGE;
-
-				// MD header is at 0x100.
-				// Vector table is at 0.
-				memcpy(&d->vectors, header, sizeof(d->vectors));
-				memcpy(&d->romHeader, &header[0x100], sizeof(d->romHeader));
-				break;
-
-			case MegaDrivePrivate::ROM_FORMAT_CART_SMD: {
-				d->fileType = FTYPE_ROM_IMAGE;
-
-				// Save the SMD header.
-				memcpy(&d->smdHeader, header, sizeof(d->smdHeader));
-
-				// First bank needs to be deinterleaved.
-				uint8_t smd_data[MegaDrivePrivate::SMD_BLOCK_SIZE];
-				uint8_t bin_data[MegaDrivePrivate::SMD_BLOCK_SIZE];
-				d->file->seek(512);
-				size = d->file->read(smd_data, sizeof(smd_data));
-				if (size != sizeof(smd_data)) {
-					// Short read. ROM is invalid.
-					d->romType = MegaDrivePrivate::ROM_UNKNOWN;
-					break;
-				}
-
-				// Decode the SMD block.
-				d->decodeSMDBlock(bin_data, smd_data);
-
-				// MD header is at 0x100.
-				// Vector table is at 0.
-				memcpy(&d->vectors, bin_data, sizeof(d->vectors));
-				memcpy(&d->romHeader, &bin_data[0x100], sizeof(d->romHeader));
-				break;
-			}
-
-			case MegaDrivePrivate::ROM_FORMAT_DISC_2048:
-				d->fileType = FTYPE_DISC_IMAGE;
-
-				// MCD-specific header is at 0. [TODO]
-				// MD-style header is at 0x100.
-				// No vector table is present on the disc.
-				memcpy(&d->romHeader, &header[0x100], sizeof(d->romHeader));
-				break;
-
-			case MegaDrivePrivate::ROM_FORMAT_DISC_2352:
-				d->fileType = FTYPE_DISC_IMAGE;
-
-				// MCD-specific header is at 0x10. [TODO]
-				// MD-style header is at 0x110.
-				// No vector table is present on the disc.
-				memcpy(&d->romHeader, &header[0x110], sizeof(d->romHeader));
-				break;
-
-			case MegaDrivePrivate::ROM_FORMAT_UNKNOWN:
-			default:
-				d->fileType = FTYPE_UNKNOWN;
-				d->romType = MegaDrivePrivate::ROM_UNKNOWN;
-				break;
+		if (d->gameType == TouhouReplayPrivate::TH_06) {
+			memcpy(&d->thrpHeader, header, sizeof(d->thrpHeader));
+			TouhouCryptFile cf(d->file, d->thrpHeader.key, offsetof(T6RP_Header, unknown));
+			cf.rewind();
+			cf.read(header, sizeof(header));
+			memcpy(&d->thrpHeader, header, sizeof(d->thrpHeader));
+			for (int i = 0; i < 7; i++) {
+				cf.seek(d->thrpHeader.stage_offset[i]);
+				cf.read(&d->stageHeader[i], sizeof(d->stageHeader[i]));
 			}
 		}
 
-		d->isValid = (d->romType >= 0);
-		if (d->isValid) {
-			// Parse the MD region code.
-			d->md_region = MegaDriveRegions::parseRegionCodes(
-				d->romHeader.region_codes, sizeof(d->romHeader.region_codes));
-		}
+		d->isValid = (d->gameType == TouhouReplayPrivate::TH_06); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -307,7 +268,7 @@ namespace LibRomData {
 		assert(info->header.addr == 0);
 		if (!info || !info->header.pData ||
 			info->header.addr != 0 ||
-			info->header.size < 0x200)
+			info->header.size < 0x4)
 		{
 			// Either no detection information was specified,
 			// or the header is too small.
@@ -318,72 +279,30 @@ namespace LibRomData {
 		const uint8_t *const pHeader = info->header.pData;
 
 		// Magic strings.
-		static const char sega_magic[4] = { 'S','E','G','A' };
-		static const char segacd_magic[16] =
-		{ 'S','E','G','A','D','I','S','C','S','Y','S','T','E','M',' ',' ' };;
+		static const char thrp_magic[][4] = {
+			{ 'T', '6', 'R', 'P' }, // koumakyou (eosd)
+			//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
+			//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
+			//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
+			//{ 'T', '9', '5', 'R' }, // bunkachou (stb)
+			//{ 'T', '1', '0', 'R' }, // fuujinroku (mof)
+			//{ 'T', '1', '1', 'R' }, // chireiden (sa)
+			//{ 'T', '1', '2', 'R' }, // seirensen (ufo)
+			//{ 'T', '1', '2', '5' }, // bunkachou (ds)
+			//{ '1', '2', '8', 'R' }, // yousei daisensou
+			//{ 'T', '1', '3', 'R' }, // shinreibyou (td)
+			// kishinjou (ddc) - has the same id as th13 for some reason
+			//{ 'T', '1', '4', '3' }, // danmaku amanojaku (isc)
+			//{ 'T', '1', '5', 'R' }, // kanjuden (lolk)
 
-		static const struct {
-			const char system_name[16];
-			uint32_t system_id;
-		} cart_magic[] = {
-			{ { 'S','E','G','A',' ','P','I','C','O',' ',' ',' ',' ',' ',' ',' ' }, MegaDrivePrivate::ROM_SYSTEM_PICO },
-			{ { 'S','E','G','A',' ','3','2','X',' ',' ',' ',' ',' ',' ',' ',' ' }, MegaDrivePrivate::ROM_SYSTEM_32X },
-			{ { 'S','E','G','A',' ','M','E','G','A',' ','D','R','I','V','E',' ' }, MegaDrivePrivate::ROM_SYSTEM_MD },
-			{ { 'S','E','G','A',' ','G','E','N','E','S','I','S',' ',' ',' ',' ' }, MegaDrivePrivate::ROM_SYSTEM_MD },
 		};
-
-		if (info->header.size >= 0x200) {
-			// Check for Sega CD.
-			// TODO: Gens/GS II lists "ISO/2048", "ISO/2352",
-			// "BIN/2048", and "BIN/2352". I don't think that's
-			// right; there should only be 2048 and 2352.
-			// TODO: Detect Sega CD 32X.
-			if (!memcmp(&pHeader[0x0010], segacd_magic, sizeof(segacd_magic))) {
-				// Found a Sega CD disc image. (2352-byte sectors)
-				return MegaDrivePrivate::ROM_SYSTEM_MCD |
-					MegaDrivePrivate::ROM_FORMAT_DISC_2352;
-			}
-			else if (!memcmp(&pHeader[0x0000], segacd_magic, sizeof(segacd_magic))) {
-				// Found a Sega CD disc image. (2048-byte sectors)
-				return MegaDrivePrivate::ROM_SYSTEM_MCD |
-					MegaDrivePrivate::ROM_FORMAT_DISC_2048;
-			}
-
-			// Check for SMD format. (Mega Drive only)
-			if (info->header.size >= 0x300) {
-				// Check if "SEGA" is in the header in the correct place
-				// for a plain binary ROM.
-				if (memcmp(&pHeader[0x100], sega_magic, sizeof(sega_magic)) != 0 &&
-					memcmp(&pHeader[0x101], sega_magic, sizeof(sega_magic)) != 0)
-				{
-					// "SEGA" is not in the header. This might be SMD.
-					const SMD_Header *smdHeader = reinterpret_cast<const SMD_Header*>(pHeader);
-					if (smdHeader->id[0] == 0xAA && smdHeader->id[1] == 0xBB &&
-						smdHeader->smd.file_data_type == SMD_FDT_68K_PROGRAM &&
-						smdHeader->file_type == SMD_FT_SMD_GAME_FILE)
-					{
-						// This is an SMD-format ROM.
-						// TODO: Show extended information from the SMD header,
-						// including "split" and other stuff?
-						return MegaDrivePrivate::ROM_SYSTEM_MD |
-							MegaDrivePrivate::ROM_FORMAT_CART_SMD;
-					}
-				}
-			}
-
-			// Check for other MD-based cartridge formats.
-			for (int i = 0; i < ARRAY_SIZE(cart_magic); i++) {
-				if (!memcmp(&pHeader[0x100], cart_magic[i].system_name, 16) ||
-					!memcmp(&pHeader[0x101], cart_magic[i].system_name, 15))
-				{
-					// Found a matching system name.
-					return MegaDrivePrivate::ROM_FORMAT_CART_BIN | cart_magic[i].system_id;
-				}
+		for (int i = 0; i < ARRAY_SIZE(thrp_magic); i++) {
+			if (!memcmp(pHeader, thrp_magic[i], 4)) {
+				return i;
 			}
 		}
-
 		// Not supported.
-		return MegaDrivePrivate::ROM_UNKNOWN;
+		return TouhouReplayPrivate::TH_UNKNOWN;
 	}
 
 	/**
@@ -407,108 +326,43 @@ namespace LibRomData {
 		if (!d->isValid || !isSystemNameTypeValid(type))
 			return nullptr;
 
-		// FIXME: Lots of system names and regions to check.
-		// Also, games can be region-free, so we need to check
-		// against the host system's locale.
-		// For now, just use the generic "Mega Drive".
-
 		static_assert(SYSNAME_TYPE_MASK == 3,
-			"MegaDrive::systemName() array index optimization needs to be updated.");
+			"TouhouReplay::systemName() array index optimization needs to be updated.");
 
-		uint32_t romSys = (d->romType & MegaDrivePrivate::ROM_SYSTEM_MASK);
-		if (romSys > MegaDrivePrivate::ROM_SYSTEM_MAX) {
-			// Invalid system type. Default to MD.
-			romSys = MegaDrivePrivate::ROM_SYSTEM_MD;
+		uint32_t romSys = d->gameType;
+		if (romSys > TouhouReplayPrivate::TH_LAST) {
+			// Invalid system type. Default to EoSD, because why not.
+			romSys = TouhouReplayPrivate::TH_06;
 		}
 
 		// sysNames[] bitfield:
 		// - Bits 0-1: Type. (short, long, abbreviation)
-		// - Bits 2-4: System type.
+		// - Bits 2-...: Game type.
 		uint32_t idx = (romSys << 2) | (type & SYSNAME_TYPE_MASK);
-		if (idx >= 20) {
+		
+		static const rp_char *const sysNames[4 * 14] = {
+			_RP("Touhou Koumakyou ~ the Embodiment of Scarlet Devil"), _RP("Embodiment of Scarlet Devil"),   _RP("EoSD"), nullptr,
+			_RP("Touhou Youyoumu ~ Perfect Cherry Blossom"),           _RP("Perfect Cherry Blossom"),        _RP("PCB"), nullptr,
+			_RP("Touhou Eiyashou ~ Imperishable Night"),               _RP("Imperishable Night"),            _RP("IN"), nullptr,
+			_RP("Touhou Kaeidzuka ~ Phantasmagoria of Flower View"),   _RP("Phantasmagoria of Flower View"), _RP("PoFV"), nullptr,
+			_RP("Touhou Bunkachou ~ Shoot the Bullet"),                _RP("Shoot the Bullet"),              _RP("StB"), nullptr,
+			_RP("Touhou Fuujinroku ~ Mountain of Faith"),              _RP("Mountain of Faith"),             _RP("MoF"), nullptr,
+			_RP("Touhou Chireiden ~ Subterranean Animism"),            _RP("Subterranean Animism"),          _RP("SA"), nullptr,
+			_RP("Touhou Seirensen ~ Undefined Fantastic Object"),      _RP("Undefined Fantastic Object"),    _RP("UFO"), nullptr,
+			_RP("Double Spoiler ~ Touhou Bunkachou"),                  _RP("Double Spoiler"),                _RP("DS"), nullptr,
+			_RP("Yousei Daisensou ~ Touhou Sangetsusei"),              _RP("Yousei Daisensou"),              _RP("FW"), nullptr,
+			_RP("Touhou Shinreibyou ~ Ten Desires"),                   _RP("Ten Desires"),                   _RP("TD"), nullptr,
+			_RP("Touhou Kishinjou ~ Double Dealing Character"),        _RP("Double Dealing Character"),      _RP("DDC"), nullptr,
+			_RP("Danmaku Amanojaku ~ Impossible Spell Card"),          _RP("Impossible Spell Card"),         _RP("ISC"), nullptr,
+			_RP("Touhou Kanjuden ~ Legacy of Lunatic Kingdom"),        _RP("Legacy of Lunatic Kingdom"),     _RP("LoLK"), nullptr,
+		};
+
+		if (idx >= ARRAY_SIZE(sysNames)) {
 			// Invalid index...
-			idx &= SYSNAME_TYPE_MASK;
+			return nullptr;
 		}
 
-		static_assert(SYSNAME_REGION_MASK == (1 << 2),
-			"MegaDrive::systemName() region type optimization needs to be updated.");
-		if ((type & SYSNAME_REGION_MASK) == SYSNAME_REGION_GENERIC) {
-			// Generic system name.
-			static const rp_char *const sysNames[20] = {
-				_RP("Sega Mega Drive"), _RP("Mega Drive"), _RP("MD"), nullptr,
-				_RP("Sega Mega CD"), _RP("Mega CD"), _RP("MCD"), nullptr,
-				_RP("Sega 32X"), _RP("Sega 32X"), _RP("32X"), nullptr,
-				_RP("Sega Mega CD 32X"), _RP("Mega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Pico"), _RP("Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames[idx];
-		}
-
-		// Get the system branding region.
-		const MegaDriveRegions::MD_BrandingRegion md_bregion =
-			MegaDriveRegions::getBrandingRegion(d->md_region);
-		switch (md_bregion) {
-		case MegaDriveRegions::MD_BREGION_JAPAN:
-		default: {
-			static const rp_char *const sysNames_JP[20] = {
-				_RP("Sega Mega Drive"), _RP("Mega Drive"), _RP("MD"), nullptr,
-				_RP("Sega Mega CD"), _RP("Mega CD"), _RP("MCD"), nullptr,
-				_RP("Sega Super 32X"), _RP("Super 32X"), _RP("32X"), nullptr,
-				_RP("Sega Mega CD 32X"), _RP("Mega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Kids Computer Pico"), _RP("Kids Computer Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames_JP[idx];
-		}
-
-		case MegaDriveRegions::MD_BREGION_USA: {
-			static const rp_char *const sysNames_US[20] = {
-				// TODO: "MD" or "Gen"?
-				_RP("Sega Genesis"), _RP("Genesis"), _RP("MD"), nullptr,
-				_RP("Sega CD"), _RP("Sega CD"), _RP("MCD"), nullptr,
-				_RP("Sega 32X"), _RP("Sega 32X"), _RP("32X"), nullptr,
-				_RP("Sega CD 32X"), _RP("Sega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Pico"), _RP("Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames_US[idx];
-		}
-
-		case MegaDriveRegions::MD_BREGION_EUROPE: {
-			static const rp_char *const sysNames_EU[20] = {
-				_RP("Sega Mega Drive"), _RP("Mega Drive"), _RP("MD"), nullptr,
-				_RP("Sega Mega CD"), _RP("Mega CD"), _RP("MCD"), nullptr,
-				_RP("Sega Mega Drive 32X"), _RP("Mega Drive 32X"), _RP("32X"), nullptr,
-				_RP("Sega Mega CD 32X"), _RP("Sega Mega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Pico"), _RP("Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames_EU[idx];
-		}
-
-		case MegaDriveRegions::MD_BREGION_SOUTH_KOREA: {
-			static const rp_char *const sysNames_KR[20] = {
-				// TODO: "MD" or something else?
-				_RP("Samsung Super Aladdin Boy"), _RP("Super Aladdin Boy"), _RP("MD"), nullptr,
-				_RP("Samsung CD Aladdin Boy"), _RP("CD Aladdin Boy"), _RP("MCD"), nullptr,
-				_RP("Samsung Super 32X"), _RP("Super 32X"), _RP("32X"), nullptr,
-				_RP("Sega Mega CD 32X"), _RP("Sega Mega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Pico"), _RP("Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames_KR[idx];
-		}
-
-		case MegaDriveRegions::MD_BREGION_BRAZIL: {
-			static const rp_char *const sysNames_BR[20] = {
-				_RP("Sega Mega Drive"), _RP("Mega Drive"), _RP("MD"), nullptr,
-				_RP("Sega CD"), _RP("Sega CD"), _RP("MCD"), nullptr,
-				_RP("Sega Mega 32X"), _RP("Mega 32X"), _RP("32X"), nullptr,
-				_RP("Sega CD 32X"), _RP("Sega CD 32X"), _RP("MCD32X"), nullptr,
-				_RP("Sega Pico"), _RP("Pico"), _RP("Pico"), nullptr
-			};
-			return sysNames_BR[idx];
-		}
-		}
-
-		// Should not get here...
-		return nullptr;
+		return sysNames[idx];
 	}
 
 	/**
@@ -568,146 +422,18 @@ namespace LibRomData {
 			// so *maybe* this is okay?
 			return -EBADF;
 		}
-		else if (!d->isValid || d->romType < 0) {
-			// Unknown ROM image type.
+		else if (!d->isValid || d->gameType < 0) {
+			// Unknown game type.
 			return -EIO;
 		}
 
-		// MD ROM header, excluding the vector table.
-		const MD_RomHeader *romHeader = &d->romHeader;
+		const T6RP_Header *thrpHeader = &d->thrpHeader;
 
 		// Read the strings from the header.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->system, sizeof(romHeader->system)));
-		d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->copyright, sizeof(romHeader->copyright)));
-
-		// Determine the publisher.
-		// Formats in the copyright line:
-		// - "(C)SEGA"
-		// - "(C)T-xx"
-		// - "(C)T-xxx"
-		// - "(C)Txxx"
-		const rp_char *publisher = nullptr;
-		unsigned int t_code = 0;
-		if (!memcmp(romHeader->copyright, "(C)SEGA", 7)) {
-			// Sega first-party game.
-			publisher = _RP("Sega");
-		}
-		else if (!memcmp(romHeader->copyright, "(C)T", 4)) {
-			// Third-party game.
-			int start = 4;
-			if (romHeader->copyright[4] == '-')
-				start++;
-			char *endptr;
-			t_code = strtoul(&romHeader->copyright[start], &endptr, 10);
-			if (t_code != 0 &&
-				endptr > &romHeader->copyright[start] &&
-				endptr < &romHeader->copyright[start + 3])
-			{
-				// Valid T-code. Look up the publisher.
-				publisher = MegaDrivePublishers::lookup(t_code);
-			}
-		}
-
-		if (publisher) {
-			// Publisher identified.
-			d->fields->addData_string(publisher);
-		}
-		else if (t_code > 0) {
-			// Unknown publisher, but there is a valid T code.
-			char buf[16];
-			int len = snprintf(buf, sizeof(buf), "T-%u", t_code);
-			if (len > (int)sizeof(buf))
-				len = sizeof(buf);
-			d->fields->addData_string(len > 0 ? latin1_to_rp_string(buf, len) : _RP(""));
-		}
-		else {
-			// Unknown publisher.
-			d->fields->addData_string(_RP("Unknown"));
-		}
-
-		// Titles, serial number, and checksum.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->title_domestic, sizeof(romHeader->title_domestic)));
-		d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->title_export, sizeof(romHeader->title_export)));
-		d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->serial, sizeof(romHeader->serial)));
-		if (!d->isDisc()) {
-			d->fields->addData_string_numeric(be16_to_cpu(romHeader->checksum), RomFields::FB_HEX, 4);
-		}
-		else {
-			// Checksum is not valid in Mega CD headers.
-			d->fields->addData_invalid();
-		}
-
-		// Parse I/O support.
-		uint32_t io_support = d->parseIOSupport(romHeader->io_support, sizeof(romHeader->io_support));
-		d->fields->addData_bitfield(io_support);
-
-		if (!d->isDisc()) {
-			// ROM range.
-			d->fields->addData_string_address_range(
-				be32_to_cpu(romHeader->rom_start),
-				be32_to_cpu(romHeader->rom_end), 8);
-
-			// RAM range.
-			d->fields->addData_string_address_range(
-				be32_to_cpu(romHeader->ram_start),
-				be32_to_cpu(romHeader->ram_end), 8);
-
-			// SRAM range.
-			// Info format: 'R', 'A', %1x1yz000, 0x20
-			const uint32_t sram_info = be32_to_cpu(romHeader->sram_info);
-			if ((sram_info & 0xFFFFA7FF) == 0x5241A020) {
-				// SRAM is present.
-				// x == 1 for backup (SRAM), 0 for not backup
-				// yz == 10 for even addresses, 11 for odd addresses
-				// TODO: Print the 'x' bit.
-				const rp_char *suffix;
-				switch ((sram_info >> (8 + 3)) & 0x03) {
-				case 2:
-					suffix = _RP("(even only)");
-					break;
-				case 3:
-					suffix = _RP("(odd only)");
-					break;
-				default:
-					// TODO: Are both alternates 16-bit?
-					suffix = _RP("(16-bit)");
-					break;
-				}
-
-				d->fields->addData_string_address_range(
-					be32_to_cpu(romHeader->sram_start),
-					be32_to_cpu(romHeader->sram_end),
-					suffix, 8);
-			}
-			else {
-				// TODO: Non-monospaced.
-				d->fields->addData_string(_RP("None"));
-			}
-		}
-		else {
-			// ROM, RAM, and SRAM ranges are not valid in Mega CD headers.
-			d->fields->addData_invalid();
-			d->fields->addData_invalid();
-			d->fields->addData_invalid();
-		}
-
-		// Region codes.
-		// TODO: Validate the Mega CD security program?
-		d->fields->addData_bitfield(d->md_region);
-
-		// Vectors.
-		if (!d->isDisc()) {
-			d->fields->addData_string_numeric(
-				be32_to_cpu(d->vectors.initial_pc), RomFields::FB_HEX, 8);
-			d->fields->addData_string_numeric(
-				be32_to_cpu(d->vectors.initial_sp), RomFields::FB_HEX, 8);
-		}
-		else {
-			// Discs don't have vector tables.
-			// Add dummy entries for the vectors.
-			d->fields->addData_invalid();
-			d->fields->addData_invalid();
-		}
+		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->name, sizeof(thrpHeader->name)));
+		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->date, sizeof(thrpHeader->date)));
+		d->fields->addData_string_numeric(thrpHeader->player);
+		d->fields->addData_string_numeric(thrpHeader->rank);
 
 		// Finished reading the field data.
 		return (int)d->fields->count();

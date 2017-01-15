@@ -38,7 +38,7 @@ extern "C" {
 		uint8_t player; // 0 = ReimuA, 1 = ReimuB, 2 = MarisaA, 3 = MarisaB
 		uint8_t rank; // 0 = Easy, 3 = Lunatic, 4 = Extra
 		uint32_t checksum; // (0x3f000318 + key + sum(c for c in decrypted_data)) % (2 ** 32)
-		uint16_t unknown2; //TODO: seems to be ignored by the game.
+		uint16_t unknown0; //TODO: seems to be ignored by the game.
 		uint8_t key;
 		// ENCRYPTED //
 		uint8_t unknown; //TODO: seems to be ignored by the game. Padding?
