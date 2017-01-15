@@ -218,6 +218,9 @@ class RomData
 			// NFC dump, e.g. amiibo.
 			FTYPE_NFC_DUMP,
 
+			// Replay file e.g. Touhou.
+			FTYPE_REPLAY_FILE,
+
 			// End of FileType.
 			FTYPE_LAST
 		};

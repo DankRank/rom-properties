@@ -190,6 +190,8 @@ namespace LibRomData {
 	{
 		// Clear the various structs.
 		memset(&thrpHeader, 0, sizeof(thrpHeader));
+
+		fileType = RomData::FTYPE_REPLAY_FILE;
 	}
 
 	/** Internal ROM data. **/
