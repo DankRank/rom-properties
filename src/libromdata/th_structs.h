@@ -30,6 +30,27 @@ extern "C" {
 #endif
 
 #pragma pack(1)
+	// Generic header for games starting from TH08
+	typedef struct PACKED _THRP_GenericHeader {
+		char magic[4]; // T8RP, etc
+		uint32_t unk1;
+		uint32_t unk2;
+		uint32_t useroffset; // offset of USER data
+	} THRP_GenericHeader;
+#pragma pack()
+	ASSERT_STRUCT(THRP_GenericHeader, 16);
+
+#pragma pack(1)
+	typedef struct PACKED _THRP_USERHeader {
+		char magic[4]; // "USER"
+		uint32_t size; // size of text data + this header
+		uint32_t unk1;
+		// text data follows
+	} THRP_USERHeader;
+#pragma pack()
+	ASSERT_STRUCT(THRP_USERHeader, 12);
+
+#pragma pack(1)
 	typedef struct PACKED _T6RP_Header {
 		// copy-pasted from https://pytouhou.linkmauve.fr/doc/06/t6rp.xhtml for now
 		// TODO: write better docs
@@ -51,6 +72,7 @@ extern "C" {
 		uint32_t unknown4; //TODO: seems to be ignored by the game.
 		uint32_t stage_offset[7];
 	} T6RP_Header;
+#pragma pack()
 	ASSERT_STRUCT(T6RP_Header, 80);
 
 #pragma pack(1)
