@@ -87,7 +87,7 @@ namespace LibRomData {
 
 		// First, read an unencrypted area as-is, and advance ptr, size and cpos
 		if (cpos < offset) {
-			count = file->read(ptr, std::min((uint64_t)offset, cpos + size) - cpos);
+			count = file->read(ptr, std::min<uint64_t>(offset, cpos + size) - cpos);
 			*(char**)&ptr += count;
 			cpos += count;
 			size -= count;
