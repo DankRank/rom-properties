@@ -255,14 +255,14 @@ namespace LibRomData {
 
 		// Touhou 13 and 14 have the same magic, so we need to check the USER section
 		if (d->gameType == TouhouReplayPrivate::TH_13) {
-			static char th14_magic[] = {
+			static uint8_t th14_magic[] = {
 				// this says: 東方輝針城 リプレイファイル情報
 				0x93, 0x8C, 0x95, 0xFB, 0x8B, 0x50, 0x90, 0x6A,
 				0x8F, 0xE9, 0x20, 0x83, 0x8A, 0x83, 0x76, 0x83,
 				0x8C, 0x83, 0x43, 0x83, 0x74, 0x83, 0x40, 0x83,
 				0x43, 0x83, 0x8B, 0x8F, 0xEE, 0x95, 0xF1,
 			};
-			char magicbuf[sizeof(th14_magic)];
+			uint8_t magicbuf[sizeof(th14_magic)];
 
 			d->file->seek((*(uint32_t*)&header[0xC]) + 0xC);
 			d->file->read(magicbuf, sizeof(th14_magic));
