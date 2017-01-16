@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
 * ROM Properties Page shell extension. (libromdata)                       *
 * TouhouReplay.cpp: Touhou Replay reader.                                 *
 *                                                                         *
@@ -253,6 +253,24 @@ namespace LibRomData {
 			}
 		}
 
+		// Touhou 13 and 14 have the same magic, so we need to check the USER section
+		if (d->gameType == TouhouReplayPrivate::TH_13) {
+			static char th14_magic[] = {
+				// this says: 東方輝針城 リプレイファイル情報
+				0x93, 0x8C, 0x95, 0xFB, 0x8B, 0x50, 0x90, 0x6A,
+				0x8F, 0xE9, 0x20, 0x83, 0x8A, 0x83, 0x76, 0x83,
+				0x8C, 0x83, 0x43, 0x83, 0x74, 0x83, 0x40, 0x83,
+				0x43, 0x83, 0x8B, 0x8F, 0xEE, 0x95, 0xF1,
+			};
+			char magicbuf[sizeof(th14_magic)];
+
+			d->file->seek((*(uint32_t*)&header[0xC]) + 0xC);
+			d->file->read(magicbuf, sizeof(th14_magic));
+			if (!memcmp(magicbuf, th14_magic, sizeof(th14_magic))) {
+				d->gameType = TouhouReplayPrivate::TH_14;
+			}
+		}
+
 		d->isValid = (d->gameType == TouhouReplayPrivate::TH_06); // TODO: add support for other games later -Egor
 	}
 
@@ -286,19 +304,20 @@ namespace LibRomData {
 			//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
 			//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
 			//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
-			//{ 'T', '9', '5', 'R' }, // bunkachou (stb)
-			//{ 'T', '1', '0', 'R' }, // fuujinroku (mof)
-			//{ 'T', '1', '1', 'R' }, // chireiden (sa)
-			//{ 'T', '1', '2', 'R' }, // seirensen (ufo)
-			//{ 'T', '1', '2', '5' }, // bunkachou (ds)
-			//{ '1', '2', '8', 'R' }, // yousei daisensou
-			//{ 'T', '1', '3', 'R' }, // shinreibyou (td)
-			// kishinjou (ddc) - has the same id as th13 for some reason
-			//{ 'T', '1', '4', '3' }, // danmaku amanojaku (isc)
-			//{ 'T', '1', '5', 'R' }, // kanjuden (lolk)
+			//{ 't', '9', '5', 'r' }, // bunkachou (stb)
+			//{ 't', '1', '0', 'r' }, // fuujinroku (mof)
+			//{ 't', '1', '1', 'r' }, // chireiden (sa)
+			//{ 't', '1', '2', 'r' }, // seirensen (ufo)
+			//{ 't', '1', '2', '5' }, // bunkachou (ds)
+			//{ '1', '2', '8', 'r' }, // yousei daisensou
+			//{ 't', '1', '3', 'r' }, // shinreibyou (td)
+			//{ 0, 0, 0, 0 }, // kishinjou (ddc) - has the same id as th13 for some reason
+			//{ 't', '1', '4', '3' }, // danmaku amanojaku (isc)
+			//{ 't', '1', '5', 'r' }, // kanjuden (lolk)
 
 		};
 		for (int i = 0; i < ARRAY_SIZE(thrp_magic); i++) {
+			if (thrp_magic[i] == 0) continue;
 			if (!memcmp(pHeader, thrp_magic[i], 4)) {
 				return i;
 			}
