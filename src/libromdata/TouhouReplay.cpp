@@ -130,10 +130,12 @@ namespace LibRomData {
 	}
 	
 	class Touhou10USERParser {
+	private:
+		bool is_valid;
+
+	public:
 		// if this variable is true, something went wrong during parsing
 		bool staticPatch;
-
-		bool is_valid;
 
 		std::string version;
 		std::string name;
@@ -144,15 +146,53 @@ namespace LibRomData {
 		long score;
 		float slowrate;
 
+	private:
+		std::string spaceString(std::string line, const std::string& keyword);
+		time_t parseDate(std::string datestr);
+
 		char* readFile(IRpFile* file, uint32_t& size);
 		bool breakLines(char* text, uint32_t size, std::string (&lines)[9]);
-		std::string spaceString(std::string line, const std::string& keyword);
 		bool parseLines(const std::string (&lines)[9]);
-		time_t parseDate(std::string datestr);
 	public:
 		explicit Touhou10USERParser(IRpFile* file);
 		bool isValid();
 	};
+
+	std::string Touhou10USERParser::spaceString(std::string line, const std::string& keyword) {
+		size_t pos = line.find(' ');
+
+		if (pos != std::string::npos) {
+			// Check the keyword
+			if (line.substr(0, pos) != keyword) staticPatch = true;
+
+			return line.substr(pos + 1);
+		}
+		else {
+			staticPatch = true;
+			return "";
+		}
+	}
+
+	time_t Touhou10USERParser::parseDate(std::string datestr) {
+		// format: yy/mm/dd hh:mm
+		if (datestr.length() != 14
+			|| datestr[2] != '/'
+			|| datestr[5] != '/'
+			|| datestr[8] != ' '
+			|| datestr[11] != ':') return -1;
+
+		tm t;
+		t.tm_year = 100 + std::stoi(datestr);
+		t.tm_mon = std::stoi(datestr.substr(3));
+		t.tm_mday = std::stoi(datestr.substr(6));
+		t.tm_hour = std::stoi(datestr.substr(9));
+		t.tm_min = std::stoi(datestr.substr(12));
+		t.tm_sec = 0;
+		t.tm_isdst = 0; // unknown
+						// other fields don't need to be set for mktime to work.
+		return mktime(&t);
+	}
+
 	char* Touhou10USERParser::readFile(IRpFile* file, uint32_t& size) {
 		assert(file);
 		assert(file->isOpen());
@@ -191,43 +231,32 @@ namespace LibRomData {
 		}
 		return nullptr;
 	}
-	std::string Touhou10USERParser::spaceString(std::string line, const std::string& keyword) {
-		size_t pos = line.find(' ');
+	
+	bool Touhou10USERParser::breakLines(char* text, uint32_t size, std::string(&lines)[9]) {
+		// Make sure there's a null at the very end
+		assert(!text[size - 1]);
+		if (text[size - 1]) return false;
 
-		if (pos != std::string::npos) {
-			// Check the keyword
-			if (line.substr(0, pos) != keyword) staticPatch = true;
+		char *p = text;
+		for (int i = 0; i < 9; i++) {
+			// Look for a new-line
+			char* p2 = strstr(p, "\r\n");
+			if (!p2) return false; // line not found
 
-			return line.substr(pos + 1);
+			lines[i] = std::string(p, p2 - p);
+			p = p2 + 2; // skip \r\n
 		}
-		else {
-			staticPatch = true;
-			return "";
-		}
+
+		// just some extra checking for the double-null at the very end
+		assert(p - text == size - 2);
+		assert(!p[0] && !p[1]);
+		return true;
 	}
-	time_t Touhou10USERParser::parseDate(std::string datestr) {
-		// format: yy/mm/dd hh:mm
-		if (datestr.length() != 14
-			|| datestr[2] != '/'
-			|| datestr[5] != '/'
-			|| datestr[8] != ' '
-			|| datestr[11] != ':') return -1;
-		
-		tm t;
-		t.tm_year = 100 + std::stoi(datestr);
-		t.tm_mon = std::stoi(datestr.substr(3));
-		t.tm_mday = std::stoi(datestr.substr(6));
-		t.tm_hour = std::stoi(datestr.substr(9));
-		t.tm_min = std::stoi(datestr.substr(12));
-		t.tm_sec = 0;
-		t.tm_isdst = 0; // unknown
-		// other fields don't need to be set for mktime to work.
-		return mktime(&t);
-	}
-	bool Touhou10USERParser::parseLines(const std::string (&lines)[9]) {
+
+	bool Touhou10USERParser::parseLines(const std::string(&lines)[9]) {
 		// Line 0 - "東方XYZ リプレイファイル情報" - "Touhou XYZ replay file info"
 		// (skipped)
-		
+
 		// Line 1 - "Version %s"
 		version = spaceString(lines[1], "Version");
 
@@ -257,34 +286,15 @@ namespace LibRomData {
 		}
 
 		// Line 7 - "Score %d"
-		score = std::stol ( spaceString(lines[7], "Score") );
+		score = std::stol(spaceString(lines[7], "Score"));
 
 		// Line 8 - "Slow Rate %2.2f"
 		// TODO: maybe make it less hacky?
-		slowrate = std::stof( spaceString(spaceString(lines[8], "Slow"), "Rate") );
-		
+		slowrate = std::stof(spaceString(spaceString(lines[8], "Slow"), "Rate"));
+
 		return true;
 	}
-	bool Touhou10USERParser::breakLines(char* text, uint32_t size, std::string(&lines)[9]) {
-		// Make sure there's a null at the very end
-		assert(!text[size - 1]);
-		if (text[size - 1]) return false;
 
-		char *p = text;
-		for (int i = 0; i < 9; i++) {
-			// Look for a new-line
-			char* p2 = strstr(p, "\r\n");
-			if (!p2) return false; // line not found
-
-			lines[i] = std::string(p, p2 - p);
-			p = p2 + 2; // skip \r\n
-		}
-
-		// just some extra checking for the double-null at the very end
-		assert(p - text == size - 2);
-		assert(!p[0] && !p[1]);
-		return true;
-	}
 	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), staticPatch(false), date(-1), score(0), slowrate(99.99f){
 		uint32_t size;
 		char* text = readFile(file, size);
@@ -302,9 +312,11 @@ namespace LibRomData {
 		is_valid = parseLines(lines);
 		
 	}
+
 	bool Touhou10USERParser::isValid() {
 		return is_valid;
 	}
+
 	class TouhouReplayPrivate : public RomDataPrivate
 	{
 	public:
