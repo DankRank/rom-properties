@@ -128,6 +128,164 @@ namespace LibRomData {
 		return file->filename();
 	}
 	
+	class Touhou10USERParser {
+		int size;
+		char* text;
+		std::string lines[9];
+		
+		// if this variable is true, something went wrong during parsing
+		bool staticPatch;
+
+		bool is_valid;
+
+		std::string version;
+		std::string name;
+		std::string date;
+		std::string chara;
+		std::string rank;
+		std::string stage;
+		long score;
+		float slowrate;
+
+		bool breakLines();
+		std::string spaceString(std::string line, const std::string& keyword);
+		bool parseLines();
+	private:
+		Touhou10USERParser& operator=(const Touhou10USERParser&other);
+		Touhou10USERParser(const Touhou10USERParser&other);
+	public:
+		explicit Touhou10USERParser(IRpFile* file);
+		~Touhou10USERParser();
+		bool isValid();
+	};
+	std::string Touhou10USERParser::spaceString(std::string line, const std::string& keyword) {
+		size_t pos = line.find(' ');
+
+		if (pos != std::string::npos) {
+			// Check the keyword
+			if (line.substr(0, pos) != keyword) staticPatch = true;
+
+			return line.substr(pos + 1);
+		}
+		else {
+			staticPatch = true;
+			return "";
+		}
+	}
+	bool Touhou10USERParser::parseLines() {
+		if (!isValid()) return false;
+		for (int i = 0; i < 9; i++) {
+			// check if breakLines didn't work properly
+			if (lines[i].empty()) return false;
+		}
+		// Line 0 - "東方XYZ リプレイファイル情報" - "Touhou XYZ replay file info"
+		// (skipped)
+		
+		// Line 1 - "Version %s"
+		version = spaceString(lines[1], "Version");
+
+		// Line 2 - "Name %s"
+		name = spaceString(lines[2], "Name");
+
+		// Line 3 - "Date %.2d/%.2d/%.2d %.2d:%.2d" (yy/mm/dd)
+		// (skipped for now)
+
+		// Line 4 - "Chara %s"
+		chara = spaceString(lines[4], "Chara");
+
+		// Line 5 - "Rank %s"
+		rank = spaceString(lines[5], "Rank");
+
+		// Line 6 - which stage was completed
+		// TODO: make a better break down with enums and stuff
+		if (lines[6] == "Extra Stage Clear") {
+			stage = lines[6];
+		}
+		else {
+			stage = spaceString(lines[6], "Stage");
+			// there could be three possible formats starting with Stage:
+			// Stage All Clear
+			// Stage %d
+			// Stage %d \x81\x60[fullwidth ~] %d
+		}
+
+		// Line 7 - "Score %d"
+		score = std::stol ( spaceString(lines[7], "Score") );
+
+		// Line 8 - "Slow Rate %2.2f"
+		// TODO: maybe make it less hacky?
+		slowrate = std::stof( spaceString(spaceString(lines[8], "Slow"), "Rate") );
+		
+		return true;
+	}
+	bool Touhou10USERParser::breakLines() {
+		if (!isValid()) return false;
+		// Make sure there's a null at the very end
+		assert(!text[size - 1]);
+		if (text[size - 1]) return false;
+
+		char *p = text;
+		for (int i = 0; i < 9; i++) {
+			// Look for a new-line
+			char* p2 = strstr(p, "\r\n");
+			if (!p2) return false; // line not found
+
+			lines[i] = std::string(p, p2 - p);
+			p = p2 + 2; // skip \r\n
+		}
+
+		// just some extra checking for the double-null at the very end
+		assert(p - text == size - 2);
+		assert(!p[0] && !p[1]);
+		return true;
+	}
+	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), text(nullptr), staticPatch(false), size(0), score(0), slowrate(99.99f){
+		assert(file);
+		assert(file->isOpen());
+		if (file && file->isOpen()) {
+			// Read offset of the USER header
+			file->seek(offsetof(THRP_GenericHeader, useroffset));
+			uint32_t offset;
+			if (sizeof(offset) != file->read(&offset, sizeof(offset))) {
+				assert(0);
+				return;
+			}
+
+			// Read USER header
+			file->seek(offset);
+			THRP_USERHeader uhead;
+			file->read(&uhead, sizeof(uhead));
+
+			// Check magic
+			static char user_magic[] = { 'U', 'S', 'E', 'R' };
+			if (!memcmp(uhead.magic, user_magic, sizeof(user_magic))) {
+				// Make sure the size is valid
+				assert(uhead.size >= sizeof(uhead));
+				if (uhead.size >= sizeof(uhead)) {
+					// Read the text data
+					uint32_t textsize = uhead.size - sizeof(uhead);
+					text = new char[textsize];
+					if (textsize != file->read(text, textsize)) {
+						// read failed, deallocate the text
+						delete[] text;
+						text = nullptr;
+						assert(0);
+						return;
+					}
+					this->size = textsize;
+					is_valid = true;
+					if (!breakLines()) is_valid = false;
+					else if (!parseLines()) is_valid = false;
+				}
+			}
+		}
+	}
+	Touhou10USERParser::~Touhou10USERParser() {
+		if (text) delete[] text;
+	}
+	bool Touhou10USERParser::isValid() {
+		return is_valid;
+	}
 	class TouhouReplayPrivate : public RomDataPrivate
 	{
 	public:
@@ -262,9 +420,9 @@ namespace LibRomData {
 				0x8C, 0x83, 0x43, 0x83, 0x74, 0x83, 0x40, 0x83,
 				0x43, 0x83, 0x8B, 0x8F, 0xEE, 0x95, 0xF1,
 			};
-			uint8_t magicbuf[sizeof(th14_magic)];
+			uint8_t magicbuf[sizeof(th14_magic)] = {0};
 
-			d->file->seek((*(uint32_t*)&header[0xC]) + 0xC);
+			d->file->seek((*(uint32_t*)&header[offsetof(THRP_GenericHeader,useroffset)]) + sizeof(THRP_USERHeader));
 			d->file->read(magicbuf, sizeof(th14_magic));
 			if (!memcmp(magicbuf, th14_magic, sizeof(th14_magic))) {
 				d->gameType = TouhouReplayPrivate::TH_14;
