@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstring>
+#include <ctime>
 
 // C++ includes.
 #include <vector>
@@ -140,7 +141,7 @@ namespace LibRomData {
 
 		std::string version;
 		std::string name;
-		std::string date;
+		time_t date;
 		std::string chara;
 		std::string rank;
 		std::string stage;
@@ -150,6 +151,7 @@ namespace LibRomData {
 		bool breakLines();
 		std::string spaceString(std::string line, const std::string& keyword);
 		bool parseLines();
+		time_t parseDate(std::string datestr);
 	private:
 		Touhou10USERParser& operator=(const Touhou10USERParser&other);
 		Touhou10USERParser(const Touhou10USERParser&other);
@@ -172,6 +174,25 @@ namespace LibRomData {
 			return "";
 		}
 	}
+	time_t Touhou10USERParser::parseDate(std::string datestr) {
+		// format: yy/mm/dd hh:mm
+		if (datestr.length() != 14
+			|| datestr[2] != '/'
+			|| datestr[5] != '/'
+			|| datestr[8] != ' '
+			|| datestr[11] != ':') return -1;
+		
+		tm t;
+		t.tm_year = 100 + std::stoi(datestr);
+		t.tm_mon = std::stoi(datestr.substr(3));
+		t.tm_mday = std::stoi(datestr.substr(6));
+		t.tm_hour = std::stoi(datestr.substr(9));
+		t.tm_min = std::stoi(datestr.substr(12));
+		t.tm_sec = 0;
+		t.tm_isdst = 0; // unknown
+		// other fields don't need to be set for mktime to work.
+		return mktime(&t);
+	}
 	bool Touhou10USERParser::parseLines() {
 		if (!isValid()) return false;
 		for (int i = 0; i < 9; i++) {
@@ -188,7 +209,7 @@ namespace LibRomData {
 		name = spaceString(lines[2], "Name");
 
 		// Line 3 - "Date %.2d/%.2d/%.2d %.2d:%.2d" (yy/mm/dd)
-		// (skipped for now)
+		date = parseDate(spaceString(lines[3], "Date"));
 
 		// Line 4 - "Chara %s"
 		chara = spaceString(lines[4], "Chara");
@@ -239,7 +260,7 @@ namespace LibRomData {
 		assert(!p[0] && !p[1]);
 		return true;
 	}
-	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), text(nullptr), staticPatch(false), size(0), score(0), slowrate(99.99f){
+	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), text(nullptr), staticPatch(false), size(0), date(-1), score(0), slowrate(99.99f){
 		assert(file);
 		assert(file->isOpen());
 		if (file && file->isOpen()) {
