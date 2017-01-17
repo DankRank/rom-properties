@@ -130,10 +130,6 @@ namespace LibRomData {
 	}
 	
 	class Touhou10USERParser {
-		int size;
-		char* text;
-		std::string lines[9];
-		
 		// if this variable is true, something went wrong during parsing
 		bool staticPatch;
 
@@ -148,18 +144,53 @@ namespace LibRomData {
 		long score;
 		float slowrate;
 
-		bool breakLines();
+		char* readFile(IRpFile* file, uint32_t& size);
+		bool breakLines(char* text, uint32_t size, std::string (&lines)[9]);
 		std::string spaceString(std::string line, const std::string& keyword);
-		bool parseLines();
+		bool parseLines(const std::string (&lines)[9]);
 		time_t parseDate(std::string datestr);
-	private:
-		Touhou10USERParser& operator=(const Touhou10USERParser&other);
-		Touhou10USERParser(const Touhou10USERParser&other);
 	public:
 		explicit Touhou10USERParser(IRpFile* file);
-		~Touhou10USERParser();
 		bool isValid();
 	};
+	char* Touhou10USERParser::readFile(IRpFile* file, uint32_t& size) {
+		assert(file);
+		assert(file->isOpen());
+		if (file && file->isOpen()) {
+			// Read offset of the USER header
+			file->seek(offsetof(THRP_GenericHeader, useroffset));
+			uint32_t offset;
+			if (sizeof(offset) != file->read(&offset, sizeof(offset))) {
+				assert(0);
+				return nullptr;
+			}
+
+			// Read USER header
+			file->seek(offset);
+			THRP_USERHeader uhead;
+			file->read(&uhead, sizeof(uhead));
+
+			// Check magic
+			static char user_magic[] = { 'U', 'S', 'E', 'R' };
+			if (!memcmp(uhead.magic, user_magic, sizeof(user_magic))) {
+				// Make sure the size is valid
+				assert(uhead.size >= sizeof(uhead));
+				if (uhead.size >= sizeof(uhead)) {
+					// Read the text data
+					size = uhead.size - sizeof(uhead);
+					char *text = new char[size];
+					if (size != file->read(text, size)) {
+						// read failed, deallocate the text
+						delete[] text;
+						assert(0);
+						return nullptr;
+					}
+					return text;
+				}
+			}
+		}
+		return nullptr;
+	}
 	std::string Touhou10USERParser::spaceString(std::string line, const std::string& keyword) {
 		size_t pos = line.find(' ');
 
@@ -193,12 +224,7 @@ namespace LibRomData {
 		// other fields don't need to be set for mktime to work.
 		return mktime(&t);
 	}
-	bool Touhou10USERParser::parseLines() {
-		if (!isValid()) return false;
-		for (int i = 0; i < 9; i++) {
-			// check if breakLines didn't work properly
-			if (lines[i].empty()) return false;
-		}
+	bool Touhou10USERParser::parseLines(const std::string (&lines)[9]) {
 		// Line 0 - "東方XYZ リプレイファイル情報" - "Touhou XYZ replay file info"
 		// (skipped)
 		
@@ -239,8 +265,7 @@ namespace LibRomData {
 		
 		return true;
 	}
-	bool Touhou10USERParser::breakLines() {
-		if (!isValid()) return false;
+	bool Touhou10USERParser::breakLines(char* text, uint32_t size, std::string(&lines)[9]) {
 		// Make sure there's a null at the very end
 		assert(!text[size - 1]);
 		if (text[size - 1]) return false;
@@ -260,49 +285,22 @@ namespace LibRomData {
 		assert(!p[0] && !p[1]);
 		return true;
 	}
-	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), text(nullptr), staticPatch(false), size(0), date(-1), score(0), slowrate(99.99f){
-		assert(file);
-		assert(file->isOpen());
-		if (file && file->isOpen()) {
-			// Read offset of the USER header
-			file->seek(offsetof(THRP_GenericHeader, useroffset));
-			uint32_t offset;
-			if (sizeof(offset) != file->read(&offset, sizeof(offset))) {
-				assert(0);
-				return;
-			}
-
-			// Read USER header
-			file->seek(offset);
-			THRP_USERHeader uhead;
-			file->read(&uhead, sizeof(uhead));
-
-			// Check magic
-			static char user_magic[] = { 'U', 'S', 'E', 'R' };
-			if (!memcmp(uhead.magic, user_magic, sizeof(user_magic))) {
-				// Make sure the size is valid
-				assert(uhead.size >= sizeof(uhead));
-				if (uhead.size >= sizeof(uhead)) {
-					// Read the text data
-					uint32_t textsize = uhead.size - sizeof(uhead);
-					text = new char[textsize];
-					if (textsize != file->read(text, textsize)) {
-						// read failed, deallocate the text
-						delete[] text;
-						text = nullptr;
-						assert(0);
-						return;
-					}
-					this->size = textsize;
-					is_valid = true;
-					if (!breakLines()) is_valid = false;
-					else if (!parseLines()) is_valid = false;
-				}
-			}
+	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), staticPatch(false), date(-1), score(0), slowrate(99.99f){
+		uint32_t size;
+		char* text = readFile(file, size);
+		if (!text) {
+			return;
 		}
-	}
-	Touhou10USERParser::~Touhou10USERParser() {
-		if (text) delete[] text;
+		
+		std::string lines[9];
+		if (!breakLines(text,size,lines)) {
+			delete[] text;
+			return;
+		}
+		delete[] text;
+
+		is_valid = parseLines(lines);
+		
 	}
 	bool Touhou10USERParser::isValid() {
 		return is_valid;
