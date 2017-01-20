@@ -142,7 +142,12 @@ namespace LibRomData {
 		time_t date;
 		std::string chara;
 		std::string rank;
-		std::string stage;
+		// stage
+		bool isClear; // set when game or extra stage is cleared
+		bool isExtra;
+		int beginStage;
+		int endStage;
+
 		long score;
 		float slowrate;
 
@@ -247,9 +252,6 @@ namespace LibRomData {
 			p = p2 + 2; // skip \r\n
 		}
 
-		// just some extra checking for the double-null at the very end
-		assert(p - text == size - 2);
-		assert(!p[0] && !p[1]);
 		return true;
 	}
 
@@ -273,16 +275,30 @@ namespace LibRomData {
 		rank = spaceString(lines[5], "Rank");
 
 		// Line 6 - which stage was completed
-		// TODO: make a better break down with enums and stuff
 		if (lines[6] == "Extra Stage Clear") {
-			stage = lines[6];
+			isExtra = true;
+			isClear = true;
+		}
+		else if (lines[6] == "Extra Stage") {
+			isExtra = true;
+			isClear = false;
+		}
+		else if (lines[6] == "Stage All Clear") {
+			isExtra = false;
+			isClear = true;
 		}
 		else {
-			stage = spaceString(lines[6], "Stage");
-			// there could be three possible formats starting with Stage:
-			// Stage All Clear
-			// Stage %d
-			// Stage %d \x81\x60[fullwidth ~] %d
+			isExtra = false;
+			isClear = false;
+			std::string stage = spaceString(lines[6], "Stage");
+			size_t pos = stage.find(' ');
+			beginStage = std::stoi(stage.substr(0, pos));
+			if(pos == std::string::npos){
+				endStage = beginStage;
+			}
+			else {
+				endStage = std::stoi(spaceString(stage.substr(pos+1), "\x81\x60")); // \x81\x60 is SJIS '〜'
+			}
 		}
 
 		// Line 7 - "Score %d"
@@ -295,7 +311,8 @@ namespace LibRomData {
 		return true;
 	}
 
-	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), staticPatch(false), date(-1), score(0), slowrate(99.99f){
+	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), staticPatch(false), date(-1), score(0), slowrate(99.99f)
+														, beginStage(0), endStage(0), isClear(false), isExtra(false){
 		uint32_t size;
 		char* text = readFile(file, size);
 		if (!text) {
@@ -329,7 +346,8 @@ namespace LibRomData {
 
 	public:
 		/** RomFields **/
-
+		static const RomFields::StringDesc th_string_warning;
+		static const struct RomFields::DateTimeDesc th_datetime;
 		// ROM fields.
 		static const struct RomFields::Desc th_fields[];
 
@@ -363,14 +381,24 @@ namespace LibRomData {
 	};
 
 	/** TouhouReplayPrivate **/
-
+	const RomFields::StringDesc TouhouReplayPrivate::th_string_warning = {
+		RomFields::StringDesc::STRF_WARNING
+	};
+	const struct RomFields::DateTimeDesc TouhouReplayPrivate::th_datetime = {
+		RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME
+	};
 	// ROM fields.
 	const struct RomFields::Desc TouhouReplayPrivate::th_fields[] = {
-		{ _RP("Player Name"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Date"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Player"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Warning"), RomFields::RFT_STRING, &th_string_warning },
+		{ _RP("Game Version"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Name"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Date"), RomFields::RFT_DATETIME, &th_datetime },
+		{ _RP("Character"), RomFields::RFT_STRING, nullptr },
 		{ _RP("Rank"), RomFields::RFT_STRING, nullptr },
-
+		{ _RP("Stage"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Game Cleared"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Score"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Slow Rate"), RomFields::RFT_STRING, nullptr },
 	};
 
 	TouhouReplayPrivate::TouhouReplayPrivate(TouhouReplay *q, IRpFile *file)
@@ -460,7 +488,10 @@ namespace LibRomData {
 			}
 		}
 
-		d->isValid = (d->gameType == TouhouReplayPrivate::TH_06); // TODO: add support for other games later -Egor
+		d->isValid = (d->gameType >= TouhouReplayPrivate::TH_10
+			&& d->gameType != TouhouReplayPrivate::TH_125
+			&& d->gameType != TouhouReplayPrivate::TH_128
+			&& d->gameType != TouhouReplayPrivate::TH_143); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -489,20 +520,20 @@ namespace LibRomData {
 
 		// Magic strings.
 		static const char thrp_magic[][4] = {
-			{ 'T', '6', 'R', 'P' }, // koumakyou (eosd)
-			//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
-			//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
-			//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
-			//{ 't', '9', '5', 'r' }, // bunkachou (stb)
-			//{ 't', '1', '0', 'r' }, // fuujinroku (mof)
-			//{ 't', '1', '1', 'r' }, // chireiden (sa)
-			//{ 't', '1', '2', 'r' }, // seirensen (ufo)
-			//{ 't', '1', '2', '5' }, // bunkachou (ds)
-			//{ '1', '2', '8', 'r' }, // yousei daisensou
-			//{ 't', '1', '3', 'r' }, // shinreibyou (td)
-			//{ 0, 0, 0, 0 }, // kishinjou (ddc) - has the same id as th13 for some reason
-			//{ 't', '1', '4', '3' }, // danmaku amanojaku (isc)
-			//{ 't', '1', '5', 'r' }, // kanjuden (lolk)
+			{ 0 },//{ 'T', '6', 'R', 'P' }, // koumakyou (eosd)
+			{ 0 },//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
+			{ 0 },//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
+			{ 0 },//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
+			{ 0 },//{ 't', '9', '5', 'r' }, // bunkachou (stb)
+			{ 't', '1', '0', 'r' }, // fuujinroku (mof)
+			{ 't', '1', '1', 'r' }, // chireiden (sa)
+			{ 't', '1', '2', 'r' }, // seirensen (ufo)
+			{ 0 },//{ 't', '1', '2', '5' }, // bunkachou (ds)
+			{ 0 },//{ '1', '2', '8', 'r' }, // yousei daisensou
+			{ 't', '1', '3', 'r' }, // shinreibyou (td)
+			{ 0 },// kishinjou (ddc) - has the same id as th13 for some reason
+			{ 0 },//{ 't', '1', '4', '3' }, // danmaku amanojaku (isc)
+			{ 't', '1', '5', 'r' }, // kanjuden (lolk)
 
 		};
 		for (int i = 0; i < ARRAY_SIZE(thrp_magic); i++) {
@@ -638,12 +669,50 @@ namespace LibRomData {
 		}
 
 		const T6RP_Header *thrpHeader = &d->thrpHeader;
+		Touhou10USERParser mofParse(d->file);
+		if (!mofParse.isValid()) {
+			return (int)d->fields->count();
+		}
 
 		// Read the strings from the header.
+		if (mofParse.staticPatch) {
+			d->fields->addData_string(_RP("This file seems to have invalid format. The information displayed below may be inaccurate."));
+		}
+		else {
+			d->fields->addData_invalid();
+		}
+		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.version.c_str(), -1));
+		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.name.c_str(), -1));
+		d->fields->addData_dateTime(mofParse.date);
+		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.chara.c_str(), -1));
+		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.rank.c_str(), -1));
+		if (mofParse.isExtra) {
+			d->fields->addData_string(_RP("Extra"));
+		}
+		else if(mofParse.isClear) {
+			d->fields->addData_string(_RP("All"));
+		}
+		else if (mofParse.beginStage != mofParse.endStage) {
+			static char buf[6];
+			snprintf(buf, sizeof(buf), "%d ~ %d", mofParse.beginStage, mofParse.endStage);
+			d->fields->addData_string(cp1252_sjis_to_rp_string(buf, -1));
+		}
+		else {
+			d->fields->addData_string_numeric(mofParse.beginStage);
+		}
+		d->fields->addData_string(mofParse.isClear ? _RP("Yes") : _RP("No"));
+		d->fields->addData_string_numeric(mofParse.score);
+		{
+			static char buf[6];
+			snprintf(buf, sizeof(buf), "%2.2f", mofParse.slowrate);
+			d->fields->addData_string(cp1252_sjis_to_rp_string(buf, -1));
+		}
+		/*
 		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->name, sizeof(thrpHeader->name)));
 		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->date, sizeof(thrpHeader->date)));
 		d->fields->addData_string_numeric(thrpHeader->player);
 		d->fields->addData_string_numeric(thrpHeader->rank);
+		*/
 
 		// Finished reading the field data.
 		return (int)d->fields->count();
