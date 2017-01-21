@@ -34,6 +34,25 @@ namespace LibRomData {
 	class TouhouReplay : public RomData
 	{
 	public:
+		enum TH_GameType {
+			TH_UNKNOWN = -1,
+			TH_06 = 0,
+			TH_07,
+			TH_08,
+			TH_09,
+			TH_095,
+			TH_10,
+			TH_11,
+			TH_12,
+			TH_125,
+			TH_128,
+			TH_13,
+			TH_14,
+			TH_143,
+			TH_15,
+			TH_LAST = TH_15
+		};
+
 		/**
 		* Read a Touhou Replay.
 		*

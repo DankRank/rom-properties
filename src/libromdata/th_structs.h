@@ -44,7 +44,8 @@ extern "C" {
 	typedef struct PACKED _THRP_USERHeader {
 		char magic[4]; // "USER"
 		uint32_t size; // size of text data + this header
-		uint32_t unk1;
+		uint8_t type; // 0 - game info, 1 - comment
+		uint8_t padding[3];
 		// text data follows
 	} THRP_USERHeader;
 #pragma pack()

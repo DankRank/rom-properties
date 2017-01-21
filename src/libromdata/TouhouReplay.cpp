@@ -22,6 +22,7 @@
 #include "TouhouReplay.hpp"
 #include "RomData_p.hpp"
 
+#include "TouhouUser.hpp"
 #include "th_structs.h"
 #include "common.h"
 #include "byteswap.h"
@@ -129,210 +130,7 @@ namespace LibRomData {
 		return file->filename();
 	}
 	
-	class Touhou10USERParser {
-	private:
-		bool is_valid;
-
-	public:
-		// if this variable is true, something went wrong during parsing
-		bool staticPatch;
-
-		std::string version;
-		std::string name;
-		time_t date;
-		std::string chara;
-		std::string rank;
-		// stage
-		bool isClear; // set when game or extra stage is cleared
-		bool isExtra;
-		int beginStage;
-		int endStage;
-
-		long score;
-		float slowrate;
-
-	private:
-		std::string spaceString(std::string line, const std::string& keyword);
-		time_t parseDate(std::string datestr);
-
-		char* readFile(IRpFile* file, uint32_t& size);
-		bool breakLines(char* text, uint32_t size, std::string (&lines)[9]);
-		bool parseLines(const std::string (&lines)[9]);
-	public:
-		explicit Touhou10USERParser(IRpFile* file);
-		bool isValid();
-	};
-
-	std::string Touhou10USERParser::spaceString(std::string line, const std::string& keyword) {
-		size_t pos = line.find(' ');
-
-		if (pos != std::string::npos) {
-			// Check the keyword
-			if (line.substr(0, pos) != keyword) staticPatch = true;
-
-			return line.substr(pos + 1);
-		}
-		else {
-			staticPatch = true;
-			return "";
-		}
-	}
-
-	time_t Touhou10USERParser::parseDate(std::string datestr) {
-		// format: yy/mm/dd hh:mm
-		if (datestr.length() != 14
-			|| datestr[2] != '/'
-			|| datestr[5] != '/'
-			|| datestr[8] != ' '
-			|| datestr[11] != ':') return -1;
-
-		tm t;
-		t.tm_year = 100 + std::stoi(datestr);
-		t.tm_mon = std::stoi(datestr.substr(3));
-		t.tm_mday = std::stoi(datestr.substr(6));
-		t.tm_hour = std::stoi(datestr.substr(9));
-		t.tm_min = std::stoi(datestr.substr(12));
-		t.tm_sec = 0;
-		t.tm_isdst = 0; // unknown
-						// other fields don't need to be set for mktime to work.
-		return mktime(&t);
-	}
-
-	char* Touhou10USERParser::readFile(IRpFile* file, uint32_t& size) {
-		assert(file);
-		assert(file->isOpen());
-		if (file && file->isOpen()) {
-			// Read offset of the USER header
-			file->seek(offsetof(THRP_GenericHeader, useroffset));
-			uint32_t offset;
-			if (sizeof(offset) != file->read(&offset, sizeof(offset))) {
-				assert(0);
-				return nullptr;
-			}
-
-			// Read USER header
-			file->seek(offset);
-			THRP_USERHeader uhead;
-			file->read(&uhead, sizeof(uhead));
-
-			// Check magic
-			static char user_magic[] = { 'U', 'S', 'E', 'R' };
-			if (!memcmp(uhead.magic, user_magic, sizeof(user_magic))) {
-				// Make sure the size is valid
-				assert(uhead.size >= sizeof(uhead));
-				if (uhead.size >= sizeof(uhead)) {
-					// Read the text data
-					size = uhead.size - sizeof(uhead);
-					char *text = new char[size];
-					if (size != file->read(text, size)) {
-						// read failed, deallocate the text
-						delete[] text;
-						assert(0);
-						return nullptr;
-					}
-					return text;
-				}
-			}
-		}
-		return nullptr;
-	}
 	
-	bool Touhou10USERParser::breakLines(char* text, uint32_t size, std::string(&lines)[9]) {
-		// Make sure there's a null at the very end
-		assert(!text[size - 1]);
-		if (text[size - 1]) return false;
-
-		char *p = text;
-		for (int i = 0; i < 9; i++) {
-			// Look for a new-line
-			char* p2 = strstr(p, "\r\n");
-			if (!p2) return false; // line not found
-
-			lines[i] = std::string(p, p2 - p);
-			p = p2 + 2; // skip \r\n
-		}
-
-		return true;
-	}
-
-	bool Touhou10USERParser::parseLines(const std::string(&lines)[9]) {
-		// Line 0 - "東方XYZ リプレイファイル情報" - "Touhou XYZ replay file info"
-		// (skipped)
-
-		// Line 1 - "Version %s"
-		version = spaceString(lines[1], "Version");
-
-		// Line 2 - "Name %s"
-		name = spaceString(lines[2], "Name");
-
-		// Line 3 - "Date %.2d/%.2d/%.2d %.2d:%.2d" (yy/mm/dd)
-		date = parseDate(spaceString(lines[3], "Date"));
-
-		// Line 4 - "Chara %s"
-		chara = spaceString(lines[4], "Chara");
-
-		// Line 5 - "Rank %s"
-		rank = spaceString(lines[5], "Rank");
-
-		// Line 6 - which stage was completed
-		if (lines[6] == "Extra Stage Clear") {
-			isExtra = true;
-			isClear = true;
-		}
-		else if (lines[6] == "Extra Stage") {
-			isExtra = true;
-			isClear = false;
-		}
-		else if (lines[6] == "Stage All Clear") {
-			isExtra = false;
-			isClear = true;
-		}
-		else {
-			isExtra = false;
-			isClear = false;
-			std::string stage = spaceString(lines[6], "Stage");
-			size_t pos = stage.find(' ');
-			beginStage = std::stoi(stage.substr(0, pos));
-			if(pos == std::string::npos){
-				endStage = beginStage;
-			}
-			else {
-				endStage = std::stoi(spaceString(stage.substr(pos+1), "\x81\x60")); // \x81\x60 is SJIS '〜'
-			}
-		}
-
-		// Line 7 - "Score %d"
-		score = std::stol(spaceString(lines[7], "Score"));
-
-		// Line 8 - "Slow Rate %2.2f"
-		// TODO: maybe make it less hacky?
-		slowrate = std::stof(spaceString(spaceString(lines[8], "Slow"), "Rate"));
-
-		return true;
-	}
-
-	Touhou10USERParser::Touhou10USERParser(IRpFile* file) :is_valid(false), staticPatch(false), date(-1), score(0), slowrate(99.99f)
-														, beginStage(0), endStage(0), isClear(false), isExtra(false){
-		uint32_t size;
-		char* text = readFile(file, size);
-		if (!text) {
-			return;
-		}
-		
-		std::string lines[9];
-		if (!breakLines(text,size,lines)) {
-			delete[] text;
-			return;
-		}
-		delete[] text;
-
-		is_valid = parseLines(lines);
-		
-	}
-
-	bool Touhou10USERParser::isValid() {
-		return is_valid;
-	}
 
 	class TouhouReplayPrivate : public RomDataPrivate
 	{
@@ -355,24 +153,7 @@ namespace LibRomData {
 
 
 	public:
-		enum TH_GameType {
-			TH_UNKNOWN = -1,
-			TH_06 = 0,
-			TH_07,
-			TH_08,
-			TH_09,
-			TH_095,
-			TH_10,
-			TH_11,
-			TH_12,
-			TH_125,
-			TH_128,
-			TH_13,
-			TH_14,
-			TH_143,
-			TH_15,
-			TH_LAST = TH_15
-		};
+		
 		int gameType;		// Game type.
 	public:
 		// THRP header.
@@ -399,11 +180,12 @@ namespace LibRomData {
 		{ _RP("Game Cleared"), RomFields::RFT_STRING, nullptr },
 		{ _RP("Score"), RomFields::RFT_STRING, nullptr },
 		{ _RP("Slow Rate"), RomFields::RFT_STRING, nullptr },
+		{ _RP("Comments"), RomFields::RFT_STRING, nullptr },
 	};
 
 	TouhouReplayPrivate::TouhouReplayPrivate(TouhouReplay *q, IRpFile *file)
 		: super(q, file, th_fields, ARRAY_SIZE(th_fields))
-		, gameType(TH_UNKNOWN)
+		, gameType(TouhouReplay::TH_UNKNOWN)
 	{
 		// Clear the various structs.
 		memset(&thrpHeader, 0, sizeof(thrpHeader));
@@ -458,7 +240,7 @@ namespace LibRomData {
 		info.szFile = 0;	// Not needed for TH.
 		d->gameType = isRomSupported_static(&info);
 
-		if (d->gameType == TouhouReplayPrivate::TH_06) {
+		if (d->gameType == TH_06) {
 			memcpy(&d->thrpHeader, header, sizeof(d->thrpHeader));
 			TouhouCryptFile cf(d->file, d->thrpHeader.key, offsetof(T6RP_Header, unknown));
 			cf.rewind();
@@ -471,7 +253,8 @@ namespace LibRomData {
 		}
 
 		// Touhou 13 and 14 have the same magic, so we need to check the USER section
-		if (d->gameType == TouhouReplayPrivate::TH_13) {
+		// NOTE: this algorithm is oversimplified, this is not the "canonical" way to read a USER section. See TouhouUser.cpp
+		if (d->gameType == TH_13) {
 			static uint8_t th14_magic[] = {
 				// this says: 東方輝針城 リプレイファイル情報
 				0x93, 0x8C, 0x95, 0xFB, 0x8B, 0x50, 0x90, 0x6A,
@@ -484,14 +267,14 @@ namespace LibRomData {
 			d->file->seek((*(uint32_t*)&header[offsetof(THRP_GenericHeader,useroffset)]) + sizeof(THRP_USERHeader));
 			d->file->read(magicbuf, sizeof(th14_magic));
 			if (!memcmp(magicbuf, th14_magic, sizeof(th14_magic))) {
-				d->gameType = TouhouReplayPrivate::TH_14;
+				d->gameType = TH_14;
 			}
 		}
 
-		d->isValid = (d->gameType >= TouhouReplayPrivate::TH_10
-			&& d->gameType != TouhouReplayPrivate::TH_125
-			&& d->gameType != TouhouReplayPrivate::TH_128
-			&& d->gameType != TouhouReplayPrivate::TH_143); // TODO: add support for other games later -Egor
+		d->isValid = (d->gameType >= TH_10
+			&& d->gameType != TH_125
+			&& d->gameType != TH_128
+			&& d->gameType != TH_143); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -543,7 +326,7 @@ namespace LibRomData {
 			}
 		}
 		// Not supported.
-		return TouhouReplayPrivate::TH_UNKNOWN;
+		return TH_UNKNOWN;
 	}
 
 	/**
@@ -571,9 +354,9 @@ namespace LibRomData {
 			"TouhouReplay::systemName() array index optimization needs to be updated.");
 
 		uint32_t romSys = d->gameType;
-		if (romSys > TouhouReplayPrivate::TH_LAST) {
+		if (romSys > TH_LAST) {
 			// Invalid system type. Default to EoSD, because why not.
-			romSys = TouhouReplayPrivate::TH_06;
+			romSys = TH_06;
 		}
 
 		// sysNames[] bitfield:
@@ -669,44 +452,30 @@ namespace LibRomData {
 		}
 
 		const T6RP_Header *thrpHeader = &d->thrpHeader;
-		Touhou10USERParser mofParse(d->file);
-		if (!mofParse.isValid()) {
+		ITouhouUserParser* mofParse = TouhouUserParserFactory::getInstance(d->gameType, d->file);
+		assert(mofParse);
+		if (!mofParse || !mofParse->isValid()) {
+			d->fields->addData_string(_RP("Parsing error has occured."));
 			return (int)d->fields->count();
 		}
 
 		// Read the strings from the header.
-		if (mofParse.staticPatch) {
+		if (mofParse->isBroken()) {
 			d->fields->addData_string(_RP("This file seems to have invalid format. The information displayed below may be inaccurate."));
 		}
 		else {
 			d->fields->addData_invalid();
 		}
-		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.version.c_str(), -1));
-		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.name.c_str(), -1));
-		d->fields->addData_dateTime(mofParse.date);
-		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.chara.c_str(), -1));
-		d->fields->addData_string(cp1252_sjis_to_rp_string(mofParse.rank.c_str(), -1));
-		if (mofParse.isExtra) {
-			d->fields->addData_string(_RP("Extra"));
-		}
-		else if(mofParse.isClear) {
-			d->fields->addData_string(_RP("All"));
-		}
-		else if (mofParse.beginStage != mofParse.endStage) {
-			static char buf[6];
-			snprintf(buf, sizeof(buf), "%d ~ %d", mofParse.beginStage, mofParse.endStage);
-			d->fields->addData_string(cp1252_sjis_to_rp_string(buf, -1));
-		}
-		else {
-			d->fields->addData_string_numeric(mofParse.beginStage);
-		}
-		d->fields->addData_string(mofParse.isClear ? _RP("Yes") : _RP("No"));
-		d->fields->addData_string_numeric(mofParse.score);
-		{
-			static char buf[6];
-			snprintf(buf, sizeof(buf), "%2.2f", mofParse.slowrate);
-			d->fields->addData_string(cp1252_sjis_to_rp_string(buf, -1));
-		}
+		d->fields->addData_string(mofParse->getVersion());
+		d->fields->addData_string(mofParse->getName());
+		d->fields->addData_dateTime(mofParse->getTime());
+		d->fields->addData_string(mofParse->getChara());
+		d->fields->addData_string(mofParse->getRank());
+		d->fields->addData_string(mofParse->getStage());
+		d->fields->addData_string(mofParse->isClear());
+		d->fields->addData_string_numeric(mofParse->getScore());
+		d->fields->addData_string(mofParse->getSlowRate());
+		d->fields->addData_string(mofParse->getComment());
 		/*
 		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->name, sizeof(thrpHeader->name)));
 		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->date, sizeof(thrpHeader->date)));
