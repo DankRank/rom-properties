@@ -44,6 +44,11 @@ namespace LibRomData {
 		bool comment_present;
 		std::string comment;
 
+		/* Utility functions */
+		std::string spaceString(std::string line, const std::string& keyword);
+		time_t parseDate(std::string datestr);
+		bool breakLines(char* text, uint32_t size, std::string *lines, int linecount);
+
 		ITouhouUserParser();
 	public:
 		virtual bool isValid();

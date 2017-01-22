@@ -30,6 +30,9 @@
 
 
 namespace LibRomData {
+
+	/** TouhouUserReader **/
+
 	class TouhouUserReader {
 	private:
 		bool is_valid;
@@ -160,7 +163,10 @@ namespace LibRomData {
 	bool TouhouUserReader::isValid() {
 		return is_valid;
 	}
-	class Touhou10UserParser : ITouhouUserParser {
+
+	/** Touhou10UserParser **/
+
+	class Touhou10UserParser : public ITouhouUserParser {
 	public:
 		// stage
 		bool is_extra;
@@ -168,69 +174,11 @@ namespace LibRomData {
 		int endStage;
 
 	private:
-		std::string spaceString(std::string line, const std::string& keyword);
-		time_t parseDate(std::string datestr);
-
-		bool breakLines(char* text, uint32_t size, std::string(&lines)[9]);
 		bool parseLines(const std::string(&lines)[9]);
 	public:
 		rp_string getStage();
 		Touhou10UserParser(int gameType, IRpFile* file);
 	};
-	
-
-	std::string Touhou10UserParser::spaceString(std::string line, const std::string& keyword) {
-		size_t pos = line.find(' ');
-
-		if (pos != std::string::npos) {
-			// Check the keyword
-			if (line.substr(0, pos) != keyword) is_broken = true;
-
-			return line.substr(pos + 1);
-		}
-		else {
-			is_broken = true;
-			return "";
-		}
-	}
-
-	time_t Touhou10UserParser::parseDate(std::string datestr) {
-		// format: yy/mm/dd hh:mm
-		if (datestr.length() != 14
-			|| datestr[2] != '/'
-			|| datestr[5] != '/'
-			|| datestr[8] != ' '
-			|| datestr[11] != ':') return -1;
-
-		tm t;
-		t.tm_year = 100 + std::stoi(datestr);
-		t.tm_mon = std::stoi(datestr.substr(3));
-		t.tm_mday = std::stoi(datestr.substr(6));
-		t.tm_hour = std::stoi(datestr.substr(9));
-		t.tm_min = std::stoi(datestr.substr(12));
-		t.tm_sec = 0;
-		t.tm_isdst = 0; // unknown
-						// other fields don't need to be set for mktime to work.
-		return mktime(&t);
-	}
-
-	bool Touhou10UserParser::breakLines(char* text, uint32_t size, std::string(&lines)[9]) {
-		// Make sure there's a null at the very end
-		assert(!text[size - 1]);
-		if (text[size - 1]) return false;
-
-		char *p = text;
-		for (int i = 0; i < 9; i++) {
-			// Look for a new-line
-			char* p2 = strstr(p, "\r\n");
-			if (!p2) return false; // line not found
-
-			lines[i] = std::string(p, p2 - p);
-			p = p2 + 2; // skip \r\n
-		}
-
-		return true;
-	}
 
 	bool Touhou10UserParser::parseLines(const std::string(&lines)[9]) {
 		// Line 0 - "東方XYZ リプレイファイル情報" - "Touhou XYZ replay file info"
@@ -323,7 +271,7 @@ namespace LibRomData {
 		}
 
 		std::string lines[9];
-		if (!breakLines(ur.text, ur.text_sz, lines)) {
+		if (!breakLines(ur.text, ur.text_sz, lines, 9)) {
 			return;
 		}
 
@@ -332,6 +280,59 @@ namespace LibRomData {
 	}
 
 	/** ITouhouUserParser **/
+	std::string ITouhouUserParser::spaceString(std::string line, const std::string& keyword) {
+		size_t pos = line.find(' ');
+
+		if (pos != std::string::npos) {
+			// Check the keyword
+			if (line.substr(0, pos) != keyword) is_broken = true;
+
+			return line.substr(pos + 1);
+		}
+		else {
+			is_broken = true;
+			return "";
+		}
+	}
+
+	time_t ITouhouUserParser::parseDate(std::string datestr) {
+		// format: yy/mm/dd hh:mm
+		if (datestr.length() != 14
+			|| datestr[2] != '/'
+			|| datestr[5] != '/'
+			|| datestr[8] != ' '
+			|| datestr[11] != ':') return -1;
+
+		tm t;
+		t.tm_year = 100 + std::stoi(datestr);
+		t.tm_mon = std::stoi(datestr.substr(3));
+		t.tm_mday = std::stoi(datestr.substr(6));
+		t.tm_hour = std::stoi(datestr.substr(9));
+		t.tm_min = std::stoi(datestr.substr(12));
+		t.tm_sec = 0;
+		t.tm_isdst = 0; // unknown
+						// other fields don't need to be set for mktime to work.
+		return mktime(&t);
+	}
+
+	bool ITouhouUserParser::breakLines(char* text, uint32_t size, std::string *lines, int linecount) {
+		// Make sure there's a null at the very end
+		assert(!text[size - 1]);
+		if (text[size - 1]) return false;
+
+		char *p = text;
+		for (int i = 0; i < linecount; i++) {
+			// Look for a new-line
+			char* p2 = strstr(p, "\r\n");
+			if (!p2) return false; // line not found
+
+			lines[i] = std::string(p, p2 - p);
+			p = p2 + 2; // skip \r\n
+		}
+
+		return true;
+	}
+
 	ITouhouUserParser::ITouhouUserParser() : is_valid(false), is_broken(false),
 		time(-1), is_clear(false), score(0), slowrate(99.99f), comment_present(false)
 	{
@@ -384,7 +385,7 @@ namespace LibRomData {
 	/** TouhouUserParserFactory **/
 	template<typename T>
 	ITouhouUserParser* TouhouUserParserFactory::construct(int gameType, IRpFile* file) {
-		return (ITouhouUserParser*)new T(gameType, file);
+		return new T(gameType, file);
 	}
 	ITouhouUserParser* TouhouUserParserFactory::getInstance(int gameType, IRpFile* file) {
 		switch (gameType) {
