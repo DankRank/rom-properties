@@ -76,7 +76,7 @@ namespace LibRomData {
 				}
 
 				// Check magic
-				static char user_magic[] = { 'U', 'S', 'E', 'R' };
+				static const char user_magic[] = { 'U', 'S', 'E', 'R' };
 				if (!memcmp(uhead.magic, user_magic, sizeof(user_magic))) {
 					// Make sure the size is valid
 					assert(uhead.size >= sizeof(uhead));
@@ -127,13 +127,13 @@ namespace LibRomData {
 			// This way we can provide a translatable string in the Ui
 			if (comment) {
 				// SJIS for "コメントを書けます"
-				static uint8_t youCanAddComments[] = {
+				static const uint8_t youCanAddComments[] = {
 					0x83, 0x52, 0x83, 0x81, 0x83, 0x93, 0x83, 0x67,
 					0x82, 0xF0, 0x8F, 0x91, 0x82, 0xAF, 0x82, 0xDC,
 					0x82, 0xB7,
 				};
 				// english version of the above string as seen in th11 patch
-				static uint8_t englishComments[] = {
+				static const uint8_t englishComments[] = {
 					'W', 'i', 'l', 'l', ' ',
 					'w', 'r', 'i', 't', 'e', ' ',
 					'c', 'o', 'm', 'm', 'e', 'n', 't', 's',
@@ -237,7 +237,7 @@ namespace LibRomData {
 	}
 
 	rp_string Touhou10UserParser::getStage() {
-		static char buf[6];
+		char buf[6];
 		if (is_extra) {
 			return _RP("Extra");
 		}
@@ -346,7 +346,7 @@ namespace LibRomData {
 	}
 
 	rp_string Touhou095UserParser::getStage() {
-		static char buf[5];
+		char buf[5];
 		if (is_extra) {
 			snprintf(buf, sizeof(buf), "EX-%d", scene);
 		}
@@ -474,7 +474,7 @@ namespace LibRomData {
 		return score;
 	}
 	rp_string ITouhouUserParser::getSlowRate() {
-		static char buf[6];
+		char buf[6];
 		snprintf(buf, sizeof(buf), "%2.2f", slowrate);
 		return cp1252_sjis_to_rp_string(buf, -1);
 	}

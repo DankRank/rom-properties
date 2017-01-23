@@ -255,7 +255,7 @@ namespace LibRomData {
 		// Touhou 13 and 14 have the same magic, so we need to check the USER section
 		// NOTE: this algorithm is oversimplified, this is not the "canonical" way to read a USER section. See TouhouUser.cpp
 		if (d->gameType == TH_13) {
-			static uint8_t th14_magic[] = {
+			static const uint8_t th14_magic[] = {
 				// this says: 東方輝針城 リプレイファイル情報
 				0x93, 0x8C, 0x95, 0xFB, 0x8B, 0x50, 0x90, 0x6A,
 				0x8F, 0xE9, 0x20, 0x83, 0x8A, 0x83, 0x76, 0x83,
