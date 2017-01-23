@@ -271,7 +271,7 @@ namespace LibRomData {
 			}
 		}
 
-		d->isValid = (d->gameType >= TH_10
+		d->isValid = (d->gameType >= TH_095
 			&& d->gameType != TH_125
 			&& d->gameType != TH_128
 			&& d->gameType != TH_143); // TODO: add support for other games later -Egor
@@ -307,7 +307,7 @@ namespace LibRomData {
 			{ 0 },//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
 			{ 0 },//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
 			{ 0 },//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
-			{ 0 },//{ 't', '9', '5', 'r' }, // bunkachou (stb)
+			{ 't', '9', '5', 'r' }, // bunkachou (stb)
 			{ 't', '1', '0', 'r' }, // fuujinroku (mof)
 			{ 't', '1', '1', 'r' }, // chireiden (sa)
 			{ 't', '1', '2', 'r' }, // seirensen (ufo)
