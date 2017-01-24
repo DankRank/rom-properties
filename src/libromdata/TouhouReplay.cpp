@@ -272,7 +272,6 @@ namespace LibRomData {
 		}
 
 		d->isValid = (d->gameType >= TH_095
-			&& d->gameType != TH_125
 			&& d->gameType != TH_128
 			&& d->gameType != TH_143); // TODO: add support for other games later -Egor
 	}
@@ -311,7 +310,7 @@ namespace LibRomData {
 			{ 't', '1', '0', 'r' }, // fuujinroku (mof)
 			{ 't', '1', '1', 'r' }, // chireiden (sa)
 			{ 't', '1', '2', 'r' }, // seirensen (ufo)
-			{ 0 },//{ 't', '1', '2', '5' }, // bunkachou (ds)
+			{ 't', '1', '2', '5' }, // bunkachou (ds)
 			{ 0 },//{ '1', '2', '8', 'r' }, // yousei daisensou
 			{ 't', '1', '3', 'r' }, // shinreibyou (td)
 			{ 0 },// kishinjou (ddc) - has the same id as th13 for some reason
