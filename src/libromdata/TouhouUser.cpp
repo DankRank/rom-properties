@@ -292,7 +292,7 @@ namespace LibRomData {
 		rp_string getStage();
 		Touhou095UserParser(int gameType, IRpFile* file);
 
-		rp_string Touhou095UserParser::isClear();
+		rp_string isClear();
 	};
 
 	bool Touhou095UserParser::parseLines(const std::string(&lines)[8]) {
@@ -395,7 +395,7 @@ namespace LibRomData {
 		rp_string getStage();
 		Touhou125UserParser(int gameType, IRpFile* file);
 
-		rp_string Touhou125UserParser::isClear();
+		rp_string isClear();
 	};
 
 	bool Touhou125UserParser::parseLines(const std::string(&lines)[8]) {
@@ -475,7 +475,7 @@ namespace LibRomData {
 		rp_string getStage();
 		Touhou143UserParser(int gameType, IRpFile* file);
 
-		rp_string Touhou143UserParser::isClear();
+		rp_string isClear();
 	};
 
 	bool Touhou143UserParser::parseLines(const std::string(&lines)[8]) {
