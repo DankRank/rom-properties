@@ -255,8 +255,6 @@ namespace LibRomData {
 	}
 	Touhou10UserParser::Touhou10UserParser(int gameType, IRpFile* file) :
 					beginStage(0), endStage(0), is_extra(false) {
-		is_valid = false;
-		
 		TouhouUserReader ur(gameType, file);
 		if (ur.comment) {
 			comment = std::string(ur.comment);
@@ -358,8 +356,6 @@ namespace LibRomData {
 
 	Touhou095UserParser::Touhou095UserParser(int gameType, IRpFile* file) :
 		level(0), scene(0), is_extra(false) {
-		is_valid = false;
-
 		TouhouUserReader ur(gameType, file);
 		if (ur.comment) {
 			comment = std::string(ur.comment);
@@ -439,8 +435,6 @@ namespace LibRomData {
 	}
 
 	Touhou125UserParser::Touhou125UserParser(int gameType, IRpFile* file) {
-		is_valid = false;
-
 		TouhouUserReader ur(gameType, file);
 		if (ur.comment) {
 			comment = std::string(ur.comment);
