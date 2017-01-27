@@ -22,7 +22,8 @@
 #include "TouhouReplay.hpp"
 #include "RomData_p.hpp"
 
-#include "TouhouUser.hpp"
+#include "TouhouCryptFile.hpp"
+#include "TouhouUserParserFactory.hpp"
 #include "th_structs.h"
 #include "common.h"
 #include "byteswap.h"
@@ -40,98 +41,9 @@
 
 // C++ includes.
 #include <vector>
-#include <algorithm>
 using std::vector;
 
 namespace LibRomData {
-	class TouhouCryptFile : public IRpFile
-	{
-	private:
-		IRpFile* file;
-		uint8_t key;
-		int64_t offset; // file offset where the encrypted area starts
-	public:
-		// TODO: copy-paste doxygen stuff here -Egor
-		TouhouCryptFile(IRpFile *file, uint8_t key, int64_t offset);
-		virtual bool isOpen(void) const final;
-		virtual IRpFile *dup(void) final;
-		virtual void close(void) final;
-		virtual size_t read(void *ptr, size_t size) final;
-		virtual size_t write(const void *ptr, size_t size) final;
-		virtual int seek(int64_t pos) final;
-		virtual int64_t tell(void) final;
-		virtual int truncate(int64_t size = 0) final;
-		virtual int64_t fileSize(void) final;
-		virtual rp_string filename(void) const final;
-
-	};
-
-	/** TouhouCryptFile **/
-
-	TouhouCryptFile::TouhouCryptFile(IRpFile *file, uint8_t key, int64_t offset) {
-		this->file = file;
-		this->key = key;
-		this->offset = offset;
-	}
-	bool TouhouCryptFile::isOpen(void) const {
-		return file && file->isOpen();
-	}
-	IRpFile *TouhouCryptFile::dup(void) {
-		return nullptr; // TODO: maybe do some dup'ing? -Egor
-	}
-	void TouhouCryptFile::close(void) {
-		file = nullptr;
-	}
-	size_t TouhouCryptFile::read(void *ptr, size_t size) {
-		if (!isOpen()) return 0;
-		int64_t cpos = tell();
-		size_t count = 0, count2 = 0;
-
-		// First, read an unencrypted area as-is, and advance ptr, size and cpos
-		if (cpos < offset) {
-			count = file->read(ptr, (size_t)(std::min<uint64_t>(offset, cpos + size) - cpos));
-			*(char**)&ptr += count;
-			cpos += count;
-			size -= count;
-		}
-
-		// Now, if there's still data to read, do the encrypted area.
-		if (size != 0) {
-			count2 = file->read(ptr, size);
-			
-			uint8_t k = (uint8_t)( key + 7 * (cpos - offset) ); // calculate key for our file position
-			for (size_t i = 0; i<count2; i++) {
-				((uint8_t*)ptr)[i] -= k;
-				k += 7;
-			}
-		}
-		return count + count2;
-	}
-	size_t TouhouCryptFile::write(const void *ptr, size_t size) {
-		return 0; // read-only
-	}
-	int TouhouCryptFile::seek(int64_t pos) {
-		if (!isOpen()) return -1;
-		return file->seek(pos);
-	}
-	int64_t TouhouCryptFile::tell(void) {
-		if (!isOpen()) return -1;
-		return file->tell();
-	}
-	int TouhouCryptFile::truncate(int64_t size) {
-		return -1; // read-only
-	}
-	int64_t TouhouCryptFile::fileSize(void) {
-		if (!isOpen()) return -1;
-		return file->fileSize();
-	}
-	rp_string TouhouCryptFile::filename(void) const {
-		if (!isOpen()) rp_string(_RP(""));
-		return file->filename();
-	}
-	
-	
-
 	class TouhouReplayPrivate : public RomDataPrivate
 	{
 	public:
@@ -153,7 +65,7 @@ namespace LibRomData {
 
 
 	public:
-		
+
 		int gameType;		// Game type.
 	public:
 		// THRP header.
@@ -262,9 +174,9 @@ namespace LibRomData {
 				0x8C, 0x83, 0x43, 0x83, 0x74, 0x83, 0x40, 0x83,
 				0x43, 0x83, 0x8B, 0x8F, 0xEE, 0x95, 0xF1,
 			};
-			uint8_t magicbuf[sizeof(th14_magic)] = {0};
+			uint8_t magicbuf[sizeof(th14_magic)] = { 0 };
 
-			d->file->seek((*(uint32_t*)&header[offsetof(THRP_GenericHeader,useroffset)]) + sizeof(THRP_USERHeader));
+			d->file->seek((*(uint32_t*)&header[offsetof(THRP_GenericHeader, useroffset)]) + sizeof(THRP_USERHeader));
 			d->file->read(magicbuf, sizeof(th14_magic));
 			if (!memcmp(magicbuf, th14_magic, sizeof(th14_magic))) {
 				d->gameType = TH_14;
@@ -361,7 +273,7 @@ namespace LibRomData {
 		// - Bits 0-1: Type. (short, long, abbreviation)
 		// - Bits 2-...: Game type.
 		uint32_t idx = (romSys << 2) | (type & SYSNAME_TYPE_MASK);
-		
+
 		static const rp_char *const sysNames[4 * 14] = {
 			_RP("Touhou Koumakyou ~ the Embodiment of Scarlet Devil"), _RP("Embodiment of Scarlet Devil"),   _RP("EoSD"), nullptr,
 			_RP("Touhou Youyoumu ~ Perfect Cherry Blossom"),           _RP("Perfect Cherry Blossom"),        _RP("PCB"), nullptr,
@@ -484,5 +396,4 @@ namespace LibRomData {
 		// Finished reading the field data.
 		return (int)d->fields->count();
 	}
-
 }

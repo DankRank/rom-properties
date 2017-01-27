@@ -1,6 +1,6 @@
 /***************************************************************************
 * ROM Properties Page shell extension. (libromdata)                       *
-* TouhouUser.hpp: Touhou Replay USER section parser.                      *
+* TouhouCryptFile.hpp: Touhou Replay file decryption.                     *
 *                                                                         *
 * Copyright (c) 2017 by Egor.                                             *
 *                                                                         *
@@ -19,59 +19,33 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
 ***************************************************************************/
 
-#include "TouhouReplay.hpp"
+#ifndef __ROMPROPERTIES_LIBROMDATA_TOUHOUCRYPTFILE_HPP__
+#define __ROMPROPERTIES_LIBROMDATA_TOUHOUCRYPTFILE_HPP__
+
 #include "file/IRpFile.hpp"
-#include "TextFuncs.hpp"
-
-#include <ctime>
-
-#include <string>
 
 namespace LibRomData {
-	class ITouhouUserParser {
-	protected:
-		bool is_valid;
-		bool is_broken; // if this variable is true, something went wrong during parsing
-		std::string version;
-		std::string name;
-		time_t time;
-		std::string chara;
-		std::string rank;
-		bool is_clear;
-		int score;
-		float slowrate;
-
-		bool comment_present;
-		std::string comment;
-
-		/* Utility functions */
-		std::string spaceString(std::string line, const std::string& keyword);
-		time_t parseDate(std::string datestr);
-		bool breakLines(char* text, uint32_t size, std::string *lines, int linecount);
-
-		ITouhouUserParser();
+	class TouhouCryptFile : public IRpFile
+	{
+	private:
+		IRpFile* file;
+		uint8_t key;
+		int64_t offset; // file offset where the encrypted area starts
 	public:
-		virtual bool isValid();
-		virtual bool isBroken();
+		// TODO: copy-paste doxygen stuff here -Egor
+		TouhouCryptFile(IRpFile *file, uint8_t key, int64_t offset);
+		virtual bool isOpen(void) const final;
+		virtual IRpFile *dup(void) final;
+		virtual void close(void) final;
+		virtual size_t read(void *ptr, size_t size) final;
+		virtual size_t write(const void *ptr, size_t size) final;
+		virtual int seek(int64_t pos) final;
+		virtual int64_t tell(void) final;
+		virtual int truncate(int64_t size = 0) final;
+		virtual int64_t fileSize(void) final;
+		virtual rp_string filename(void) const final;
 
-		virtual rp_string getVersion();
-		virtual rp_string getName();
-		virtual time_t getTime();
-		virtual rp_string getChara();
-		virtual rp_string getRank();
-		virtual rp_string getStage()=0; // NOTE: pure virtual
-		virtual rp_string isClear();
-		virtual int getScore();
-		virtual rp_string getSlowRate();
-		virtual rp_string getComment();
-
-		virtual ~ITouhouUserParser();
-	};
-
-	class TouhouUserParserFactory {
-		template<typename T>
-		static ITouhouUserParser* construct(int gameType, IRpFile* file);
-	public:
-		static ITouhouUserParser* getInstance(int gameType, IRpFile* file);
 	};
 }
+
+#endif /* __ROMPROPERTIES_LIBROMDATA_TOUHOUCRYPTFILE_HPP__ */

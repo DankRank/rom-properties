@@ -77,8 +77,15 @@ SET(libromdata_SRCS
 	VirtualBoy.cpp
 	Amiibo.cpp
 	NES.cpp
-	TouhouReplay.cpp
-	TouhouUser.cpp
+	touhou/TouhouCryptFile.cpp
+	touhou/TouhouReplay.cpp
+	touhou/TouhouUserReader.cpp
+	touhou/Touhou10UserParser.cpp
+	touhou/Touhou095UserParser.cpp
+	touhou/Touhou125UserParser.cpp
+	touhou/Touhou143UserParser.cpp
+	touhou/ITouhouUserParser.cpp
+	touhou/TouhouUserParserFactory.cpp
 	data/MegaDrivePublishers.cpp
 	data/NintendoPublishers.cpp
 	data/AmiiboData.cpp
@@ -128,8 +135,15 @@ SET(libromdata_H
 	DreamcastSave.hpp
 	VirtualBoy.hpp
 	Amiibo.hpp
-	TouhouReplay.hpp
-	TouhouUser.hpp
+	touhou/TouhouCryptFile.hpp
+	touhou/TouhouReplay.hpp
+	touhou/TouhouUserReader.hpp
+	touhou/Touhou10UserParser.hpp
+	touhou/Touhou095UserParser.hpp
+	touhou/Touhou125UserParser.hpp
+	touhou/Touhou143UserParser.hpp
+	touhou/ITouhouUserParser.hpp
+	touhou/TouhouUserParserFactory.hpp
 	md_structs.h
 	gcn_structs.h
 	gcn_card.h

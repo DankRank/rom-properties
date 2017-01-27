@@ -51,7 +51,7 @@ using std::vector;
 #include "PlayStationSave.hpp"
 #include "Amiibo.hpp"
 #include "NES.hpp"
-#include "TouhouReplay.hpp"
+#include "touhou/TouhouReplay.hpp"
 
 // Special case for Dreamcast save files.
 #include "dc_structs.h"
