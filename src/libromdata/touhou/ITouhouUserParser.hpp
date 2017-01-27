@@ -23,6 +23,7 @@
 #define __ROMPROPERTIES_LIBROMDATA_ITOUHOUUSERPARSER_HPP__
 
 #include "TextFuncs.hpp"
+#include "file/IRpFile.hpp"
 
 #include <ctime>
 #include <cstdint>
@@ -68,6 +69,12 @@ namespace LibRomData {
 		virtual rp_string getComment();
 
 		virtual ~ITouhouUserParser();
+
+	private:
+		template<typename T>
+		static ITouhouUserParser* construct(int gameType, IRpFile* file);
+	public:
+		static ITouhouUserParser* getInstance(int gameType, IRpFile* file);
 	};
 }
 

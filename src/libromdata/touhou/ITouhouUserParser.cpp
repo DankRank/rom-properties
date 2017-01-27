@@ -20,6 +20,11 @@
 ***************************************************************************/
 
 #include "ITouhouUserParser.hpp"
+#include "TouhouReplay.hpp"
+#include "Touhou095UserParser.hpp"
+#include "Touhou125UserParser.hpp"
+#include "Touhou143UserParser.hpp"
+#include "Touhou10UserParser.hpp"
 
 #include <cassert>
 
@@ -124,5 +129,30 @@ namespace LibRomData {
 	}
 	ITouhouUserParser::~ITouhouUserParser()
 	{
+	}
+
+	template<typename T>
+	ITouhouUserParser* ITouhouUserParser::construct(int gameType, IRpFile* file) {
+		return new T(gameType, file);
+	}
+
+	ITouhouUserParser* ITouhouUserParser::getInstance(int gameType, IRpFile* file) {
+		switch (gameType) {
+		case TouhouReplay::TH_095:
+			return construct<Touhou095UserParser>(gameType, file);
+		case TouhouReplay::TH_125:
+			return construct<Touhou125UserParser>(gameType, file);
+		case TouhouReplay::TH_143:
+			return construct<Touhou143UserParser>(gameType, file);
+		case TouhouReplay::TH_10:
+		case TouhouReplay::TH_11:
+		case TouhouReplay::TH_12:
+		case TouhouReplay::TH_13:
+		case TouhouReplay::TH_14:
+		case TouhouReplay::TH_15:
+			return construct<Touhou10UserParser>(gameType, file);
+		default:
+			return nullptr; // not supported
+		}
 	}
 }

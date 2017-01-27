@@ -23,7 +23,7 @@
 #include "RomData_p.hpp"
 
 #include "TouhouCryptFile.hpp"
-#include "TouhouUserParserFactory.hpp"
+#include "ITouhouUserParser.hpp"
 #include "th_structs.h"
 #include "common.h"
 #include "byteswap.h"
@@ -362,7 +362,7 @@ namespace LibRomData {
 		}
 
 		const T6RP_Header *thrpHeader = &d->thrpHeader;
-		ITouhouUserParser* mofParse = TouhouUserParserFactory::getInstance(d->gameType, d->file);
+		ITouhouUserParser* mofParse = ITouhouUserParser::getInstance(d->gameType, d->file);
 		assert(mofParse);
 		if (!mofParse || !mofParse->isValid()) {
 			d->fields->addData_string(_RP("Parsing error has occured."));
