@@ -184,7 +184,8 @@ namespace LibRomData {
 		}
 
 		d->isValid = (d->gameType >= TH_095
-			&& d->gameType != TH_128); // TODO: add support for other games later -Egor
+			&& d->gameType != TH_128
+			&& d->gameType != TH_ALCO); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -219,6 +220,7 @@ namespace LibRomData {
 			{ 0 },//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
 			{ 't', '9', '5', 'r' }, // bunkachou (stb)
 			{ 't', '1', '0', 'r' }, // fuujinroku (mof)
+			{ 'a', 'l', '1', 'r' }, // tasogare sakaba (algostg)
 			{ 't', '1', '1', 'r' }, // chireiden (sa)
 			{ 't', '1', '2', 'r' }, // seirensen (ufo)
 			{ 't', '1', '2', '5' }, // bunkachou (ds)
@@ -262,6 +264,8 @@ namespace LibRomData {
 
 		static_assert(SYSNAME_TYPE_MASK == 3,
 			"TouhouReplay::systemName() array index optimization needs to be updated.");
+		static_assert(TH_LAST == 14,
+			"TouhouReplay::systemName() array needs to be updated.");
 
 		uint32_t romSys = d->gameType;
 		if (romSys > TH_LAST) {
@@ -274,13 +278,14 @@ namespace LibRomData {
 		// - Bits 2-...: Game type.
 		uint32_t idx = (romSys << 2) | (type & SYSNAME_TYPE_MASK);
 
-		static const rp_char *const sysNames[4 * 14] = {
+		static const rp_char *const sysNames[4 * 15] = {
 			_RP("Touhou Koumakyou ~ the Embodiment of Scarlet Devil"), _RP("Embodiment of Scarlet Devil"),   _RP("EoSD"), nullptr,
 			_RP("Touhou Youyoumu ~ Perfect Cherry Blossom"),           _RP("Perfect Cherry Blossom"),        _RP("PCB"), nullptr,
 			_RP("Touhou Eiyashou ~ Imperishable Night"),               _RP("Imperishable Night"),            _RP("IN"), nullptr,
 			_RP("Touhou Kaeidzuka ~ Phantasmagoria of Flower View"),   _RP("Phantasmagoria of Flower View"), _RP("PoFV"), nullptr,
 			_RP("Touhou Bunkachou ~ Shoot the Bullet"),                _RP("Shoot the Bullet"),              _RP("StB"), nullptr,
 			_RP("Touhou Fuujinroku ~ Mountain of Faith"),              _RP("Mountain of Faith"),             _RP("MoF"), nullptr,
+			_RP("Tasogare Sakaba ~Uwabami Breakers~"),                 _RP("Uwabami Breakers"),              _RP("alcostg"), nullptr,
 			_RP("Touhou Chireiden ~ Subterranean Animism"),            _RP("Subterranean Animism"),          _RP("SA"), nullptr,
 			_RP("Touhou Seirensen ~ Undefined Fantastic Object"),      _RP("Undefined Fantastic Object"),    _RP("UFO"), nullptr,
 			_RP("Double Spoiler ~ Touhou Bunkachou"),                  _RP("Double Spoiler"),                _RP("DS"), nullptr,

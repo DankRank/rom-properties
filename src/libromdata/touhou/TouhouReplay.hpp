@@ -42,6 +42,7 @@ namespace LibRomData {
 			TH_09,
 			TH_095,
 			TH_10,
+			TH_ALCO,
 			TH_11,
 			TH_12,
 			TH_125,
