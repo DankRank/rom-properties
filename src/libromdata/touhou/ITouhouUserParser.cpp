@@ -25,10 +25,21 @@
 #include "Touhou125UserParser.hpp"
 #include "Touhou143UserParser.hpp"
 #include "Touhou10UserParser.hpp"
+#include "Touhou06UserParser.hpp"
 
 #include <cassert>
 
 namespace LibRomData {
+	std::string ITouhouUserParser::rangeString(unsigned value, const std::string *strings, unsigned count) {
+		if (value >= count) {
+			char buf[22];
+			snprintf(buf, sizeof(buf), "Unknown (%u)", value);
+			is_broken = true;
+			return buf;
+		}
+
+		return strings[value];
+	}
 	std::string ITouhouUserParser::spaceString(std::string line, const std::string& keyword) {
 		size_t pos = line.find(' ');
 
@@ -44,6 +55,24 @@ namespace LibRomData {
 		}
 	}
 
+	time_t ITouhouUserParser::parseDate06(std::string datestr) {
+		// format: mm/dd/yy
+		if (datestr.length() != 8
+			|| datestr[2] != '/'
+			|| datestr[5] != '/') return -1;
+
+		tm t;
+		t.tm_year = 100 + std::stoi(datestr.substr(6));
+		t.tm_mon = std::stoi(datestr)-1; 
+		t.tm_mday = std::stoi(datestr.substr(3));
+		t.tm_hour = 0;
+		t.tm_min = 0;
+		t.tm_sec = 0;
+		t.tm_isdst = 0; // unknown
+						// other fields don't need to be set for mktime to work.
+		return mktime(&t);
+	}
+
 	time_t ITouhouUserParser::parseDate(std::string datestr) {
 		// format: yy/mm/dd hh:mm
 		if (datestr.length() != 14
@@ -54,7 +83,7 @@ namespace LibRomData {
 
 		tm t;
 		t.tm_year = 100 + std::stoi(datestr);
-		t.tm_mon = std::stoi(datestr.substr(3));
+		t.tm_mon = std::stoi(datestr.substr(3))-1;
 		t.tm_mday = std::stoi(datestr.substr(6));
 		t.tm_hour = std::stoi(datestr.substr(9));
 		t.tm_min = std::stoi(datestr.substr(12));
@@ -138,6 +167,8 @@ namespace LibRomData {
 
 	ITouhouUserParser* ITouhouUserParser::getInstance(int gameType, IRpFile* file) {
 		switch (gameType) {
+		case TouhouReplay::TH_06:
+			return construct<Touhou06UserParser>(gameType, file);
 		case TouhouReplay::TH_095:
 			return construct<Touhou095UserParser>(gameType, file);
 		case TouhouReplay::TH_125:

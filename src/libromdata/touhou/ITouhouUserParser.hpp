@@ -48,7 +48,9 @@ namespace LibRomData {
 		std::string comment;
 
 		/* Utility functions */
+		std::string rangeString(unsigned value, const std::string *strings, unsigned count);
 		std::string spaceString(std::string line, const std::string& keyword);
+		time_t parseDate06(std::string datestr);
 		time_t parseDate(std::string datestr);
 		bool breakLines(char* text, uint32_t size, std::string *lines, int linecount);
 

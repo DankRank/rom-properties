@@ -152,18 +152,6 @@ namespace LibRomData {
 		info.szFile = 0;	// Not needed for TH.
 		d->gameType = isRomSupported_static(&info);
 
-		if (d->gameType == TH_06) {
-			memcpy(&d->thrpHeader, header, sizeof(d->thrpHeader));
-			TouhouCryptFile cf(d->file, d->thrpHeader.key, offsetof(T6RP_Header, unknown));
-			cf.rewind();
-			cf.read(header, sizeof(header));
-			memcpy(&d->thrpHeader, header, sizeof(d->thrpHeader));
-			for (int i = 0; i < 7; i++) {
-				cf.seek(d->thrpHeader.stage_offset[i]);
-				cf.read(&d->stageHeader[i], sizeof(d->stageHeader[i]));
-			}
-		}
-
 		// Touhou 13 and 14 have the same magic, so we need to check the USER section
 		// NOTE: this algorithm is oversimplified, this is not the "canonical" way to read a USER section. See TouhouUser.cpp
 		if (d->gameType == TH_13) {
@@ -183,9 +171,10 @@ namespace LibRomData {
 			}
 		}
 
-		d->isValid = (d->gameType >= TH_095
-			&& d->gameType != TH_128
-			&& d->gameType != TH_ALCO); // TODO: add support for other games later -Egor
+		d->isValid = (d->gameType == TH_06
+			|| d->gameType >= TH_095
+			   && d->gameType != TH_128
+			   && d->gameType != TH_ALCO); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -214,7 +203,7 @@ namespace LibRomData {
 
 		// Magic strings.
 		static const char thrp_magic[][4] = {
-			{ 0 },//{ 'T', '6', 'R', 'P' }, // koumakyou (eosd)
+			{ 'T', '6', 'R', 'P' }, // koumakyou (eosd)
 			{ 0 },//{ 'T', '7', 'R', 'P' }, // youyoumu (pcb)
 			{ 0 },//{ 'T', '8', 'R', 'P' }, // eiyashou (in)
 			{ 0 },//{ 'T', '9', 'R', 'P' }, // kaeidzuka (pofv)
@@ -391,12 +380,6 @@ namespace LibRomData {
 		d->fields->addData_string_numeric(mofParse->getScore());
 		d->fields->addData_string(mofParse->getSlowRate());
 		d->fields->addData_string(mofParse->getComment());
-		/*
-		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->name, sizeof(thrpHeader->name)));
-		d->fields->addData_string(cp1252_to_rp_string(thrpHeader->date, sizeof(thrpHeader->date)));
-		d->fields->addData_string_numeric(thrpHeader->player);
-		d->fields->addData_string_numeric(thrpHeader->rank);
-		*/
 
 		// Finished reading the field data.
 		return (int)d->fields->count();
