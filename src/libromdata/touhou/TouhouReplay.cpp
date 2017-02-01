@@ -67,10 +67,6 @@ namespace LibRomData {
 	public:
 
 		int gameType;		// Game type.
-	public:
-		// THRP header.
-		T6RP_Header thrpHeader;		// ROM header.
-		T6RP_Stage stageHeader[7];
 	};
 
 	/** TouhouReplayPrivate **/
@@ -100,8 +96,6 @@ namespace LibRomData {
 		, gameType(TouhouReplay::TH_UNKNOWN)
 	{
 		// Clear the various structs.
-		memset(&thrpHeader, 0, sizeof(thrpHeader));
-
 		fileType = RomData::FTYPE_REPLAY_FILE;
 	}
 
@@ -125,7 +119,6 @@ namespace LibRomData {
 	TouhouReplay::TouhouReplay(IRpFile *file)
 		: super(new TouhouReplayPrivate(this, file))
 	{
-		// TODO: completely rewrite this -Egor
 		// TODO: Only validate that this is an TH replay here.
 		// Load fields elsewhere.
 		RP_D(TouhouReplay);
@@ -137,9 +130,9 @@ namespace LibRomData {
 		// Seek to the beginning of the file.
 		d->file->rewind();
 
-		// Read the ROM header. [0x400 bytes]
-		uint8_t header[sizeof(T6RP_Header)];
-		size_t size = d->file->read(header, sizeof(header));
+		// Read the ROM header.
+		THRP_GenericHeader header;
+		size_t size = d->file->read(&header, sizeof(header));
 		if (size != sizeof(header))
 			return;
 
@@ -147,13 +140,13 @@ namespace LibRomData {
 		DetectInfo info;
 		info.header.addr = 0;
 		info.header.size = sizeof(header);
-		info.header.pData = header;
+		info.header.pData = (uint8_t*)&header;
 		info.ext = nullptr;	// Not needed for TH.
 		info.szFile = 0;	// Not needed for TH.
 		d->gameType = isRomSupported_static(&info);
 
 		// Touhou 13 and 14 have the same magic, so we need to check the USER section
-		// NOTE: this algorithm is oversimplified, this is not the "canonical" way to read a USER section. See TouhouUser.cpp
+		// NOTE: this algorithm is oversimplified, this is not the "canonical" way to read a USER section. See TouhouUserReader.cpp
 		if (d->gameType == TH_13) {
 			static const uint8_t th14_magic[] = {
 				// this says: 東方輝針城 リプレイファイル情報
@@ -164,7 +157,7 @@ namespace LibRomData {
 			};
 			uint8_t magicbuf[sizeof(th14_magic)] = { 0 };
 
-			d->file->seek((*(uint32_t*)&header[offsetof(THRP_GenericHeader, useroffset)]) + sizeof(THRP_USERHeader));
+			d->file->seek(header.useroffset + sizeof(THRP_USERHeader));
 			d->file->read(magicbuf, sizeof(th14_magic));
 			if (!memcmp(magicbuf, th14_magic, sizeof(th14_magic))) {
 				d->gameType = TH_14;
@@ -355,7 +348,6 @@ namespace LibRomData {
 			return -EIO;
 		}
 
-		const T6RP_Header *thrpHeader = &d->thrpHeader;
 		ITouhouUserParser* mofParse = ITouhouUserParser::getInstance(d->gameType, d->file);
 		assert(mofParse);
 		if (!mofParse || !mofParse->isValid()) {

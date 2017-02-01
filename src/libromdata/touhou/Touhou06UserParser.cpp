@@ -82,9 +82,9 @@ namespace LibRomData {
 		static std::string th06chara[] = {
 			"ReimuA", "ReimuB", "MarisaA", "MarisaB"
 		};
-		chara = rangeString(thrpHeader.player, th06chara, ARRAY_SIZE(th06chara));
+		chara = rangeString(thrpHeader.chara, th06chara, ARRAY_SIZE(th06chara));
 
-		//Rank
+		// Rank
 		static std::string th06rank[] = {
 			"Easy", "Normal", "Hard", "Lunatic", "Extra"
 		};
