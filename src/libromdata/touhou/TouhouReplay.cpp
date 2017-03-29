@@ -144,9 +144,7 @@ namespace LibRomData {
 			}
 		}
 
-		d->isValid = (d->gameType == TH_06
-			|| d->gameType >= TH_095
-			   && d->gameType != TH_128); // TODO: add support for other games later -Egor
+		d->isValid = (d->gameType < TH_07 || d->gameType > TH_09); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/
@@ -185,7 +183,7 @@ namespace LibRomData {
 			{ 't', '1', '1', 'r' }, // chireiden (sa)
 			{ 't', '1', '2', 'r' }, // seirensen (ufo)
 			{ 't', '1', '2', '5' }, // bunkachou (ds)
-			{ 0 },//{ '1', '2', '8', 'r' }, // yousei daisensou
+			{ '1', '2', '8', 'r' }, // yousei daisensou
 			{ 't', '1', '3', 'r' }, // shinreibyou (td)
 			{ 0 },// kishinjou (ddc) - has the same id as th13 for some reason
 			{ 't', '1', '4', '3' }, // danmaku amanojaku (isc)
