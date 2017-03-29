@@ -353,7 +353,9 @@ namespace LibRomData {
 		d->fields->addField_string(_RP("Game Cleared"), mofParse->isClear());
 		d->fields->addField_string_numeric(_RP("Score"), mofParse->getScore());
 		d->fields->addField_string(_RP("Slow Rate"), mofParse->getSlowRate());
-		d->fields->addField_string(_RP("Comments"), mofParse->getComment());
+		if (d->gameType >= TH_08) { // comments have been added in th08
+			d->fields->addField_string(_RP("Comments"), mofParse->getComment());
+		}
 
 		// Finished reading the field data.
 		return 0;
