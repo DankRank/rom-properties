@@ -21,7 +21,7 @@
  ***************************************************************************/
 
 #ifndef __ROMPROPERTIES_LIBROMDATA_NES_HPP__
-#define __ROMPROPERTIES_LIBROMDATA_NES_HPP__z
+#define __ROMPROPERTIES_LIBROMDATA_NES_HPP__
 
 #include <stdint.h>
 #include <string>
@@ -58,8 +58,7 @@ class NES : public RomData
 	private:
 		typedef RomData super;
 		friend class NESPrivate;
-		NES(const NES &other);
-		NES &operator=(const NES &other);
+		RP_DISABLE_COPY(NES)
 
 	public:
 		/** ROM detection functions. **/

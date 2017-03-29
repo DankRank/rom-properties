@@ -29,6 +29,7 @@
 #include <cstring>
 
 // rp_string
+#include "libromdata/common.h"
 #include "libromdata/TextFuncs.hpp"
 #include "libromdata/RpWin32.hpp"
 
@@ -49,8 +50,7 @@ class DialogBuilder
 		~DialogBuilder();
 
 	private:
-		DialogBuilder(const DialogBuilder &);
-		DialogBuilder &operator=(const DialogBuilder &);
+		RP_DISABLE_COPY(DialogBuilder)
 
 	private:
 		/** DLGTEMPLATEEX helper functions. **/
@@ -120,7 +120,7 @@ class DialogBuilder
 	protected:
 		// DLGTEMPLATEEX data.
 		// TODO: Smaller maximum size and/or dynamic allocation?
-		uint8_t m_DlgBuf[32768];
+		uint8_t m_DlgBuf[1024];
 
 		// Current pointer into m_DlgBuf.
 		uint8_t *m_pDlgBuf;

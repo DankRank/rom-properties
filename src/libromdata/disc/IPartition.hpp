@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * IPartition.hpp: Partition reader interface.                             *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -35,8 +35,7 @@ class IPartition : public IDiscReader
 
 	private:
 		typedef IDiscReader super;
-		IPartition(const IPartition &other);
-		IPartition &operator=(const IPartition &other);
+		RP_DISABLE_COPY(IPartition)
 
 	public:
 		/** IDiscReader **/
@@ -47,7 +46,7 @@ class IPartition : public IDiscReader
 		 * TODO: Move to IPartition.cpp?
 		 * @return -1
 		 */
-		virtual int isDiscSupported(const uint8_t *pHeader, size_t szHeader) const final
+		virtual int isDiscSupported(const uint8_t *pHeader, size_t szHeader) const override final
 		{
 			((void)pHeader);
 			((void)szHeader);
@@ -62,6 +61,7 @@ class IPartition : public IDiscReader
 		 * @return Partition size, or -1 on error.
 		 */
 		virtual int64_t partition_size(void) const = 0;
+
 		/**
 		 * Get the used partition size.
 		 * This includes the partition headers and any

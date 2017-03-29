@@ -23,6 +23,7 @@
 #define __ROMPROPERTIES_LIBROMDATA_IDISCREADER_HPP__
 
 #include "config.libromdata.h"
+#include "common.h"
 
 // C includes.
 #include <stdint.h>
@@ -42,8 +43,7 @@ class IDiscReader
 		virtual ~IDiscReader() = 0;
 
 	private:
-		IDiscReader(const IDiscReader &);
-		IDiscReader &operator=(const IDiscReader&);
+		RP_DISABLE_COPY(IDiscReader)
 
 	public:
 		/** Disc image detection functions. **/
@@ -95,6 +95,12 @@ class IDiscReader
 		 * Seek to the beginning of the disc image.
 		 */
 		virtual void rewind(void) = 0;
+
+		/**
+		 * Get the disc image position.
+		 * @return Disc image position on success; -1 on error.
+		 */
+		virtual int64_t tell(void) = 0;
 
 		/**
 		 * Get the disc image size.

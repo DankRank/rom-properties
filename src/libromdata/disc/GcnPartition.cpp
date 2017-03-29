@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * GcnPartition.cpp: GameCube partition reader.                            *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -121,7 +121,11 @@ int GcnPartition::seek(int64_t pos)
 	}
 
 	// Use the IDiscReader directly for GCN partitions.
-	return d->discReader->seek(d->data_offset + pos);
+	int ret = d->discReader->seek(d->data_offset + pos);
+	if (ret != 0) {
+		m_lastError = d->discReader->lastError();
+	}
+	return ret;
 }
 
 /**
@@ -130,6 +134,28 @@ int GcnPartition::seek(int64_t pos)
 void GcnPartition::rewind(void)
 {
 	seek(0);
+}
+
+/**
+ * Get the partition position.
+ * @return Partition position on success; -1 on error.
+ */
+int64_t GcnPartition::tell(void)
+{
+	RP_D(GcnPartition);
+	assert(d->discReader != nullptr);
+	assert(d->discReader->isOpen());
+	if (!d->discReader ||  !d->discReader->isOpen()) {
+		m_lastError = EBADF;
+		return -1;
+	}
+
+	// Use the IDiscReader directly for GCN partitions.
+	int64_t ret = d->discReader->tell();
+	if (ret < 0) {
+		m_lastError = d->discReader->lastError();
+	}
+	return ret;
 }
 
 /**
@@ -155,7 +181,7 @@ int64_t GcnPartition::size(void)
 int64_t GcnPartition::partition_size(void) const
 {
 	// TODO: Errors?
-	RP_D(GcnPartition);
+	RP_D(const GcnPartition);
 	return d->partition_size;
 }
 
@@ -183,7 +209,7 @@ int64_t GcnPartition::partition_size_used(void) const
 	}
 
 	// FST offset and size.
-	int64_t size = (d->bootBlock.fst_offset + d->bootBlock.fst_size) << d->offsetShift;
+	int64_t size = (int64_t)(d->bootBlock.fst_offset + d->bootBlock.fst_size) << d->offsetShift;
 	
 	// Get the FST used size.
 	size += d->fst->totalUsedSize();

@@ -46,8 +46,8 @@ ENDIF(NOT WIN32)
 # ZLIB and libpng are checked in the top-level CMakeLists.txt.
 
 # Check for C library functions.
-INCLUDE(CheckFunctionExists)
-CHECK_FUNCTION_EXISTS(strnlen HAVE_STRNLEN)
+INCLUDE(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(strnlen "string.h" HAVE_STRNLEN)
 
 # Check if non-capturing lambda functions can be cast to function pointers.
 INCLUDE(CheckCXX11LambdaAsFunctionPointer)
@@ -77,6 +77,8 @@ SET(libromdata_SRCS
 	VirtualBoy.cpp
 	Amiibo.cpp
 	NES.cpp
+	EXE.cpp
+	WiiU.cpp
 	touhou/TouhouCryptFile.cpp
 	touhou/TouhouReplay.cpp
 	touhou/TouhouUserReader.cpp
@@ -91,14 +93,18 @@ SET(libromdata_SRCS
 	data/AmiiboData.cpp
 	data/WiiSystemMenuVersion.cpp
 	data/NESMappers.cpp
+	data/EXEData.cpp
+	data/WiiUData.cpp
 	file/IRpFile.cpp
 	file/RpMemFile.cpp
+	file/FileSystem_common.cpp
 	img/rp_image.cpp
 	img/rp_image_backend.cpp
 	img/RpImageLoader.cpp
 	img/ImageDecoder.cpp
 	img/RpPng.cpp
 	img/IconAnimHelper.cpp
+	#img/TCreateThumbnail.cpp	# NOT listed here due to template stuff.
 	disc/IDiscReader.cpp
 	disc/DiscReader.cpp
 	disc/WbfsReader.cpp
@@ -108,6 +114,9 @@ SET(libromdata_SRCS
 	disc/WiiPartition.cpp
 	disc/GcnFst.cpp
 	disc/PartitionFile.cpp
+	disc/SparseDiscReader.cpp
+	disc/PEResourceReader.cpp
+	disc/NEResourceReader.cpp
 	img/pngcheck/pngcheck.cpp
 	)
 SET(libromdata_H
@@ -135,6 +144,8 @@ SET(libromdata_H
 	DreamcastSave.hpp
 	VirtualBoy.hpp
 	Amiibo.hpp
+	EXE.hpp
+	WiiU.hpp
 	touhou/TouhouCryptFile.hpp
 	touhou/TouhouReplay.hpp
 	touhou/TouhouUserReader.hpp
@@ -157,12 +168,15 @@ SET(libromdata_H
 	vb_structs.h
 	nfp_structs.h
 	nes_structs.h
+	wiiu_structs.h
 	th_structs.h
 	data/MegaDrivePublishers.hpp
 	data/NintendoPublishers.hpp
 	data/AmiiboData.hpp
 	data/WiiSystemMenuVersion.hpp
 	data/NESMappers.hpp
+	data/EXEData.hpp
+	data/WiiUData.hpp
 	file/IRpFile.hpp
 	file/RpFile.hpp
 	file/RpMemFile.hpp
@@ -175,6 +189,7 @@ SET(libromdata_H
 	img/IconAnimData.hpp
 	img/IconAnimHelper.hpp
 	img/APNG_dlopen.h
+	img/TCreateThumbnail.hpp
 	disc/IDiscReader.hpp
 	disc/DiscReader.hpp
 	disc/WbfsReader.hpp
@@ -188,6 +203,11 @@ SET(libromdata_H
 	disc/IFst.hpp
 	disc/GcnFst.hpp
 	disc/PartitionFile.hpp
+	disc/SparseDiscReader.hpp
+	disc/SparseDiscReader_p.hpp
+	disc/IResourceReader.hpp
+	disc/PEResourceReader.hpp
+	disc/NEResourceReader.hpp
 	NES.hpp
 	)
 
@@ -195,6 +215,11 @@ IF(NOT USE_INTERNAL_PNG OR (USE_INTERNAL_PNG AND USE_INTERNAL_PNG_DLL))
 	SET(libromdata_SRCS ${libromdata_SRCS} img/APNG_dlopen.c)
 	SET(libromdata_NEEDS_DL 1)
 ENDIF(NOT USE_INTERNAL_PNG OR (USE_INTERNAL_PNG AND USE_INTERNAL_PNG_DLL))
+
+IF(JPEG_FOUND)
+	SET(libromdata_SRCS ${libromdata_SRCS} img/RpJpeg.cpp)
+	SET(libromdata_H ${libromdata_H} img/RpJpeg.hpp)
+ENDIF(JPEG_FOUND)
 
 IF(WIN32)
 	SET(libromdata_OS_SRCS
@@ -317,6 +342,10 @@ FOREACH(_target romdata8 romdata16)
 		TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${PNG_INCLUDE_DIRS})
 		TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE ${PNG_DEFINITIONS})
 	ENDIF(PNG_FOUND)
+	IF(JPEG_FOUND)
+		TARGET_LINK_LIBRARIES(${_target} ${JPEG_LIBRARY})
+		TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${JPEG_INCLUDE_DIRS})
+	ENDIF(JPEG_FOUND)
 	IF(NETTLE_FOUND)
 		TARGET_LINK_LIBRARIES(${_target} ${NETTLE_LIBRARY})
 		TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${NETTLE_INCLUDE_DIRS})

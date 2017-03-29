@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * DreamcastSave.cpp: Sega Dreamcast save file reader.                     *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -24,7 +24,6 @@
 
 #include "dc_structs.h"
 
-#include "common.h"
 #include "byteswap.h"
 #include "TextFuncs.hpp"
 #include "file/IRpFile.hpp"
@@ -42,9 +41,11 @@
 
 // C++ includes.
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 using std::string;
+using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
@@ -57,23 +58,7 @@ class DreamcastSavePrivate : public RomDataPrivate
 
 	private:
 		typedef RomDataPrivate super;
-		DreamcastSavePrivate(const DreamcastSavePrivate &other);
-		DreamcastSavePrivate &operator=(const DreamcastSavePrivate &other);
-
-	public:
-		// RomFields data.
-
-		// Date/Time. (RFT_DATETIME)
-		static const RomFields::DateTimeDesc ctime_dt;
-
-		// Monospace string formatting.
-		static const RomFields::StringDesc dc_save_string_monospace;
-
-		// "Warning" string formatting.
-		static const RomFields::StringDesc dc_save_string_warning;
-
-		// RomFields data.
-		static const struct RomFields::Desc dc_save_fields[];
+		RP_DISABLE_COPY(DreamcastSavePrivate)
 
 	public:
 		// Save file type.
@@ -191,47 +176,6 @@ class DreamcastSavePrivate : public RomDataPrivate
 
 /** DreamcastSavePrivate **/
 
-// Last Modified timestamp.
-const RomFields::DateTimeDesc DreamcastSavePrivate::ctime_dt = {
-	RomFields::RFT_DATETIME_HAS_DATE |
-	RomFields::RFT_DATETIME_HAS_TIME |
-	RomFields::RFT_DATETIME_IS_UTC	// Dreamcast doesn't support timezones.
-};
-
-// Monospace string formatting.
-const RomFields::StringDesc DreamcastSavePrivate::dc_save_string_monospace = {
-	RomFields::StringDesc::STRF_MONOSPACE
-};
-
-// "Warning" string formatting.
-const RomFields::StringDesc DreamcastSavePrivate::dc_save_string_warning = {
-	RomFields::StringDesc::STRF_WARNING
-};
-
-// Save file fields.
-const struct RomFields::Desc DreamcastSavePrivate::dc_save_fields[] = {
-	// Generic warning field for e.g. VMS with no VMI.
-	// TODO: Bold+Red?
-	{_RP("Warning"), RomFields::RFT_STRING, {&dc_save_string_warning}},
-
-	// VMI fields.
-	{_RP("VMI Description"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("VMI Copyright"), RomFields::RFT_STRING, {nullptr}},
-
-	// VMS directory entry fields.
-	{_RP("File Type"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Copy Protect"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Filename"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Creation Time"), RomFields::RFT_DATETIME, {&ctime_dt}},
-	// TODO: Size, header address?
-
-	// VMS fields.
-	{_RP("VMS Description"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("DC Description"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Game Title"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("CRC"), RomFields::RFT_STRING, {&dc_save_string_monospace}},
-};
-
 // Graphic eyecatch sizes.
 const uint32_t DreamcastSavePrivate::eyecatch_sizes[4] = {
 	0,	// DC_VMS_EYECATCH_NONE
@@ -241,7 +185,7 @@ const uint32_t DreamcastSavePrivate::eyecatch_sizes[4] = {
 };
 
 DreamcastSavePrivate::DreamcastSavePrivate(DreamcastSave *q, IRpFile *file)
-	: super(q, file, dc_save_fields, ARRAY_SIZE(dc_save_fields))
+	: super(q, file)
 	, saveType(SAVE_TYPE_UNKNOWN)
 	, loaded_headers(0)
 	, vmi_file(nullptr)
@@ -492,9 +436,9 @@ int DreamcastSavePrivate::readVmiHeader(IRpFile *vmi_file)
 		vms_dirent.filetype = DC_VMS_DIRENT_FTYPE_DATA;
 		vms_dirent.header_addr = 0;
 	}
-	vms_dirent.protect = (vmi_header.mode & DC_VMI_MODE_PROTECT_MASK
-					? DC_VMS_DIRENT_PROTECT_COPY_OK
-					: DC_VMS_DIRENT_PROTECT_COPY_PROTECTED);
+	vms_dirent.protect = ((vmi_header.mode & DC_VMI_MODE_PROTECT_MASK)
+					? DC_VMS_DIRENT_PROTECT_COPY_PROTECTED
+					: DC_VMS_DIRENT_PROTECT_COPY_OK);
 	vms_dirent.address = 200 - blocks;	// Fake starting address.
 	memcpy(vms_dirent.filename, vmi_header.vms_filename, DC_VMS_FILENAME_LENGTH);
 	// TODO: Convert the timestamp to BCD?
@@ -548,7 +492,7 @@ rp_image *DreamcastSavePrivate::loadIcon(void)
 	if (vms_header.eyecatch_type <= 3) {
 		sz_reserved += eyecatch_sizes[vms_header.eyecatch_type];
 	}
-	if ((int64_t)sz_reserved > this->file->fileSize()) {
+	if ((int64_t)sz_reserved > this->file->size()) {
 		// File is NOT big enough.
 		return nullptr;
 	}
@@ -794,15 +738,15 @@ rp_image *DreamcastSavePrivate::loadBanner(void)
 	const uint32_t sz_icons = (uint32_t)sizeof(vms_header) +
 		DC_VMS_ICON_PALETTE_SIZE +
 		(vms_header.icon_count * DC_VMS_ICON_DATA_SIZE);
-	if ((int64_t)sz_icons + eyecatch_size > this->file->fileSize()) {
+	if ((int64_t)sz_icons + eyecatch_size > this->file->size()) {
 		// File is NOT big enough.
 		return nullptr;
 	}
 
 	// Load the eyecatch data.
-	uint8_t *data = static_cast<uint8_t*>(malloc(eyecatch_size));
+	unique_ptr<uint8_t[]> data(new uint8_t[eyecatch_size]);
 	this->file->seek(vms_header_offset + sz_icons);
-	size_t size = this->file->read(data, eyecatch_size);
+	size_t size = this->file->read(data.get(), eyecatch_size);
 	if (size != eyecatch_size) {
 		// Error loading the eyecatch data.
 		return nullptr;
@@ -812,7 +756,7 @@ rp_image *DreamcastSavePrivate::loadBanner(void)
 		// Apply 32-bit byteswapping to the eyecatch data.
 		// TODO: Use an IRpFile subclass that automatically byteswaps
 		// instead of doing manual byteswapping here?
-		__byte_swap_32_array((uint32_t*)data, eyecatch_size);
+		__byte_swap_32_array(reinterpret_cast<uint32_t*>(data.get()), eyecatch_size);
 	}
 
 	// Convert the eycatch to rp_image.
@@ -829,33 +773,32 @@ rp_image *DreamcastSavePrivate::loadBanner(void)
 			// FIXME: Completely untested.
 			img = ImageDecoder::fromDreamcastARGB4444(
 				DC_VMS_EYECATCH_W, DC_VMS_EYECATCH_H,
-				reinterpret_cast<const uint16_t*>(data), DC_VMS_EYECATCH_ARGB4444_DATA_SIZE);
+				reinterpret_cast<const uint16_t*>(data.get()), DC_VMS_EYECATCH_ARGB4444_DATA_SIZE);
 			break;
 		}
 
 		case DC_VMS_EYECATCH_CI8: {
 			// CI8 eyecatch.
 			// TODO: Needs more testing.
-			const uint8_t *image_buf = data + DC_VMS_EYECATCH_CI8_PALETTE_SIZE;
+			const uint8_t *image_buf = data.get() + DC_VMS_EYECATCH_CI8_PALETTE_SIZE;
 			img = ImageDecoder::fromDreamcastCI8(
 				DC_VMS_EYECATCH_W, DC_VMS_EYECATCH_H,
 				image_buf, DC_VMS_EYECATCH_CI8_DATA_SIZE,
-				reinterpret_cast<const uint16_t*>(data), DC_VMS_EYECATCH_CI8_PALETTE_SIZE);
+				reinterpret_cast<const uint16_t*>(data.get()), DC_VMS_EYECATCH_CI8_PALETTE_SIZE);
 			break;
 		}
 
 		case DC_VMS_EYECATCH_CI4: {
 			// CI4 eyecatch.
-			const uint8_t *image_buf = data + DC_VMS_EYECATCH_CI4_PALETTE_SIZE;
+			const uint8_t *image_buf = data.get() + DC_VMS_EYECATCH_CI4_PALETTE_SIZE;
 			img = ImageDecoder::fromDreamcastCI4(
 				DC_VMS_EYECATCH_W, DC_VMS_EYECATCH_H,
 				image_buf, DC_VMS_EYECATCH_CI4_DATA_SIZE,
-				reinterpret_cast<const uint16_t*>(data), DC_VMS_EYECATCH_CI4_PALETTE_SIZE);
+				reinterpret_cast<const uint16_t*>(data.get()), DC_VMS_EYECATCH_CI4_PALETTE_SIZE);
 			break;
 		}
 	}
 
-	free(data);
 	return img;
 }
 
@@ -902,7 +845,7 @@ DreamcastSave::DreamcastSave(IRpFile *file)
 	// Standard VMS is always a multiple of DC_VMS_BLOCK_SIZE.
 	// DCI is a multiple of DC_VMS_BLOCK_SIZE, plus 32 bytes.
 	// NOTE: May be DC_VMS_ICONDATA_MONO_MINSIZE for ICONDATA_VMS.
-	int64_t fileSize = d->file->fileSize();
+	int64_t fileSize = d->file->size();
 	if (fileSize % DC_VMS_BLOCK_SIZE == 0 ||
 	    fileSize == DC_VMS_ICONDATA_MONO_MINSIZE)
 	{
@@ -1049,8 +992,8 @@ DreamcastSave::DreamcastSave(IRpFile *vms_file, IRpFile *vmi_file)
 	// - VMS file should be a multiple of 512 bytes,
 	//   or 160 bytes for some monochrome ICONDATA_VMS.
 	// - VMI file should be 108 bytes.
-	int64_t vms_fileSize = d->file->fileSize();
-	int64_t vmi_fileSize = d->vmi_file->fileSize();
+	int64_t vms_fileSize = d->file->size();
+	int64_t vmi_fileSize = d->vmi_file->size();
 	if (((vms_fileSize % 512 != 0) && vms_fileSize != DC_VMS_ICONDATA_MONO_MINSIZE) ||
 	      vmi_fileSize != DC_VMI_Header_SIZE)
 	{
@@ -1112,7 +1055,7 @@ DreamcastSave::DreamcastSave(IRpFile *vms_file, IRpFile *vmi_file)
 int DreamcastSave::isRomSupported_static(const DetectInfo *info)
 {
 	assert(info != nullptr);
-	if (!info) {
+	if (!info || !info->ext) {
 		// Either no detection information was specified,
 		// or the file extension is missing.
 		return DreamcastSavePrivate::SAVE_TYPE_UNKNOWN;
@@ -1249,6 +1192,60 @@ uint32_t DreamcastSave::supportedImageTypes(void) const
 }
 
 /**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> DreamcastSave::supportedImageSizes_static(ImageType imageType)
+{
+	assert(imageType >= IMG_INT_MIN && imageType <= IMG_EXT_MAX);
+	if (imageType < IMG_INT_MIN || imageType > IMG_EXT_MAX) {
+		// ImageType is out of range.
+		return std::vector<ImageSizeDef>();
+	}
+
+	switch (imageType) {
+		case IMG_INT_ICON: {
+			static const ImageSizeDef sz_INT_ICON[] = {
+				{nullptr, DC_VMS_ICON_W, DC_VMS_ICON_H, 0},
+			};
+			return vector<ImageSizeDef>(sz_INT_ICON,
+				sz_INT_ICON + ARRAY_SIZE(sz_INT_ICON));
+		}
+		case IMG_INT_BANNER: {
+			static const ImageSizeDef sz_INT_BANNER[] = {
+				{nullptr, DC_VMS_EYECATCH_W, DC_VMS_EYECATCH_H, 0},
+			};
+			return vector<ImageSizeDef>(sz_INT_BANNER,
+				sz_INT_BANNER + ARRAY_SIZE(sz_INT_BANNER));
+		}
+		default:
+			break;
+	}
+
+	// Unsupported image type.
+	return std::vector<ImageSizeDef>();
+}
+
+/**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> DreamcastSave::supportedImageSizes(ImageType imageType) const
+{
+	return supportedImageSizes_static(imageType);
+}
+
+/**
  * Load field data.
  * Called by RomData::fields() if the field data hasn't been loaded yet.
  * @return Number of fields read on success; negative POSIX error code on error.
@@ -1267,11 +1264,14 @@ int DreamcastSave::loadFieldData(void)
 		return -EIO;
 	}
 
+	// TODO: The "Warning" field is not shown if all fields are shown.
+	d->fields->reserve(11);	// Maximum of 11 fields.
+
 	// NOTE: DCI files have a directory entry, but not the
 	// extra VMI information.
 	switch (d->loaded_headers) {
 		case DreamcastSavePrivate::DC_HAVE_VMS |
-		     DreamcastSavePrivate::DC_HAVE_VMI:
+			DreamcastSavePrivate::DC_HAVE_VMI:
 		case DreamcastSavePrivate::DC_HAVE_VMS |
 		     DreamcastSavePrivate::DC_HAVE_DIR_ENTRY:
 		case DreamcastSavePrivate::DC_HAVE_VMS |
@@ -1285,8 +1285,7 @@ int DreamcastSave::loadFieldData(void)
 		     DreamcastSavePrivate::DC_HAVE_VMI |
 		     DreamcastSavePrivate::DC_HAVE_DIR_ENTRY:
 			// VMS and the directory entry are present.
-			// Hide the "warning" field.
-			d->fields->addData_invalid();
+			// Don't show the "warning" field.
 			break;
 
 		case DreamcastSavePrivate::DC_HAVE_VMI:
@@ -1294,20 +1293,36 @@ int DreamcastSave::loadFieldData(void)
 		case DreamcastSavePrivate::DC_HAVE_VMI |
 		     DreamcastSavePrivate::DC_HAVE_DIR_ENTRY:
 			// VMS is missing.
-			d->fields->addData_string(_RP("The VMS file was not found."));
+			d->fields->addField_string(_RP("Warning"),
+				_RP("The VMS file was not found."),
+				RomFields::STRF_WARNING);
 			break;
 
 		case DreamcastSavePrivate::DC_HAVE_VMS:
 		case DreamcastSavePrivate::DC_IS_ICONDATA_VMS:
 			// VMI is missing.
-			d->fields->addData_string(_RP("The VMI file was not found."));
+			d->fields->addField_string(_RP("Warning"),
+				_RP("The VMI file was not found."),
+				RomFields::STRF_WARNING);
 			break;
 
 		default:
 			// Should not happen...
 			assert(!"DreamcastSave: Unrecognized VMS/VMI combination.");
-			d->fields->addData_string(_RP("Unrecognized VMS/VMI combination."));
+			d->fields->addField_string(_RP("Warning"),
+				_RP("Unrecognized VMS/VMI combination."),
+				RomFields::STRF_WARNING);
 			break;
+	}
+
+	// DC VMI header.
+	if (d->loaded_headers & DreamcastSavePrivate::DC_HAVE_VMI) {
+		d->fields->addField_string(_RP("VMI Description"),
+			cp1252_sjis_to_rp_string(
+				d->vmi_header.description, sizeof(d->vmi_header.description)));
+		d->fields->addField_string(_RP("VMI Copyright"),
+			cp1252_sjis_to_rp_string(
+				d->vmi_header.copyright, sizeof(d->vmi_header.copyright)));
 	}
 
 	// File type.
@@ -1346,27 +1361,16 @@ int DreamcastSave::loadFieldData(void)
 		}
 	}
 
-	// DC VMI header.
-	if (d->loaded_headers & DreamcastSavePrivate::DC_HAVE_VMI) {
-		d->fields->addData_string(
-			cp1252_sjis_to_rp_string(d->vmi_header.description, sizeof(d->vmi_header.description)));
-		d->fields->addData_string(
-			cp1252_sjis_to_rp_string(d->vmi_header.copyright, sizeof(d->vmi_header.copyright)));
-	} else {
-		// VMI is missing.
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
-	}
-
 	if (filetype) {
-		d->fields->addData_string(filetype);
+		d->fields->addField_string(_RP("File Type"), filetype);
 	} else {
 		// Unknown file type.
 		char buf[20];
 		int len = snprintf(buf, sizeof(buf), "Unknown (0x%02X)", d->vms_dirent.filetype);
 		if (len > (int)sizeof(buf))
 			len = sizeof(buf);
-		d->fields->addData_string(len > 0 ? latin1_to_rp_string(buf, len) : _RP("Unknown"));
+		d->fields->addField_string(_RP("File Type"),
+			len > 0 ? latin1_to_rp_string(buf, len) : _RP("Unknown"));
 	}
 
 	// DC VMS directory entry.
@@ -1385,28 +1389,29 @@ int DreamcastSave::loadFieldData(void)
 		}
 
 		if (filetype) {
-			d->fields->addData_string(protect);
+			d->fields->addField_string(_RP("Copy Protect"), protect);
 		} else {
 			// Unknown file type.
 			char buf[20];
 			int len = snprintf(buf, sizeof(buf), "Unknown (0x%02X)", d->vms_dirent.protect);
 			if (len > (int)sizeof(buf))
 				len = sizeof(buf);
-			d->fields->addData_string(len > 0 ? latin1_to_rp_string(buf, len) : _RP("Unknown"));
+			d->fields->addField_string(_RP("Copy Protect"),
+				len > 0 ? latin1_to_rp_string(buf, len) : _RP("Unknown"));
 		}
 
 		// Filename.
 		// TODO: Latin1 or Shift-JIS?
-		d->fields->addData_string(latin1_to_rp_string(d->vms_dirent.filename, sizeof(d->vms_dirent.filename)));
+		d->fields->addField_string(_RP("Filename"),
+			latin1_to_rp_string(d->vms_dirent.filename, sizeof(d->vms_dirent.filename)));
 
 		// Creation time.
 		// TODO: Interpret dateTime of -1 as "error"?
-		d->fields->addData_dateTime(d->ctime);
-	} else {
-		// Directory entry is missing.
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
+		d->fields->addField_dateTime(_RP("Creation Time"), d->ctime,
+			RomFields::RFT_DATETIME_HAS_DATE |
+			RomFields::RFT_DATETIME_HAS_TIME |
+			RomFields::RFT_DATETIME_IS_UTC  // Dreamcast doesn't support timezones.
+		);
 	}
 
 	if (d->loaded_headers & DreamcastSavePrivate::DC_IS_ICONDATA_VMS) {
@@ -1414,38 +1419,39 @@ int DreamcastSave::loadFieldData(void)
 		const DC_VMS_ICONDATA_Header *const icondata_vms = &d->vms_header.icondata_vms;
 
 		// VMS description.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(icondata_vms->vms_description, sizeof(icondata_vms->vms_description)));
+		d->fields->addField_string(_RP("VMS Description"),
+			cp1252_sjis_to_rp_string(
+				icondata_vms->vms_description, sizeof(icondata_vms->vms_description)));
 
 		// Other VMS fields aren't used here.
 		// TODO: Indicate if both a mono and color icon are present?
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
 	} else if (d->loaded_headers & DreamcastSavePrivate::DC_HAVE_VMS) {
 		// DC VMS header.
 		const DC_VMS_Header *const vms_header = &d->vms_header;
 
 		// VMS description.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(vms_header->vms_description, sizeof(vms_header->vms_description)));
+		d->fields->addField_string(_RP("VMS Description"),
+			cp1252_sjis_to_rp_string(
+				vms_header->vms_description, sizeof(vms_header->vms_description)));
 
 		// DC description.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(vms_header->dc_description, sizeof(vms_header->dc_description)));
+		d->fields->addField_string(_RP("DC Description"),
+			cp1252_sjis_to_rp_string(
+				vms_header->dc_description, sizeof(vms_header->dc_description)));
 
 		// Game Title.
 		// NOTE: This is used as the "sort key" on DC file management,
 		// and occasionally has control codes.
-		// TODO: EScape the control codes.
-		d->fields->addData_string(cp1252_sjis_to_rp_string(vms_header->application, sizeof(vms_header->application)));
+		// TODO: Escape the control codes.
+		d->fields->addField_string(_RP("Game Title"),
+			cp1252_sjis_to_rp_string(
+				vms_header->application, sizeof(vms_header->application)));
 
 		// CRC.
 		// NOTE: Seems to be 0 for all of the SA2 theme files.
-		d->fields->addData_string_numeric(vms_header->crc, RomFields::FB_HEX, 4);
-	} else {
-		// VMS is missing.
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
-		d->fields->addData_invalid();
+		d->fields->addField_string_numeric(_RP("CRC"),
+			vms_header->crc, RomFields::FB_HEX, 4,
+			RomFields::STRF_MONOSPACE);
 	}
 
 	// Finished reading the field data.

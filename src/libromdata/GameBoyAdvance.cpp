@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * GameBoyAdvance.hpp: Nintendo Game Boy Advance ROM reader.               *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -49,17 +49,7 @@ class GameBoyAdvancePrivate : public RomDataPrivate
 
 	private:
 		typedef RomDataPrivate super;
-		GameBoyAdvancePrivate(const GameBoyAdvancePrivate &other);
-		GameBoyAdvancePrivate &operator=(const GameBoyAdvancePrivate &other);
-
-	public:
-		/** RomFields **/
-
-		// Monospace string formatting.
-		static const RomFields::StringDesc gba_string_monospace;
-
-		// ROM fields.
-		static const struct RomFields::Desc gba_fields[];
+		RP_DISABLE_COPY(GameBoyAdvancePrivate)
 
 	public:
 		enum RomType {
@@ -78,22 +68,8 @@ class GameBoyAdvancePrivate : public RomDataPrivate
 
 /** GameBoyAdvancePrivate **/
 
-// Monospace string formatting.
-const RomFields::StringDesc GameBoyAdvancePrivate::gba_string_monospace = {
-	RomFields::StringDesc::STRF_MONOSPACE
-};
-
-// ROM fields.
-const struct RomFields::Desc GameBoyAdvancePrivate::gba_fields[] = {
-	{_RP("Title"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Game ID"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Publisher"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Revision"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Entry Point"), RomFields::RFT_STRING, {&gba_string_monospace}},
-};
-
 GameBoyAdvancePrivate::GameBoyAdvancePrivate(GameBoyAdvance *q, IRpFile *file)
-	: super(q, file, gba_fields, ARRAY_SIZE(gba_fields))
+	: super(q, file)
 	, romType(ROM_UNKNOWN)
 {
 	// Clear the ROM header struct.
@@ -256,8 +232,10 @@ const rp_char *GameBoyAdvance::systemName(uint32_t type) const
 vector<const rp_char*> GameBoyAdvance::supportedFileExtensions_static(void)
 {
 	static const rp_char *const exts[] = {
-		_RP(".gba"), _RP(".agb"),
-		//_RP(".mb"),	// TODO: Enable this?
+		_RP(".gba"),	// Most common
+		_RP(".agb"),	// Less common
+		_RP(".mb"),	// Multiboot (may conflict with AutoDesk Maya)
+		_RP(".srl"),	// Official SDK extension
 	};
 	return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
 }
@@ -301,9 +279,11 @@ int GameBoyAdvance::loadFieldData(void)
 
 	// GBA ROM header.
 	const GBA_RomHeader *const romHeader = &d->romHeader;
+	d->fields->reserve(5);	// Maximum of 5 fields.
 
 	// Game title.
-	d->fields->addData_string(latin1_to_rp_string(romHeader->title, sizeof(romHeader->title)));
+	d->fields->addField_string(_RP("Title"),
+		latin1_to_rp_string(romHeader->title, sizeof(romHeader->title)));
 
 	// Game ID.
 	// Replace any non-printable characters with underscores.
@@ -315,14 +295,16 @@ int GameBoyAdvance::loadFieldData(void)
 			: '_');
 	}
 	id6[6] = 0;
-	d->fields->addData_string(latin1_to_rp_string(id6, 6));
+	d->fields->addField_string(_RP("Game ID"), latin1_to_rp_string(id6, 6));
 
 	// Look up the publisher.
 	const rp_char *publisher = NintendoPublishers::lookup(romHeader->company);
-	d->fields->addData_string(publisher ? publisher : _RP("Unknown"));
+	d->fields->addField_string(_RP("Publisher"),
+		publisher ? publisher : _RP("Unknown"));
 
 	// ROM version.
-	d->fields->addData_string_numeric(romHeader->rom_version, RomFields::FB_DEC, 2);
+	d->fields->addField_string_numeric(_RP("Revision"),
+		romHeader->rom_version, RomFields::FB_DEC, 2);
 
 	// Entry point.
 	switch (d->romType) {
@@ -337,23 +319,26 @@ int GameBoyAdvance::loadFieldData(void)
 				if (entry_point & 0x02000000) {
 					entry_point |= 0xFC000000;
 				}
-				d->fields->addData_string_numeric(entry_point, RomFields::FB_HEX, 8);
+				d->fields->addField_string_numeric(_RP("Entry Point"),
+					entry_point, RomFields::FB_HEX, 8,
+					RomFields::STRF_MONOSPACE);
 			} else {
 				// Non-standard entry point instruction.
-				d->fields->addData_string_hexdump(romHeader->entry_point_bytes, 4);
+				d->fields->addField_string_hexdump(_RP("Entry Point"),
+					romHeader->entry_point_bytes, 4,
+					RomFields::STRF_MONOSPACE);
 			}
 			break;
 
 		case GameBoyAdvancePrivate::ROM_NDS_EXP:
 			// Not bootable.
-			// TODO: Make it non-monospace for this condition.
-			d->fields->addData_string(_RP("Not bootable (Nintendo DS expansion)"));
+			d->fields->addField_string(_RP("Entry Point"),
+				_RP("Not bootable (Nintendo DS expansion)"));
 			break;
 
 		default:
 			// Unknown ROM type type.
-			// TODO: Make it non-monospace for this condition.
-			d->fields->addData_string(_RP("Unknown"));
+			d->fields->addField_string(_RP("Entry Point"), _RP("Unknown"));
 			break;
 	}
 

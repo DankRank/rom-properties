@@ -84,15 +84,17 @@ const rp_image *RpImageWin32::getInternalImage(const RomData *romData, RomData::
  */
 rp_image *RpImageWin32::getExternalImage(const RomData *romData, RomData::ImageType imageType)
 {
-	const vector<RomData::ExtURL> *extURLs = romData->extURLs(imageType);
-	if (!extURLs || extURLs->empty()) {
+	// TODO: Image size selection.
+	std::vector<RomData::ExtURL> extURLs;
+	int ret = romData->extURLs(imageType, &extURLs, RomData::IMAGE_SIZE_DEFAULT);
+	if (ret != 0 || extURLs.empty()) {
 		// No URLs.
 		return nullptr;
 	}
 
 	// Check each URL.
 	CacheManager cache;
-	for (auto iter = extURLs->cbegin(); iter != extURLs->cend(); ++iter) {
+	for (auto iter = extURLs.cbegin(); iter != extURLs.cend(); ++iter) {
 		const RomData::ExtURL &extURL = *iter;
 
 		// TODO: Have download() return the actual data and/or load the cached file.
@@ -411,4 +413,96 @@ HICON RpImageWin32::toHICON(const rp_image *image)
 	DeleteObject(hBitmap);
 	DeleteObject(hbmMask);
 	return hIcon;
+}
+
+/**
+ * Convert an HBITMAP to rp_image.
+ * @param hBitmap HBITMAP.
+ * @return rp_image.
+ */
+rp_image *RpImageWin32::fromHBITMAP(HBITMAP hBitmap)
+{
+	BITMAP bm;
+	if (!GetObject(hBitmap, sizeof(bm), &bm)) {
+		// GetObject() failed.
+		return nullptr;
+	}
+
+	// Determine the image format.
+	rp_image::Format format;
+	int copy_len;
+	switch (bm.bmBitsPixel) {
+		case 8:
+			assert(!"fromHBITMAP() doesn't support 8bpp yet.");
+			return nullptr;
+#if 0
+			format = rp_image::FORMAT_CI8;
+			copy_len = bm.bmWidth;
+			break;
+#endif
+		case 32:
+			format = rp_image::FORMAT_ARGB32;
+			copy_len = bm.bmWidth * 4;
+			break;
+		default:
+			assert(!"Unsupported HBITMAP bmBitsPixel value.");
+			return nullptr;
+	}
+
+	// TODO: Copy the palette for 8-bit.
+
+	// Reference: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
+	const int height = abs(bm.bmHeight);
+	BITMAPINFOHEADER bi;
+	bi.biSize = sizeof(bi);
+	bi.biWidth = bm.bmWidth;
+	bi.biHeight = -height;	// Ensure the image is top-down.
+	bi.biPlanes = 1;
+	bi.biBitCount = bm.bmBitsPixel;
+	bi.biCompression = BI_RGB;
+	bi.biSizeImage = 0;
+	bi.biXPelsPerMeter = 0;
+	bi.biYPelsPerMeter = 0;
+	bi.biClrUsed = 0;	// TODO for 8-bit
+	bi.biClrImportant = 0;	// TODO for 8-bit
+
+	// Allocate memory for the bitmap.
+	const int src_stride = ((bm.bmWidth * bi.biBitCount + 31) / 32) * 4;
+	const DWORD dwBmpSize = src_stride * height;
+	uint8_t *pBits = static_cast<uint8_t*>(malloc(dwBmpSize));
+	if (!pBits) {
+		// malloc() failed.
+		return nullptr;
+	}
+
+	// Get the DIBits.
+	HDC hDC = GetDC(nullptr);
+	int dib_ret = GetDIBits(hDC, hBitmap, 0, height, pBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+	ReleaseDC(nullptr, hDC);
+	if (!dib_ret) {
+		// GetDIBits() failed.
+		free(pBits);
+		return nullptr;
+	}
+
+	// Copy the data into a new rp_image.
+	rp_image *img = new rp_image(bm.bmWidth, height, format);
+
+	// TODO: Copy the palette for 8-bit.
+
+	// The image might be upside-down.
+
+	// Copy the image data.
+	const uint8_t *src = pBits;
+	uint8_t *dest = static_cast<uint8_t*>(img->bits());
+	const int dest_stride = img->stride();
+	for (int y = height; y > 0; y--) {
+		memcpy(dest, src, copy_len);
+		src += src_stride;
+		dest += dest_stride;
+	}
+	free(pBits);
+
+	// rp_image created.
+	return img;
 }

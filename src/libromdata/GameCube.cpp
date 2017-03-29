@@ -69,15 +69,9 @@ class GameCubePrivate : public RomDataPrivate
 
 	private:
 		typedef RomDataPrivate super;
-		GameCubePrivate(const GameCubePrivate &other);
-		GameCubePrivate &operator=(const GameCubePrivate &other);
+		RP_DISABLE_COPY(GameCubePrivate)
 
 	public:
-		// RomFields data.
-		static const rp_char *const rvl_partitions_names[];
-		static const RomFields::ListDataDesc rvl_partitions;
-		static const struct RomFields::Desc gcn_fields[];
-
 		// NDDEMO header.
 		static const uint8_t nddemo_header[64];
 
@@ -113,6 +107,9 @@ class GameCubePrivate : public RomDataPrivate
 		// how many comment fields are present.
 		banner_bnr2_t *gcn_opening_bnr;
 
+		// Wii opening.bnr. (IMET section)
+		wii_imet_t *wii_opening_bnr;
+
 		// Region code. (bi2.bin for GCN, RVL_RegionSetting for Wii.)
 		uint32_t gcnRegion;
 
@@ -136,9 +133,9 @@ class GameCubePrivate : public RomDataPrivate
 		WiiPartTable wiiVgTbl[4];	// Volume group table.
 		bool wiiVgTblLoaded;
 
-		// Update partition.
-		// Points to entry within WiiParttable.
+		// Pointers to specific partitions within WiiPartTable.
 		WiiPartition *updatePartition;
+		WiiPartition *gamePartition;
 
 		/**
 		 * Load the Wii volume group and partition tables.
@@ -166,8 +163,9 @@ class GameCubePrivate : public RomDataPrivate
 		 *
 		 * @return GameTDB region code(s), or empty vector if the region value is invalid.
 		 */
-		vector<const char*> gcnRegionToGameTDB(unsigned int gcnRegion, char idRegion);
+		static vector<const char*> gcnRegionToGameTDB(unsigned int gcnRegion, char idRegion);
 
+	public:
 		/**
 		 * Load opening.bnr. (GameCube only)
 		 * @return 0 on success; negative POSIX error code on error.
@@ -175,52 +173,29 @@ class GameCubePrivate : public RomDataPrivate
 		int gcn_loadOpeningBnr(void);
 
 		/**
-		 * Get the banner_comment_t from opening.bnr.
+		 * Load opening.bnr. (Wii only)
+		 * @return 0 on success; negative POSIX error code on error.
+		 */
+		int wii_loadOpeningBnr(void);
+
+		/**
+		 * Get the banner_comment_t from opening.bnr. (GameCube version)
 		 * For BNR2, this uses the comment that most
 		 * closely matches the host system language.
 		 * @return banner_comment_t, or nullptr if opening.bnr was not loaded.
 		 */
 		const banner_comment_t *gcn_getBannerComment(void) const;
+
+		/**
+		 * Get the game name from opening.bnr. (Wii version)
+		 * This uses the name that most closely matches
+		 * the host system language.
+		 * @return Game name, or empty string if opening.bnr was not loaded.
+		 */
+		rp_string wii_getBannerName(void) const;
 };
 
 /** GameCubePrivate **/
-
-// Wii partition table.
-const rp_char *const GameCubePrivate::rvl_partitions_names[] = {
-	_RP("#"), _RP("Type"), _RP("Key"), _RP("Used Size"), _RP("Total Size")
-};
-
-const struct RomFields::ListDataDesc GameCubePrivate::rvl_partitions = {
-	ARRAY_SIZE(rvl_partitions_names), rvl_partitions_names
-};
-
-// ROM fields.
-const struct RomFields::Desc GameCubePrivate::gcn_fields[] = {
-	// TODO: Banner?
-	{_RP("Title"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Game ID"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Publisher"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Disc #"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Revision"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Region"), RomFields::RFT_STRING, {nullptr}},
-
-	/** GameCube-specific fields. **/
-	// Game information from opening.bnr.
-	{_RP("Game Info"), RomFields::RFT_STRING, {nullptr}},
-
-	/** Wii-specific fields. **/
-	// Age rating(s).
-	{_RP("Age Rating"), RomFields::RFT_STRING, {nullptr}},
-	// Wii System Update version.
-	{_RP("Update"), RomFields::RFT_STRING, {nullptr}},
-
-	// Wii partition table.
-	// NOTE: Actually a table of tables, so we'll use
-	// 0p0-style numbering, where the first digit is
-	// the table number, and the second digit is the
-	// partition number. (both start at 0)
-	{_RP("Partitions"), RomFields::RFT_LISTDATA, {&rvl_partitions}},
-};
 
 // NDDEMO header.
 const uint8_t GameCubePrivate::nddemo_header[64] = {
@@ -235,13 +210,15 @@ const uint8_t GameCubePrivate::nddemo_header[64] = {
 };
 
 GameCubePrivate::GameCubePrivate(GameCube *q, IRpFile *file)
-	: super(q, file, gcn_fields, ARRAY_SIZE(gcn_fields))
+	: super(q, file)
 	, discType(DISC_UNKNOWN)
 	, discReader(nullptr)
 	, gcn_opening_bnr(nullptr)
+	, wii_opening_bnr(nullptr)
 	, gcnRegion(~0)
 	, wiiVgTblLoaded(false)
 	, updatePartition(nullptr)
+	, gamePartition(nullptr)
 {
 	// Clear the various structs.
 	memset(&discHeader, 0, sizeof(discHeader));
@@ -251,6 +228,7 @@ GameCubePrivate::GameCubePrivate(GameCube *q, IRpFile *file)
 GameCubePrivate::~GameCubePrivate()
 {
 	updatePartition = nullptr;
+	gamePartition = nullptr;
 
 	// Delete partition objects in wiiVgTbl[].
 	// TODO: Check wiiVgTblLoaded?
@@ -261,6 +239,7 @@ GameCubePrivate::~GameCubePrivate()
 	}
 
 	free(gcn_opening_bnr);
+	free(wii_opening_bnr);
 	delete discReader;
 }
 
@@ -341,6 +320,9 @@ int GameCubePrivate::loadWiiPartitionTables(void)
 			if (entry.type == PARTITION_UPDATE && !updatePartition) {
 				// System Update partition.
 				updatePartition = entry.partition;
+			} else if (entry.type == PARTITION_GAME && !gamePartition) {
+				// Game partition.
+				gamePartition = entry.partition;
 			}
 		}
 	}
@@ -590,19 +572,20 @@ vector<const char*> GameCubePrivate::gcnRegionToGameTDB(unsigned int gcnRegion, 
 }
 
 /**
- * Load opening.bnr. (GameCube only)
+ * Load opening.bnr. (GameCube version)
  * @return 0 on success; negative POSIX error code on error.
  */
 int GameCubePrivate::gcn_loadOpeningBnr(void)
 {
 	assert(discReader != nullptr);
-
-	// TODO: Do Triforce games have opening.bnr?
-	if ((discType & DISC_SYSTEM_MASK) != DISC_SYSTEM_GCN &&
-	    (discType & DISC_SYSTEM_MASK) != DISC_SYSTEM_TRIFORCE)
+	if (!discReader) {
+		return -EIO;
+	} else if ((discType & DISC_SYSTEM_MASK) != DISC_SYSTEM_GCN &&
+		   (discType & DISC_SYSTEM_MASK) != DISC_SYSTEM_TRIFORCE)
 	{
-		// No opening.bnr.
-		return -ENOENT;
+		// Not supported.
+		// TODO: Do Triforce games have opening.bnr?
+		return -ENOTSUP;
 	}
 
 	if (gcn_opening_bnr) {
@@ -623,14 +606,6 @@ int GameCubePrivate::gcn_loadOpeningBnr(void)
 		// Error opening "opening.bnr".
 		return -gcnPartition->lastError();
 	}
-
-	// Static assertions for the banner structs.
-	static_assert(sizeof(banner_comment_t) == GCN_BANNER_COMMENT_SIZE,
-		"banner_comment_t is the wrong size. (Should be 320 bytes.)");
-	static_assert(sizeof(banner_bnr1_t) == GCN_BANNER_BNR1_SIZE,
-		"banner_bnr1_t is the wrong size. (Should be 6,496 bytes.)");
-	static_assert(sizeof(banner_bnr2_t) == GCN_BANNER_BNR2_SIZE,
-		"banner_bnr2_t is the wrong size. (Should be 8,096 bytes.)");
 
 	// Always use a BNR2 pointer.
 	// BNR1 and BNR2 have identical layouts, except
@@ -679,13 +654,70 @@ int GameCubePrivate::gcn_loadOpeningBnr(void)
 		return (err != 0 ? -err : -EIO);
 	}
 
-	// Banner loaded.
+	// Banner is loaded.
 	gcn_opening_bnr = pBanner;
 	return 0;
 }
 
 /**
-* Get the banner_comment_t from opening.bnr.
+ * Load opening.bnr. (Wii version)
+ * @return 0 on success; negative POSIX error code on error.
+ */
+int GameCubePrivate::wii_loadOpeningBnr(void)
+{
+	assert(discReader != nullptr);
+	assert((discType & DISC_SYSTEM_MASK) == DISC_SYSTEM_WII);
+	if (!discReader) {
+		return -EIO;
+	} else if ((discType & DISC_SYSTEM_MASK) != DISC_SYSTEM_WII) {
+		// Not supported.
+		return -ENOTSUP;
+	}
+
+	if (wii_opening_bnr) {
+		// Banner is already loaded.
+		return 0;
+	}
+
+	if (!gamePartition) {
+		// No game partition...
+		return -ENOENT;
+	}
+
+	unique_ptr<IRpFile> f_opening_bnr(gamePartition->open(_RP("/opening.bnr")));
+	if (!f_opening_bnr) {
+		// Error opening "opening.bnr".
+		return -gamePartition->lastError();
+	}
+
+	// Read the IMET struct.
+	wii_imet_t *pBanner = static_cast<wii_imet_t*>(malloc(sizeof(*pBanner)));
+	if (!pBanner) {
+		return -ENOMEM;
+	}
+	size_t size = f_opening_bnr->read(pBanner, sizeof(*pBanner));
+	if (size != sizeof(*pBanner)) {
+		// Read error.
+		free(pBanner);
+		int err = f_opening_bnr->lastError();
+		return (err != 0 ? -err : -EIO);
+	}
+
+	// Verify the IMET magic.
+	if (be32_to_cpu(pBanner->magic) != WII_IMET_MAGIC) {
+		// Magic is incorrect.
+		// TODO: Better error code?
+		free(pBanner);
+		return -EIO;
+	}
+
+	// Banner is loaded.
+	wii_opening_bnr = pBanner;
+	return 0;
+}
+
+/**
+ * Get the banner_comment_t from opening.bnr.
  * For BNR2, this uses the comment that most
  * closely matches the host system language.
  * @return banner_comment_t, or nullptr if opening.bnr was not loaded.
@@ -709,7 +741,7 @@ const banner_comment_t *GameCubePrivate::gcn_getBannerComment(void) const
 	// Check if this is BNR1 or BNR2.
 	// BNR2 has language-specific fields.
 	const banner_comment_t *comment = nullptr;
-	if (gcn_opening_bnr->magic == 0x424E5232) {
+	if (gcn_opening_bnr->magic == BANNER_MAGIC_BNR2) {
 		// Determine the system language.
 		switch (SystemRegion::getLanguageCode()) {
 			case 'en':
@@ -749,12 +781,79 @@ const banner_comment_t *GameCubePrivate::gcn_getBannerComment(void) const
 			// Revert to English.
 			comment = &gcn_opening_bnr->comments[GCN_PAL_LANG_ENGLISH];
 		}
-	} else {
+	} else /*if (gcn_opening_bnr->magic == BANNER_MAGIC_BNR1)*/ {
 		// BNR1 only has one banner comment.
 		comment = &gcn_opening_bnr->comments[0];
 	}
 
 	return comment;
+}
+
+/**
+ * Get the game name from opening.bnr. (Wii version)
+ * This uses the name that most closely matches
+ * the host system language.
+ * @return Game name, or empty string if opening.bnr was not loaded.
+ */
+rp_string GameCubePrivate::wii_getBannerName(void) const
+{
+	if (!wii_opening_bnr) {
+		// Attempt to load opening.bnr.
+		if (const_cast<GameCubePrivate*>(this)->wii_loadOpeningBnr() != 0) {
+			// Error loading opening.bnr.
+			return rp_string();
+		}
+
+		// Make sure it was actually loaded.
+		if (!wii_opening_bnr) {
+			// opening.bnr was not loaded.
+			return rp_string();
+		}
+	}
+
+	// Determine the system language.
+	const char16_t *game_name;
+	switch (SystemRegion::getLanguageCode()) {
+		case 'en':
+		default:
+			// English. (default)
+			// Used if the host system language doesn't match
+			// any of the languages supported by Wii.
+			game_name = wii_opening_bnr->names[WII_LANG_ENGLISH];
+			break;
+
+		case 'ja':
+			game_name = wii_opening_bnr->names[WII_LANG_JAPANESE];
+			break;
+		case 'de':
+			game_name = wii_opening_bnr->names[WII_LANG_GERMAN];
+			break;
+		case 'fr':
+			game_name = wii_opening_bnr->names[WII_LANG_FRENCH];
+			break;
+		case 'es':
+			game_name = wii_opening_bnr->names[WII_LANG_SPANISH];
+			break;
+		case 'it':
+			game_name = wii_opening_bnr->names[WII_LANG_ITALIAN];
+			break;
+		case 'nl':
+			game_name = wii_opening_bnr->names[WII_LANG_DUTCH];
+			break;
+		case 'ko':
+			game_name = wii_opening_bnr->names[WII_LANG_KOREAN];
+			break;
+	}
+
+	// If the language-specific name is empty,
+	// revert to English.
+	if (game_name[0] == 0) {
+		// Revert to English.
+		game_name = wii_opening_bnr->names[WII_LANG_ENGLISH];
+	}
+
+	// Convert from UTF-16BE.
+	return utf16be_to_rp_string(game_name, ARRAY_SIZE(wii_opening_bnr->names[0]));
 }
 
 /** GameCube **/
@@ -1062,7 +1161,10 @@ vector<const rp_char*> GameCube::supportedFileExtensions_static(void)
 	static const rp_char *const exts[] = {
 		_RP(".gcm"), _RP(".rvm"), _RP(".wbfs"),
 		_RP(".ciso"), _RP(".cso"), _RP(".tgc"),
-		//_RP(".iso"),	// TODO: Enable this?
+
+		// NOTE: May cause conflicts on Windows
+		// if fallback handling isn't working.
+		_RP(".iso"),
 	};
 	return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
 }
@@ -1091,7 +1193,9 @@ vector<const rp_char*> GameCube::supportedFileExtensions(void) const
  */
 uint32_t GameCube::supportedImageTypes_static(void)
 {
-       return IMGBF_INT_BANNER | IMGBF_EXT_MEDIA;
+	return IMGBF_INT_BANNER | IMGBF_EXT_MEDIA |
+	       IMGBF_EXT_COVER | IMGBF_EXT_COVER_3D |
+	       IMGBF_EXT_COVER_FULL;
 }
 
 /**
@@ -1100,7 +1204,83 @@ uint32_t GameCube::supportedImageTypes_static(void)
  */
 uint32_t GameCube::supportedImageTypes(void) const
 {
-       return supportedImageTypes_static();
+	return supportedImageTypes_static();
+}
+
+/**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> GameCube::supportedImageSizes_static(ImageType imageType)
+{
+	assert(imageType >= IMG_INT_MIN && imageType <= IMG_EXT_MAX);
+	if (imageType < IMG_INT_MIN || imageType > IMG_EXT_MAX) {
+		// ImageType is out of range.
+		return std::vector<ImageSizeDef>();
+	}
+
+	switch (imageType) {
+		case IMG_INT_BANNER: {
+			static const ImageSizeDef sz_INT_BANNER[] = {
+				{nullptr, 96, 32, 0},
+			};
+			return vector<ImageSizeDef>(sz_INT_BANNER,
+				sz_INT_BANNER + ARRAY_SIZE(sz_INT_BANNER));
+		}
+		case IMG_EXT_MEDIA: {
+			static const ImageSizeDef sz_EXT_MEDIA[] = {
+				{nullptr, 160, 160, 0},
+			};
+			return vector<ImageSizeDef>(sz_EXT_MEDIA,
+				sz_EXT_MEDIA + ARRAY_SIZE(sz_EXT_MEDIA));
+		}
+		case IMG_EXT_COVER: {
+			static const ImageSizeDef sz_EXT_COVER[] = {
+				{nullptr, 160, 224, 0},
+			};
+			return vector<ImageSizeDef>(sz_EXT_COVER,
+				sz_EXT_COVER + ARRAY_SIZE(sz_EXT_COVER));
+		}
+		case IMG_EXT_COVER_3D: {
+			static const ImageSizeDef sz_EXT_COVER_3D[] = {
+				{nullptr, 176, 248, 0},
+			};
+			return vector<ImageSizeDef>(sz_EXT_COVER_3D,
+				sz_EXT_COVER_3D + ARRAY_SIZE(sz_EXT_COVER_3D));
+		}
+		case IMG_EXT_COVER_FULL: {
+			static const ImageSizeDef sz_EXT_COVER_FULL[] = {
+				{nullptr, 512, 340, 0},
+				{"HQ", 1024, 680, 1},
+			};
+			return vector<ImageSizeDef>(sz_EXT_COVER_FULL,
+				sz_EXT_COVER_FULL + ARRAY_SIZE(sz_EXT_COVER_FULL));
+		}
+		default:
+			break;
+	}
+
+	// Unsupported image type.
+	return std::vector<ImageSizeDef>();
+}
+
+/**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> GameCube::supportedImageSizes(ImageType imageType) const
+{
+	return supportedImageSizes_static(imageType);
 }
 
 /**
@@ -1123,6 +1303,8 @@ int GameCube::loadFieldData(void)
 	}
 
 	// Disc header is read in the constructor.
+	// TODO: Reserve fewer fields for GCN?
+	d->fields->reserve(10);	// Maximum of 10 fields.
 
 	// TODO: Trim the titles. (nulls, spaces)
 	// NOTE: The titles are dup()'d as C strings, so maybe not nulls.
@@ -1134,15 +1316,18 @@ int GameCube::loadFieldData(void)
 		case GCN_REGION_PAL:
 		default:
 			// USA/PAL uses cp1252.
-			d->fields->addData_string(cp1252_to_rp_string(
-				d->discHeader.game_title, sizeof(d->discHeader.game_title)));
+			d->fields->addField_string(_RP("Title"),
+				cp1252_to_rp_string(
+					d->discHeader.game_title, sizeof(d->discHeader.game_title)));
 			break;
 
 		case GCN_REGION_JAPAN:
 		case GCN_REGION_SOUTH_KOREA:
 			// Japan uses Shift-JIS.
-			d->fields->addData_string(cp1252_sjis_to_rp_string(
-				d->discHeader.game_title, sizeof(d->discHeader.game_title)));
+			d->fields->addField_string(_RP("Title"),
+				cp1252_sjis_to_rp_string(
+					d->discHeader.game_title, sizeof(d->discHeader.game_title)));
+			break;
 	}
 
 	// Game ID.
@@ -1155,29 +1340,33 @@ int GameCube::loadFieldData(void)
 			: '_');
 	}
 	id6[6] = 0;
-	d->fields->addData_string(latin1_to_rp_string(id6, 6));
+	d->fields->addField_string(_RP("Game ID"), latin1_to_rp_string(id6, 6));
 
 	// Look up the publisher.
 	const rp_char *publisher = NintendoPublishers::lookup(d->discHeader.company);
-	d->fields->addData_string(publisher ? publisher : _RP("Unknown"));
+	d->fields->addField_string(_RP("Publisher"),
+		publisher ? publisher : _RP("Unknown"));
 
 	// Other fields.
-	d->fields->addData_string_numeric(d->discHeader.disc_number+1, RomFields::FB_DEC);
-	d->fields->addData_string_numeric(d->discHeader.revision, RomFields::FB_DEC, 2);
+	d->fields->addField_string_numeric(_RP("Disc #"),
+		d->discHeader.disc_number+1, RomFields::FB_DEC);
+	d->fields->addField_string_numeric(_RP("Revision"),
+		d->discHeader.revision, RomFields::FB_DEC, 2);
 
 	// Region code.
 	// bi2.bin and/or RVL_RegionSetting is loaded in the constructor,
 	// and the region code is stored in d->gcnRegion.
 	const rp_char *region = d->gcnRegionToString(d->gcnRegion, d->discHeader.id4[3]);
 	if (region) {
-		d->fields->addData_string(region);
+		d->fields->addField_string(_RP("Region"), region);
 	} else {
 		// Invalid region code.
 		char buf[32];
 		int len = snprintf(buf, sizeof(buf), "Unknown (0x%08X)", d->gcnRegion);
 		if (len > (int)sizeof(buf))
 			len = sizeof(buf);
-		d->fields->addData_string(len > 0 ? latin1_to_rp_string(buf, len) : _RP(""));
+		d->fields->addField_string(_RP("Region"),
+			len > 0 ? latin1_to_rp_string(buf, len) : _RP(""));
 	}
 
 	if ((d->discType & GameCubePrivate::DISC_SYSTEM_MASK) !=
@@ -1244,30 +1433,19 @@ int GameCube::loadFieldData(void)
 					case GCN_REGION_PAL:
 					default:
 						// USA/PAL uses cp1252.
-						d->fields->addData_string(
+						d->fields->addField_string(_RP("Game Info"),
 							cp1252_to_rp_string(comment_data.data(), (int)comment_data.size()));
 						break;
 
 					case GCN_REGION_JAPAN:
 					case GCN_REGION_SOUTH_KOREA:
 						// Japan uses Shift-JIS.
-						d->fields->addData_string(
+						d->fields->addField_string(_RP("Game Info"),
 							cp1252_sjis_to_rp_string(comment_data.data(), (int)comment_data.size()));
 						break;
 				}
-			} else {
-				// No comment data.
-				d->fields->addData_invalid();
 			}
-		} else {
-			// opening.bnr was not loaded.
-			d->fields->addData_invalid();
 		}
-
-		// Add dummy entries for Wii-specific fields.
-		d->fields->addData_invalid();	// Age rating(s).
-		d->fields->addData_invalid();	// System Update
-		d->fields->addData_invalid();	// Partitions
 
 		// Finished reading the field data.
 		return (int)d->fields->count();
@@ -1275,58 +1453,55 @@ int GameCube::loadFieldData(void)
 	
 	/** Wii-specific fields. **/
 
-	// Add a dummy entry for the "Game Info" field.
-	d->fields->addData_invalid();	// Game Info
+	// Load the Wii partition tables.
+	int wiiPtLoaded = d->loadWiiPartitionTables();
 
-	// Get age rating(s).
-	// RVL_RegionSetting is loaded in the constructor.
-	// TODO: Optimize this?
-	ostringstream oss;
-	static const char rating_organizations[16][8] = {
-		"CERO", "ESRB", "", "USK",
-		"PEGI", "MEKU", "PEGI-PT", "BBFC",
-		"ACB", "GRB", "", "",
-		"", "", "", ""
-	};
-
-	for (int i = 0; i < 16; i++) {
-		// "Ratings" value is an age.
-		// TODO: Decode to e.g. ESRB and CERO identifiers.
-		// TODO: Handle PEGI before USK?
-		if (rating_organizations[i][0] == 0)
-			continue;
-
-		// NOTE: This field also contains some flags:
-		// - 0x80: Rating is unused.
-		// - 0x20: Has online play. (TODO: Check PAL and JPN)
-		if (d->regionSetting.ratings[i] < 0x80) {
-			oss << rating_organizations[i] << "="
-			    << (int)(d->regionSetting.ratings[i] & 0x1F);
-			if (d->regionSetting.ratings[i] & 0x20) {
-				// Indicate online play.
-				// TODO: Explain this flag.
-				// NOTE: Unicode U+00B0, encoded as UTF-8.
-				oss << "\xC2\xB0";
-			}
-			oss << ", ";
+	// Get the game name from opening.bnr.
+	if (wiiPtLoaded == 0) {
+		rp_string game_name = d->wii_getBannerName();
+		if (!game_name.empty()) {
+			d->fields->addField_string(_RP("Game Info"), game_name);
 		}
 	}
 
-	string str = oss.str();
-	if (str.size() > 2) {
-		// Remove the trailing ", ".
-		str.resize(str.size() - 2);
-	}
+	// Get age rating(s).
+	// RVL_RegionSetting is loaded in the constructor.
+	// Note that not all 16 fields are present on GCN,
+	// though the fields do match exactly, so no
+	// mapping is necessary.
+	RomFields::age_ratings_t age_ratings;
+	// Valid ratings: 0-1, 3-9
+	static const uint16_t valid_ratings = 0x3FB;
 
-	if (!str.empty()) {
-		d->fields->addData_string(utf8_to_rp_string(str.data(), (int)str.size()));
-	} else {
-		d->fields->addData_string(_RP("Unknown"));
-	}
+	for (int i = (int)age_ratings.size()-1; i >= 0; i--) {
+		if (!(valid_ratings & (1 << i))) {
+			// Rating is not applicable for GameCube.
+			age_ratings[i] = 0;
+			continue;
+		}
 
-	// Load the Wii partition tables.
-	int ret = d->loadWiiPartitionTables();
-	if (ret == 0) {
+		// GCN ratings field:
+		// - 0x1F: Age rating.
+		// - 0x20: Has online play if set.
+		// - 0x80: Unused if set.
+		const uint8_t rvl_rating = d->regionSetting.ratings[i];
+		if (rvl_rating & 0x80) {
+			// Rating is unused.
+			age_ratings[i] = 0;
+			continue;
+		}
+		// Set active | age value.
+		age_ratings[i] = RomFields::AGEBF_ACTIVE | (rvl_rating & 0x1F);
+
+		// Is "rating may change during online play" set?
+		if (rvl_rating & 0x20) {
+			age_ratings[i] |= RomFields::AGEBF_ONLINE_PLAY;
+		}
+	}
+	d->fields->addField_ageRatings(_RP("Age Rating"), age_ratings);
+
+	// Display the Wii partition tables.
+	if (wiiPtLoaded == 0) {
 		// Wii partition tables loaded.
 		// Convert them to RFT_LISTDATA for display purposes.
 
@@ -1353,11 +1528,7 @@ int GameCube::loadFieldData(void)
 			}
 		}
 
-		if (sysMenu) {
-			d->fields->addData_string(sysMenu);
-		} else {
-			// TODO: Show specific errors if the system menu WAD wasn't found.
-			// Missing encryption key, etc.
+		if (!sysMenu) {
 			if (!d->updatePartition) {
 				sysMenu = _RP("None");
 			} else {
@@ -1386,19 +1557,26 @@ int GameCube::loadFieldData(void)
 						break;
 				}
 			}
-
-			d->fields->addData_string(sysMenu);
 		}
+		d->fields->addField_string(_RP("Update"), sysMenu);
 
 		// Partition table.
-		RomFields::ListData *partitions = new RomFields::ListData();
+		auto partitions = new std::vector<std::vector<rp_string> >();
+		int partition_count = 0;
+		for (int i = 0; i < 4; i++) {
+			partition_count += (int)d->wiiVgTbl[i].size();
+		}
+		partitions->resize(partition_count);
 
-		vector<rp_string> data_row;     // Temporary storage for each partition entry.
+		partition_count = 0;
 		for (int i = 0; i < 4; i++) {
 			const int count = (int)d->wiiVgTbl[i].size();
-			for (int j = 0; j < count; j++) {
+			for (int j = 0; j < count; j++, partition_count++) {
+				vector<rp_string> &data_row = partitions->at(partition_count);
+				data_row.reserve(5);	// 5 fields per row.
+
+				// Partition entry.
 				const GameCubePrivate::WiiPartEntry &entry = d->wiiVgTbl[i].at(j);
-				data_row.clear();
 
 				// Partition number.
 				char buf[16];
@@ -1466,62 +1644,26 @@ int GameCube::loadFieldData(void)
 
 				// Partition size.
 				data_row.push_back(d->formatFileSize(entry.partition->partition_size()));
-
-				// Add the partition information to the ListData.
-				partitions->data.push_back(data_row);
 			}
 		}
 
+		// Fields.
+		static const rp_char *const partitions_names[] = {
+			_RP("#"), _RP("Type"), _RP("Key"),
+			_RP("Used Size"), _RP("Total Size")
+		};
+		vector<rp_string> *v_partitions_names = RomFields::strArrayToVector(
+			partitions_names, ARRAY_SIZE(partitions_names));
+
 		// Add the partitions list data.
-		d->fields->addData_listData(partitions);
+		d->fields->addField_listData(_RP("Partitions"), v_partitions_names, partitions);
 	} else {
 		// Could not load partition tables.
-		// FIXME: Show an error? For now, add dummy fields.
-		d->fields->addData_invalid();		// Update
-		d->fields->addData_invalid();		// Partitions
+		// FIXME: Show an error?
 	}
 
 	// Finished reading the field data.
 	return (int)d->fields->count();
-}
-
-/**
- * Get the GameTDB URL for a given game.
- * @param system System name.
- * @param type Image type.
- * @param region Region name.
- * @param gameID Game ID.
- * @return GameTDB URL.
- */
-static LibRomData::rp_string getURL_GameTDB(const char *system, const char *type, const char *region, const char *gameID)
-{
-	char buf[128];
-	int len = snprintf(buf, sizeof(buf), "http://art.gametdb.com/%s/%s/%s/%s.png", system, type, region, gameID);
-	if (len > (int)sizeof(buf))
-		len = sizeof(buf);	// TODO: Handle truncation better.
-
-	// TODO: UTF-8, not Latin-1?
-	return (len > 0 ? latin1_to_rp_string(buf, len) : _RP(""));
-}
-
-/**
- * Get the GameTDB URL for a given game.
- * @param system System name.
- * @param type Image type.
- * @param region Region name.
- * @param gameID Game ID.
- * TODO: PAL multi-region selection?
- * @return GameTDB URL.
- */
-static LibRomData::rp_string getCacheKey(const char *system, const char *type, const char *region, const char *gameID)
-{
-	char buf[128];
-	int len = snprintf(buf, sizeof(buf), "%s/%s/%s/%s.png", system, type, region, gameID);
-	if (len > (int)sizeof(buf))
-		len = sizeof(buf);	// TODO: Handle truncation better.
-
-	// TODO: UTF-8, not Latin-1?
-	return (len > 0 ? latin1_to_rp_string(buf, len) : _RP(""));
 }
 
 /**
@@ -1556,7 +1698,7 @@ int GameCube::loadInternalImage(ImageType imageType)
 		return -ENOENT;
 	}
 
-	// Load opening.bnr.
+	// Load opening.bnr. (GCN/Triforce only)
 	// FIXME: Does Triforce have opening.bnr?
 	if (d->gcn_loadOpeningBnr() != 0) {
 		// Could not load opening.bnr.
@@ -1581,32 +1723,67 @@ int GameCube::loadInternalImage(ImageType imageType)
 }
 
 /**
- * Load URLs for an external media type.
- * Called by RomData::extURL() if the URLs haven't been loaded yet.
+ * Get the imgpf value for external media types.
  * @param imageType Image type to load.
+ * @return imgpf value.
+ */
+uint32_t GameCube::imgpf_extURL(ImageType imageType) const
+{
+	assert(imageType >= IMG_EXT_MIN && imageType <= IMG_EXT_MAX);
+	if (imageType < IMG_EXT_MIN || imageType > IMG_EXT_MAX) {
+		// ImageType is out of range.
+		return 0;
+	}
+
+	// NOTE: GameTDB's Wii and GameCube disc and 3D cover scans have
+	// alpha transparency. Hence, no image processing is required.
+	return 0;
+}
+
+/**
+ * Get a list of URLs for an external image type.
+ *
+ * A thumbnail size may be requested from the shell.
+ * If the subclass supports multiple sizes, it should
+ * try to get the size that most closely matches the
+ * requested size.
+ *
+ * @param imageType	[in]     Image type.
+ * @param pExtURLs	[out]    Output vector.
+ * @param size		[in,opt] Requested image size. This may be a requested
+ *                               thumbnail size in pixels, or an ImageSizeType
+ *                               enum value.
  * @return 0 on success; negative POSIX error code on error.
  */
-int GameCube::loadURLs(ImageType imageType)
+int GameCube::extURLs(ImageType imageType, vector<ExtURL> *pExtURLs, int size) const
 {
 	assert(imageType >= IMG_EXT_MIN && imageType <= IMG_EXT_MAX);
 	if (imageType < IMG_EXT_MIN || imageType > IMG_EXT_MAX) {
 		// ImageType is out of range.
 		return -ERANGE;
 	}
+	assert(pExtURLs != nullptr);
+	if (!pExtURLs) {
+		// No vector.
+		return -EINVAL;
+	}
+	pExtURLs->clear();
 
-	RP_D(GameCube);
+	RP_D(const GameCube);
 	if ((d->discType & GameCubePrivate::DISC_FORMAT_MASK) == GameCubePrivate::DISC_FORMAT_TGC) {
 		// TGC game IDs aren't unique, so we can't get
 		// an image URL that makes any sense.
-		return 0;
+		return -ENOENT;
 	}
 
-	const int idx = imageType - IMG_EXT_MIN;
-	std::vector<ExtURL> &extURLs = d->extURLs[idx];
-	if (!extURLs.empty()) {
-		// URLs *have* been loaded...
-		return 0;
-	} else if (!d->file || !d->file->isOpen()) {
+	// Check for known unusable game IDs.
+	// - RELSAB: Generic ID used for prototypes.
+	if (!memcmp(d->discHeader.id6, "RELSAB", 6)) {
+		// Cannot download images for this game ID.
+		return -ENOENT;
+	}
+
+	if (!d->file || !d->file->isOpen()) {
 		// File isn't open.
 		return -EBADF;
 	} else if (d->discType < 0) {
@@ -1614,30 +1791,50 @@ int GameCube::loadURLs(ImageType imageType)
 		return -EIO;
 	}
 
-	// Check for the requested media type.
-	// NOTE: GameTDB has coverHQ for Wii/GCN, but not discHQ.
-	// GameTDB does not have *M for Wii/GCN.
-	// TODO: Configurable quality settings?
-	// TODO: Option to pick the *B version?
-	// TODO: Handle discs that have weird region codes?
-	const char *imageTypeName;
+	// Get the image sizes and sort them based on the
+	// requested image size.
+	vector<ImageSizeDef> sizeDefs = supportedImageSizes(imageType);
+	if (sizeDefs.empty()) {
+		// No image sizes.
+		return -ENOENT;
+	}
+
+	// Select the best size.
+	const ImageSizeDef *sizeDef = d->selectBestSize(sizeDefs, size);
+	if (!sizeDef) {
+		// No size available...
+		return -ENOENT;
+	}
+
+	// NOTE: Only downloading the first size as per the
+	// sort order, since GameTDB basically guarantees that
+	// all supported sizes for an image type are available.
+	// TODO: Add cache keys for other sizes in case they're
+	// downloaded and none of these are available?
+
+	// Determine the image type name.
+	const char *imageTypeName_base;
 	switch (imageType) {
 		case IMG_EXT_MEDIA:
-			imageTypeName = "disc";
+			imageTypeName_base = "disc";
 			break;
-		case IMG_EXT_BOX:
-			imageTypeName = "cover";
+		case IMG_EXT_COVER:
+			imageTypeName_base = "cover";
 			break;
-		case IMG_EXT_BOX_FULL:
-			imageTypeName = "coverfull";
+		case IMG_EXT_COVER_3D:
+			imageTypeName_base = "cover3D";
 			break;
-		case IMG_EXT_BOX_3D:
-			imageTypeName = "cover3D";
+		case IMG_EXT_COVER_FULL:
+			imageTypeName_base = "coverfull";
 			break;
 		default:
 			// Unsupported image type.
 			return -ENOENT;
 	}
+	// Current image type.
+	char imageTypeName[16];
+	snprintf(imageTypeName, sizeof(imageTypeName), "%s%s",
+		 imageTypeName_base, (sizeDef->name ? sizeDef->name : ""));
 
 	// Determine the GameTDB region code(s).
 	vector<const char*> tdb_regions = d->gcnRegionToGameTDB(d->gcnRegion, d->discHeader.id4[3]);
@@ -1653,20 +1850,11 @@ int GameCube::loadURLs(ImageType imageType)
 	}
 	id6[6] = 0;
 
-	// Replace any non-printable characters with underscores.
-	// (NDDEMO has ID6 "00\0E01".)
-	for (int i = 0; i < 6; i++) {
-		if (!isprint(id6[i])) {
-			id6[i] = '_';
-		}
-	}
-
-	// NOTE: GameTDB's Wii and GameCube disc and 3D cover scans have
-	// alpha transparency. Hence, no image processing is required.
-	d->imgpf[imageType] = 0;
-
-	// Current extURL.
-	ExtURL extURL;
+	// ExtURLs.
+	// TODO: If multiple image sizes are added, add the
+	// "default" size to the end of ExtURLs in case the
+	// user has high-resolution downloads disabled.
+	pExtURLs->reserve(4);
 
 	// Disc scan: Is this not the first disc?
 	if (imageType == IMG_EXT_MEDIA &&
@@ -1674,27 +1862,37 @@ int GameCube::loadURLs(ImageType imageType)
 	{
 		// Disc 2 (or 3, or 4...)
 		// Request the disc 2 image first.
-		char s_discNum[16];
-		int len = snprintf(s_discNum, sizeof(s_discNum), "disc%u", d->discHeader.disc_number+1);
-		if (len > 0 && len < (int)(sizeof(s_discNum))) {
-			for (auto iter = tdb_regions.cbegin(); iter != tdb_regions.cend(); ++iter) {
-				extURL.url = getURL_GameTDB("wii", s_discNum, *iter, id6);
-				extURL.cache_key = getCacheKey("wii", s_discNum, *iter, id6);
-				extURLs.push_back(extURL);
-			}
+		char discName[16];
+		snprintf(discName, sizeof(discName), "%s%u",
+			 imageTypeName, d->discHeader.disc_number+1);
+
+		for (auto iter = tdb_regions.cbegin(); iter != tdb_regions.cend(); ++iter) {
+			int idx = (int)pExtURLs->size();
+			pExtURLs->resize(idx+1);
+			auto &extURL = pExtURLs->at(idx);
+
+			extURL.url = d->getURL_GameTDB("wii", discName, *iter, id6, ".png");
+			extURL.cache_key = d->getCacheKey_GameTDB("wii", discName, *iter, id6, ".png");
+			extURL.width = sizeDef->width;
+			extURL.height = sizeDef->height;
 		}
 	}
 
 	// First disc, or not a disc scan.
-	for (auto iter = tdb_regions.cbegin(); iter != tdb_regions.cend(); ++iter)
-	{
-		extURL.url = getURL_GameTDB("wii", imageTypeName, *iter, id6);
-		extURL.cache_key = getCacheKey("wii", imageTypeName, *iter, id6);
-		extURLs.push_back(extURL);
+	for (auto iter = tdb_regions.cbegin(); iter != tdb_regions.cend(); ++iter) {
+		int idx = (int)pExtURLs->size();
+		pExtURLs->resize(idx+1);
+		auto &extURL = pExtURLs->at(idx);
+
+		extURL.url = d->getURL_GameTDB("wii", imageTypeName, *iter, id6, ".png");
+		extURL.cache_key = d->getCacheKey_GameTDB("wii", imageTypeName, *iter, id6, ".png");
+		extURL.width = sizeDef->width;
+		extURL.height = sizeDef->height;
+		extURL.high_res = false;	// Only one size is available.
 	}
 
 	// All URLs added.
-	return (extURLs.empty() ? -ENOENT : 0);
+	return 0;
 }
 
 }

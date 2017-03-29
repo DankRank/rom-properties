@@ -3,7 +3,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
 project(zlib C)
 
-set(VERSION "1.2.10")
+set(VERSION "1.2.11")
 
 # rom-properties:
 # Unix: Add -fpic/-fPIC in order to use this static library in plugins.
@@ -228,10 +228,11 @@ TARGET_INCLUDE_DIRECTORIES(zlibstatic
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 	)
 
-# rom-properties: Split debug functionality.
+# rom-properties: Split debug functionality; Windows subsystem.
 # NOTE: Do NOT use DO_SPLIT_DEBUG on static library targets,
 # since it results in the entire thing being split out on Linux.
 DO_SPLIT_DEBUG(zlib)
+SET_WINDOWS_SUBSYSTEM(zlib WIN32)
 INCLUDE(SetMSVCDebugPath)
 SET_MSVC_DEBUG_PATH(zlibstatic)
 
@@ -275,6 +276,8 @@ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
 	GET_TARGET_PROPERTY(DEBUG_FILENAME zlib PDB)
 	IF(WIN32)
 		# TODO: Test on MinGW.
+		# FIXME: Generator PDB expression doesn't have the debug postfix for some reason,
+		# so cpack fails in debug builds if we get the PDB property.
 		SET(PDB_FILENAME_D "$<TARGET_FILE_DIR:zlib>/zlib1${CMAKE_DEBUG_POSTFIX}.pdb")
 		SET(PDB_FILENAME_R "$<TARGET_FILE_DIR:zlib>/zlib1${CMAKE_RELEASE_POSTFIX}.pdb")
 		INSTALL(FILES "${PDB_FILENAME_D}" "${PDB_FILENAME_R}"

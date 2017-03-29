@@ -45,10 +45,11 @@ class GcnFstPrivate
 		~GcnFstPrivate();
 
 	private:
-		GcnFstPrivate(const GcnFstPrivate &other);
-		GcnFstPrivate &operator=(const GcnFstPrivate &other);
+		RP_DISABLE_COPY(GcnFstPrivate)
 
 	public:
+		bool hasErrors;
+
 		// FST data.
 		GCN_FST_Entry *fstData;
 		uint32_t fstData_sz;
@@ -104,8 +105,9 @@ class GcnFstPrivate
 /** GcnFstPrivate **/
 
 GcnFstPrivate::GcnFstPrivate(const uint8_t *fstData, uint32_t len, uint8_t offsetShift)
-	: fstData(nullptr)
-	, fstData_sz(0)
+	: hasErrors(false)
+	, fstData(nullptr)
+	, fstData_sz(len + 1)
 	, string_table(nullptr)
 	, string_table_sz(0)
 	, offsetShift(offsetShift)
@@ -113,23 +115,34 @@ GcnFstPrivate::GcnFstPrivate(const uint8_t *fstData, uint32_t len, uint8_t offse
 {
 	if (len < sizeof(GCN_FST_Entry)) {
 		// Invalid FST length.
+		hasErrors = true;
 		return;
 	}
 
 	// String table is stored directly after the root entry.
 	const GCN_FST_Entry *root_entry = reinterpret_cast<const GCN_FST_Entry*>(fstData);
 	const uint32_t file_count = be32_to_cpu(root_entry->root_dir.file_count);
+	if (file_count <= 1 || file_count > (fstData_sz / sizeof(GCN_FST_Entry))) {
+		// Sanity check: File count is invalid.
+		// - 1 file means it only has a root directory.
+		// - 0 files isn't possible.
+		// - Can't have more than fstData_sz / sizeof(GCN_FST_Entry) files.
+		hasErrors = true;
+		return;
+	}
+
 	uint32_t string_table_offset = file_count * sizeof(GCN_FST_Entry);
 	if (string_table_offset >= len) {
 		// Invalid FST length.
+		hasErrors = true;
 		return;
 	}
 
 	// Copy the FST data.
-	fstData_sz = len + 1;
 	uint8_t *fst8 = static_cast<uint8_t*>(malloc(fstData_sz));
 	if (!fst8) {
 		// Could not allocate memory for the FST.
+		hasErrors = true;
 		return;
 	}
 	fst8[len] = 0; // Make sure the string table is NULL-terminated.
@@ -378,6 +391,26 @@ GcnFst::~GcnFst()
 }
 
 /**
+ * Is the FST open?
+ * @return True if open; false if not.
+ */
+bool GcnFst::isOpen(void) const
+{
+	return (d->string_table != nullptr);
+}
+
+/**
+ * Have any errors been detected in the FST?
+ * @return True if yes; false if no.
+ */
+bool GcnFst::hasErrors(void) const
+{
+	return d->hasErrors;
+}
+
+/** opendir() interface. **/
+
+/**
  * Open a directory.
  * @param path	[in] Directory path.
  * @return IFst::Dir*, or nullptr on error.
@@ -456,7 +489,13 @@ IFst::DirEnt *GcnFst::readdir(IFst::Dir *dirp)
 
 	if (idx != dirp->dir_idx && d->is_dir(fst_entry)) {
 		// Skip over this directory.
-		idx = be32_to_cpu(fst_entry->dir.next_offset);
+		int next_idx = be32_to_cpu(fst_entry->dir.next_offset);
+		if (next_idx <= idx) {
+			// Seeking backwards? (or looping to the same entry)
+			d->hasErrors = true;
+			return nullptr;
+		}
+		idx = next_idx;
 	} else {
 		// Go to the next file.
 		idx++;
@@ -474,6 +513,13 @@ IFst::DirEnt *GcnFst::readdir(IFst::Dir *dirp)
 	dirp->entry.idx = idx;
 	if (!fst_entry) {
 		// No more entries.
+		dirp->entry.type = 0;
+		dirp->entry.name = nullptr;
+		return nullptr;
+	} else if (!pName || pName[0] == 0) {
+		// Empty or NULL name. This is invalid.
+		// Stop processing the directory.
+		d->hasErrors = true;
 		dirp->entry.type = 0;
 		dirp->entry.name = nullptr;
 		return nullptr;

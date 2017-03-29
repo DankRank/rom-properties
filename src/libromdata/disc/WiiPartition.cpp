@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * WiiPartition.hpp: Wii partition reader.                                 *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -58,8 +58,7 @@ class WiiPartitionPrivate : public GcnPartitionPrivate
 
 	private:
 		typedef GcnPartitionPrivate super;
-		WiiPartitionPrivate(const WiiPartitionPrivate &other);
-		WiiPartitionPrivate &operator=(const WiiPartitionPrivate &other);
+		RP_DISABLE_COPY(WiiPartitionPrivate)
 
 	public:
 		// Partition header.
@@ -616,6 +615,29 @@ int WiiPartition::seek(int64_t pos)
 #else /* !ENABLE_DECRYPTION */
 	// Decryption is not enabled.
 	((void)pos);
+	m_lastError = EIO;
+	return -1;
+#endif /* ENABLE_DECRYPTION */
+}
+
+/**
+ * Get the partition position.
+ * @return Partition position on success; -1 on error.
+ */
+int64_t WiiPartition::tell(void)
+{
+	RP_D(WiiPartition);
+	assert(d->discReader != nullptr);
+	assert(d->discReader->isOpen());
+	if (!d->discReader ||  !d->discReader->isOpen()) {
+		m_lastError = EBADF;
+		return -1;
+	}
+
+#ifdef ENABLE_DECRYPTION
+	return d->pos_7C00;
+#else /* !ENABLE_DECRYPTION */
+	// Decryption is not enabled.
 	m_lastError = EIO;
 	return -1;
 #endif /* ENABLE_DECRYPTION */

@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * IRpFile.hpp: File wrapper interface.                                    *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -22,7 +22,8 @@
 #ifndef __ROMPROPERTIES_LIBROMDATA_IRPFILE_HPP__
 #define __ROMPROPERTIES_LIBROMDATA_IRPFILE_HPP__
 
-#include <config.libromdata.h>
+#include "config.libromdata.h"
+#include "common.h"
 
 // C includes.
 #include <stdint.h>
@@ -40,8 +41,7 @@ class IRpFile
 		virtual ~IRpFile() { }
 
 	private:
-		IRpFile(const IRpFile &other);
-		IRpFile &operator=(const IRpFile &other);
+		RP_DISABLE_COPY(IRpFile)
 
 	public:
 		/**
@@ -104,18 +104,18 @@ class IRpFile
 		virtual int seek(int64_t pos) = 0;
 
 		/**
-		 * Get the file position.
-		 * @return File position, or -1 on error.
-		 */
-		virtual int64_t tell(void) = 0;
-
-		/**
 		 * Seek to the beginning of the file.
 		 */
 		inline void rewind(void)
 		{
 			this->seek(0);
 		}
+
+		/**
+		 * Get the file position.
+		 * @return File position, or -1 on error.
+		 */
+		virtual int64_t tell(void) = 0;
 
 		/**
 		 * Truncate the file.
@@ -131,7 +131,7 @@ class IRpFile
 		 * Get the file size.
 		 * @return File size, or negative on error.
 		 */
-		virtual int64_t fileSize(void) = 0;
+		virtual int64_t size(void) = 0;
 
 		/**
 		 * Get the filename.

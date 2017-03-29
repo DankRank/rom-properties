@@ -35,6 +35,8 @@ Currently, the ROM Properties Page shell extension is compatible with the
 following platforms:
 * KDE 4.x
 * KDE Frameworks 5.x
+* XFCE (GTK+ 2.x)
+* GNOME and Unity (GTK+ 3.x)
 * Windows XP (and later)
 
 For instructions on compiling from source, see doc/COMPILING.md .
@@ -76,15 +78,15 @@ access on Windows Vista and later.
 | KDE 4.x            |       Yes      |     Yes    |
 | KDE 5.x            |       Yes      |     Yes    |
 | XFCE (Thunar)      |       Yes      |     No     |
-| GNOME 3 (Nautilus) |       Yes      |     No     |
+| GNOME 3 (Nautilus) |       Yes      |     Yes    |
 | Windows            |       Yes      |     Yes    |
 
 Notes:
 * The KDE 4.x and 5.x plugins share most of the code. The only differences
   are in the plugin interface (due to automoc issues) and the .desktop file.
-* The XFCE and GNOME file managers both use a similar interface for generating
-  thumbnails, but with a different metadata file. Hence, once thumbnail support
-  is implemented for one of them, it will also be implemented for the other.
+* Similarly, the GNOME and XFCE property page plugins also share most of the
+  code. The main difference here is the interface to the specific property
+  page object for each file browser.
 * Windows supports separate icon and thumbnail handlers. Linux desktop
   environments generally use the file's MIME type to determine the icon, so
   custom icons are always implemented using the thumbnail interface.
@@ -95,16 +97,18 @@ Notes:
 |:-----------------------------:|:--------------:|:---------------:|:--------------:|
 | Sega Mega Drive               |       Yes      |       N/A       |       No       |
 | Sega Dreamcast Saves          |       Yes      |   Icon, Banner  |       No       |
-| Nintendo DS(i)                |       Yes      |       Icon      |       No       |
+| Nintendo DS(i)                |       Yes      |       Icon      |  Covers, Box   |
 | Nintendo GameCube             |       Yes      |      Banner     |      Disc      |
 | Nintendo GameCube Saves       |       Yes      |       Icon      |       N/A      |
-| Nintendo Wii                  |       Yes      |        No       |      Disc      |
+| Nintendo Wii                  |       Yes      |        No       |  Disc, Covers  |
 | Nintendo Game Boy (Color)     |       Yes      |       N/A       |       No       |
 | Nintendo Game Boy Advance     |       Yes      |       N/A       |       No       |
 | Nintendo Virtual Boy          |       Yes      |       N/A       |       No       |
 | Sony PlayStation Saves        |       Yes      |       Icon      |       N/A      |
 | Nintendo amiibo               |       Yes      |        No       |      Media     |
-| Nintendo Entertainment System |       Yes      |       N/A       |       No
+| Nintendo Entertainment System |       Yes      |       N/A       |       No       |
+| Windows/DOS Executables       |       Yes      |        No       |       N/A      |
+| Nintendo Wii                  |       Yes      |        No       |  Disc, Covers  |
 
 Notes:
 * Internal image refers to artwork contained within the ROM and/or disc image.
@@ -118,6 +122,8 @@ Notes:
   * Anything else indicates what types of images are available.
   * For amiibo, "media" refers to the amiibo object, which may be a figurine,
     a card, or a plush.
+* Windows executables may contain multiple icon sizes. Support for Windows icons
+  will be added once support for multiple image sizes is added.
 
 There will eventually be a configuration window for setting which image
 will be used for thumbnails (and icons on Windows).
@@ -126,21 +132,19 @@ will be used for thumbnails (and icons on Windows).
 
 * Sega Mega Drive: Plain binary (\*.gen, \*.bin), Super Magic Drive (\*.smd)
 * Sega Dreamcast: Save files (\*.vmi, \*.vms, \*.dci)
-* Nintendo DS(i): Decrypted (\*.nds)
+* Nintendo DS(i): Plain binary (\*.nds, \*.dsi, \*.srl)
 * Nintendo GameCube: 1:1 disc image (\*.iso, \*.gcm) [including DiscEx-shrunken images],
   CISO disc image (\*.ciso), TGC embedded disc image (\*.tgc), save files (\*.gci, \*.gcs, \*.sav)
 * Nintendo Wii: 1:1 disc image (\*.iso, \*.gcm), WBFS disc image (\*.wbfs),
   CISO disc image (\*.ciso)
 * Nintendo Game Boy: Plain binary (\*.gb, \*.gbc, \*.sgb)
-* Nintendo Game Boy Advance: Plain binary (\*.gba, \*.agb, \*.mb)
+* Nintendo Game Boy Advance: Plain binary (\*.gba, \*.agb, \*.mb, \*.srl)
 * Nintendo Virtual Boy: Plain binary (\*.vb)
 * Sony PlayStation: Save files (\*.psv)
 * Nintendo amiibo: Plain binary (\*.bin, \*.nfc, \*.nfp)
-* Nintendo Entertainment System: iNES dumps (\*.nes), FDS dumps (\*.fds),
+* Nintendo Entertainment System: iNES dumps (\*.nes), FDS dumps (\*.fds, \*.qd),
   3DS Virtual Console dumps (\*.tds)
-
-Some file types are not currently registered on Windows due to conflicts with
-well-known file types, e.g. \*.bin, \*.iso, and \*.mb.
+* Windows/DOS: Executables (\*.exe, \*.dll, others)
 
 ## External Media Downloads
 

@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ComBase.hpp: Base class for COM objects.                             *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -30,6 +30,14 @@
  * - http://stackoverflow.com/questions/17310733/how-do-i-re-use-an-interface-implementation-in-many-classes
  */
 
+// QISearch()
+#include "QITab.h"
+extern "C" {
+extern PFNQISEARCH pQISearch;
+void incRpGlobalRefCount(void);
+void decRpGlobalRefCount(void);
+}
+
 #include "libromdata/RpWin32.hpp"
 
 // References of all objects.
@@ -53,28 +61,27 @@ static inline bool RP_ComBase_isReferenced(void)
 	public: \
 		name() : m_ulRefCount(1) \
 		{ \
-			InterlockedIncrement(&RP_ulTotalRefCount); \
+			incRpGlobalRefCount(); \
 		} \
 		virtual ~name() { } \
 	\
 	public: \
 		/** IUnknown **/ \
-		IFACEMETHODIMP_(ULONG) AddRef(void) final \
+		IFACEMETHODIMP_(ULONG) AddRef(void) override final \
 		{ \
-			InterlockedIncrement(&RP_ulTotalRefCount); \
+			incRpGlobalRefCount(); \
 			InterlockedIncrement(&m_ulRefCount); \
 			return m_ulRefCount; \
 		} \
 		\
-		IFACEMETHODIMP_(ULONG) Release(void) final \
+		IFACEMETHODIMP_(ULONG) Release(void) override final \
 		{ \
 			ULONG ulRefCount = InterlockedDecrement(&m_ulRefCount); \
 			if (ulRefCount == 0) { \
 				/* No more references. */ \
 				delete this; \
 			} \
-			\
-			InterlockedDecrement(&RP_ulTotalRefCount); \
+			decRpGlobalRefCount(); \
 			return ulRefCount; \
 		} \
 }
@@ -86,5 +93,9 @@ class RP_ComBase : public I
 template<class I1, class I2>
 class RP_ComBase2 : public I1, public I2
 	RP_COMBASE_IMPL(RP_ComBase2);
+
+template<class I1, class I2, class I3>
+class RP_ComBase3 : public I1, public I2, public I3
+	RP_COMBASE_IMPL(RP_ComBase3);
 
 #endif /* __ROMPROPERTIES_WIN32_RP_COMBASE_HPP__ */

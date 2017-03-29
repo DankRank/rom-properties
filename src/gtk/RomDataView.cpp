@@ -23,6 +23,7 @@
 #include "GdkImageConv.hpp"
 
 #include "libromdata/common.h"
+#include "libromdata/TextFuncs.hpp"
 #include "libromdata/RomData.hpp"
 #include "libromdata/RomFields.hpp"
 #include "libromdata/RomDataFactory.hpp"
@@ -36,10 +37,12 @@ using namespace LibRomData;
 #include <cassert>
 
 // C++ includes.
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+using std::ostringstream;
 using std::string;
 using std::unordered_map;
 using std::unordered_set;
@@ -103,10 +106,6 @@ struct _RomDataView {
 	GtkVBox __parent__;
 #endif
 
-	/* Widgets */
-	GtkWidget	*table;		// GtkTable (2.x); GtkGrid (3.x)
-	GtkWidget	*lblCredits;
-
 	/* Timeouts */
 	guint		changed_idle;
 
@@ -126,6 +125,7 @@ struct _RomDataView {
 	// Animated icon data.
 	const IconAnimData *iconAnimData;
 	// TODO: GdkPixmap or cairo_surface_t?
+	// TODO: Use std::array<>?
 	GdkPixbuf	*iconFrames[IconAnimData::MAX_FRAMES];
 	IconAnimHelper	*iconAnimHelper;
 	int		last_frame_number;	// Last frame number.
@@ -133,6 +133,15 @@ struct _RomDataView {
 	// Icon animation timer.
 	guint		tmrIconAnim;
 	int		last_delay;		// Last delay value.
+
+	// Tab layout.
+	GtkWidget	*tabWidget;
+	struct tab {
+		GtkWidget	*vbox;		// Either page or a GtkVBox/GtkBox.
+		GtkWidget	*table;		// GtkTable (2.x); GtkGrid (3.x)
+		GtkWidget	*lblCredits;
+	};
+	vector<tab> *tabs;
 
 	// Description labels.
 	RpDescFormatType		desc_format_type;
@@ -224,10 +233,16 @@ set_label_format_type(RomDataView *page, GtkLabel *label, RpDescFormatType desc_
 
 			// Text alignment: Right
 			gtk_label_set_justify(label, GTK_JUSTIFY_RIGHT);
-#if GTK_CHECK_VERSION(3,0,0)
-			gtk_widget_set_halign(GTK_WIDGET(label), GTK_ALIGN_END);
-			gtk_widget_set_valign(GTK_WIDGET(label), GTK_ALIGN_START);
+#if GTK_CHECK_VERSION(3,16,0)
+			// NOTE: gtk_widget_set_?align() doesn't work properly
+			// when using a GtkSizeGroup on GTK+ 3.x.
+			// gtk_label_set_?align() was introduced in GTK+ 3.16.
+			gtk_label_set_xalign(label, 1.0);
+			gtk_label_set_yalign(label, 0.0);
 #else
+			// NOTE: GtkMisc is deprecated on GTK+ 3.x, but it's
+			// needed for proper text alignment when using
+			// GtkSizeGroup prior to GTK+ 3.16.
 			gtk_misc_set_alignment(GTK_MISC(label), 1.0f, 0.0f);
 #endif
 
@@ -243,10 +258,16 @@ set_label_format_type(RomDataView *page, GtkLabel *label, RpDescFormatType desc_
 
 			// Text alignment: Left
 			gtk_label_set_justify(label, GTK_JUSTIFY_LEFT);
-#if GTK_CHECK_VERSION(3,0,0)
-			gtk_widget_set_halign(GTK_WIDGET(label), GTK_ALIGN_START);
-			gtk_widget_set_valign(GTK_WIDGET(label), GTK_ALIGN_START);
+#if GTK_CHECK_VERSION(3,16,0)
+			// NOTE: gtk_widget_set_?align() doesn't work properly
+			// when using a GtkSizeGroup on GTK+ 3.x.
+			// gtk_label_set_?align() was introduced in GTK+ 3.16.
+			gtk_label_set_xalign(label, 0.0);
+			gtk_label_set_yalign(label, 0.0);
 #else
+			// NOTE: GtkMisc is deprecated on GTK+ 3.x, but it's
+			// needed for proper text alignment when using
+			// GtkSizeGroup prior to GTK+ 3.16.
 			gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.0f);
 #endif
 
@@ -264,10 +285,11 @@ rom_data_view_init(RomDataView *page)
 	// No ROM data initially.
 	page->filename = nullptr;
 	page->romData = nullptr;
-	page->table = nullptr;
-	page->lblCredits = nullptr;
 	page->last_frame_number = 0;
 	page->iconAnimHelper = new IconAnimHelper();
+	page->tabWidget = nullptr;
+	page->tabs = new vector<RomDataView::tab>();
+
 	page->desc_format_type = RP_DFT_XFCE;
 	page->vecDescLabels = new vector<GtkWidget*>();
 	page->setDescLabelIsWarning = new unordered_set<GtkWidget*>();
@@ -355,6 +377,7 @@ rom_data_view_dispose(GObject *object)
 	}
 
 	// Clear the widget reference containers.
+	page->tabs->clear();
 	page->vecDescLabels->clear();
 	page->setDescLabelIsWarning->clear();
 	page->mapBitfields->clear();
@@ -373,6 +396,7 @@ rom_data_view_finalize(GObject *object)
 
 	// Delete the C++ objects.
 	delete page->iconAnimHelper;
+	delete page->tabs;
 	delete page->vecDescLabels;
 	delete page->setDescLabelIsWarning;
 	delete page->mapBitfields;
@@ -507,20 +531,25 @@ rom_data_view_set_filename(RomDataView	*page,
 			gtk_widget_hide(page->hboxHeaderRow);
 		}
 
+		// Delete the tabs.
+		for (int i = (int)page->tabs->size()-1; i >= 0; i--) {
+			auto &tab = page->tabs->at(i);
+			if (tab.lblCredits) {
+				gtk_widget_destroy(tab.lblCredits);
+			}
+			if (tab.table) {
+				gtk_widget_destroy(tab.table);
+			}
+			if (tab.vbox && tab.vbox != GTK_WIDGET(page)) {
+				gtk_widget_destroy(tab.vbox);
+			}
+		}
+		page->tabs->clear();
+
 		// Clear the various widget references.
 		page->vecDescLabels->clear();
 		page->setDescLabelIsWarning->clear();
 		page->mapBitfields->clear();
-
-		// Delete the table and "credits" label.
-		if (page->table) {
-			gtk_widget_destroy(page->table);
-			page->table = nullptr;
-		}
-		if (page->lblCredits) {
-			gtk_widget_destroy(page->lblCredits);
-			page->lblCredits = nullptr;
-		}
 	}
 
 	// Filename has been changed.
@@ -689,6 +718,373 @@ rom_data_view_init_header_row(RomDataView *page)
 #define GTK_WIDGET_HALIGN_RIGHT(widget)		gtk_misc_set_alignment(GTK_MISC(widget), 1.0f, 0.0f)
 #endif
 
+/**
+ * Initialize a string field.
+ * @param page RomDataView object.
+ * @param field RomFields::Field
+ * @return Display widget, or nullptr on error.
+ */
+static GtkWidget*
+rom_data_view_init_string(RomDataView *page, const RomFields::Field *field)
+{
+	// String type.
+	GtkWidget *widget = gtk_label_new(nullptr);
+	gtk_label_set_use_underline(GTK_LABEL(widget), false);
+	gtk_widget_show(widget);
+
+	if (field->desc.flags & RomFields::STRF_CREDITS) {
+		// Credits text. Enable formatting and center alignment.
+		gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_CENTER);
+		GTK_WIDGET_HALIGN_CENTER(widget);
+		if (field->data.str) {
+			// NOTE: Pango markup does not support <br/>.
+			// It uses standard newlines for line breaks.
+			gtk_label_set_markup(GTK_LABEL(widget), rp_string_to_utf8(*(field->data.str)).c_str());
+		}
+	} else {
+		// Standard text with no formatting.
+		gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+		gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
+		GTK_WIDGET_HALIGN_LEFT(widget);
+		if (field->data.str) {
+			gtk_label_set_text(GTK_LABEL(widget), rp_string_to_utf8(*(field->data.str)).c_str());
+		}
+	}
+
+	// Check for any formatting options.
+	if (field->desc.flags != 0) {
+		PangoAttrList *attr_lst = pango_attr_list_new();
+
+		// Monospace font?
+		if (field->desc.flags & RomFields::STRF_MONOSPACE) {
+			PangoAttribute *attr = pango_attr_family_new("monospace");
+			pango_attr_list_insert(attr_lst, attr);
+		}
+
+		// "Warning" font?
+		if (field->desc.flags & RomFields::STRF_WARNING) {
+			PangoAttribute *attr = pango_attr_weight_new(PANGO_WEIGHT_HEAVY);
+			pango_attr_list_insert(attr_lst, attr);
+			attr = pango_attr_foreground_new(65535, 0, 0);
+			pango_attr_list_insert(attr_lst, attr);
+		}
+
+		gtk_label_set_attributes(GTK_LABEL(widget), attr_lst);
+		pango_attr_list_unref(attr_lst);
+	}
+
+	if (field->desc.flags & RomFields::STRF_CREDITS) {
+		// Credits row goes at the end.
+		// There should be a maximum of one STRF_CREDITS per tab.
+		auto &tab = page->tabs->at(field->tabIdx);
+		assert(tab.lblCredits == nullptr);
+
+		// Credits row.
+		gtk_box_pack_end(GTK_BOX(tab.vbox), widget, FALSE, FALSE, 0);
+
+		// NULL out widget to hide the description field.
+		// NOTE: Not destroying the widget since we still
+		// need it to be displayed.
+		widget = nullptr;
+	}
+
+	return widget;
+}
+
+/**
+ * Initialize a bitfield.
+ * @param page RomDataView object.
+ * @param field RomFields::Field
+ * @return Display widget, or nullptr on error.
+ */
+static GtkWidget*
+rom_data_view_init_bitfield(RomDataView *page, const RomFields::Field *field)
+{
+	// Bitfield type. Create a grid of checkboxes.
+	// TODO: Description label needs some padding on the top...
+	const auto &bitfieldDesc = field->desc.bitfield;
+
+#if GTK_CHECK_VERSION(3,0,0)
+	GtkWidget *widget = gtk_grid_new();
+	//gtk_grid_set_row_spacings(GTK_TABLE(widget), 2);
+	//gtk_grid_set_column_spacings(GTK_TABLE(widget), 8);
+#else
+	// Determine the total number of rows and columns.
+	int totalRows, totalCols;
+	if (bitfieldDesc.elemsPerRow == 0) {
+		// All elements are in one row.
+		totalCols = bitfieldDesc.elements;
+		totalRows = 1;
+	} else {
+		// Multiple rows.
+		totalCols = bitfieldDesc.elemsPerRow;
+		totalRows = bitfieldDesc.elements / bitfieldDesc.elemsPerRow;
+		if ((bitfieldDesc.elements % bitfieldDesc.elemsPerRow) > 0) {
+			totalRows++;
+		}
+	}
+
+	GtkWidget *widget = gtk_table_new(totalRows, totalCols, FALSE);
+	//gtk_table_set_row_spacings(GTK_TABLE(widget), 2);
+	//gtk_table_set_col_spacings(GTK_TABLE(widget), 8);
+#endif
+	gtk_widget_show(widget);
+
+	// Reserve space in the bitfield widget map.
+	page->mapBitfields->reserve(page->mapBitfields->size() + bitfieldDesc.elements);
+
+	int count = bitfieldDesc.elements;
+	assert(count <= (int)bitfieldDesc.names->size());
+	if (count > (int)bitfieldDesc.names->size()) {
+		count = (int)bitfieldDesc.names->size();
+	}
+
+	int row = 0, col = 0;
+	for (int bit = 0; bit < count; bit++) {
+		const rp_string &name = bitfieldDesc.names->at(bit);
+		if (name.empty())
+			continue;
+
+		GtkWidget *checkBox = gtk_check_button_new_with_label(rp_string_to_utf8(name).c_str());
+		gtk_widget_show(checkBox);
+		gboolean value = !!(field->data.bitfield & (1 << bit));
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkBox), value);
+
+		// Save the bitfield checkbox in the map.
+		page->mapBitfields->insert(std::make_pair(checkBox, value));
+
+		// Disable user modifications.
+		// NOTE: Unlike Qt, both the "clicked" and "toggled" signals are
+		// emitted for both user and program modifications, so we have to
+		// connect this signal *after* setting the initial value.
+		g_signal_connect(checkBox, "toggled",
+			reinterpret_cast<GCallback>(checkbox_no_toggle_signal_handler),
+			page);
+
+#if GTK_CHECK_VERSION(3,0,0)
+		// TODO: GTK_FILL
+		gtk_grid_attach(GTK_GRID(widget), checkBox, col, row, 1, 1);
+#else
+		gtk_table_attach(GTK_TABLE(widget), checkBox, col, col+1, row, row+1,
+			GTK_FILL, GTK_FILL, 0, 0);
+#endif
+		col++;
+		if (col == bitfieldDesc.elemsPerRow) {
+			row++;
+			col = 0;
+		}
+	}
+
+	return widget;
+}
+
+/**
+ * Initialize a list data field.
+ * @param page RomDataView object.
+ * @param field RomFields::Field
+ * @return Display widget, or nullptr on error.
+ */
+static GtkWidget*
+rom_data_view_init_listdata(G_GNUC_UNUSED RomDataView *page, const RomFields::Field *field)
+{
+	// ListData type. Create a GtkListStore for the data.
+	const auto &listDataDesc = field->desc.list_data;
+	assert(listDataDesc.names != nullptr);
+	if (!listDataDesc.names) {
+		// No column names...
+		return nullptr;
+	}
+
+	// Set up the column names.
+	const int count = (int)listDataDesc.names->size();
+	GType *types = new GType[count];
+	for (int i = 0; i < count; i++) {
+		types[i] = G_TYPE_STRING;
+	}
+	GtkListStore *listStore = gtk_list_store_newv(count, types);
+	delete[] types;
+
+	// Add the row data.
+	auto list_data = field->data.list_data;
+	assert(list_data != nullptr);
+	if (list_data) {
+		const int count = (int)list_data->size();
+		for (int i = 0; i < count; i++) {
+			const vector<rp_string> &data_row = list_data->at(i);
+			GtkTreeIter treeIter;
+			gtk_list_store_insert_before(listStore, &treeIter, nullptr);
+			int col = 0;
+			for (auto iter = data_row.cbegin(); iter != data_row.cend(); ++iter, ++col) {
+				gtk_list_store_set(listStore, &treeIter,
+					col, rp_string_to_utf8(*iter).c_str(), -1);
+			}
+		}
+	}
+
+	// Scroll area for the GtkTreeView.
+	GtkWidget *widget = gtk_scrolled_window_new(nullptr, nullptr);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(widget),
+			GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+	gtk_widget_show(widget);
+
+	// Create the GtkTreeView.
+	GtkWidget *treeView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(listStore));
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeView), TRUE);
+	gtk_widget_show(treeView);
+	//treeWidget->setRootIsDecorated(false);
+	//treeWidget->setUniformRowHeights(true);
+	gtk_container_add(GTK_CONTAINER(widget), treeView);
+
+	// Set up the column names.
+	for (int i = 0; i < count; i++) {
+		const rp_string &name = listDataDesc.names->at(i);
+		if (!name.empty()) {
+			GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+			GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+				rp_string_to_utf8(name).c_str(), renderer,
+				"text", i, nullptr);
+			gtk_tree_view_append_column(GTK_TREE_VIEW(treeView), column);
+		}
+	}
+
+	// Set a minimum height for the scroll area.
+	// TODO: Adjust for DPI, and/or use a font size?
+	// TODO: Force maximum horizontal width somehow?
+	gtk_widget_set_size_request(widget, -1, 128);
+
+	// Resize the columns to fit the contents.
+	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(treeView));
+
+	return widget;
+}
+
+/**
+ * Initialize a Date/Time field.
+ * @param page RomDataView object.
+ * @param field RomFields::Field
+ * @return Display widget, or nullptr on error.
+ */
+static GtkWidget*
+rom_data_view_init_datetime(G_GNUC_UNUSED RomDataView *page, const RomFields::Field *field)
+{
+	// Date/Time.
+	GtkWidget *widget = gtk_label_new(nullptr);
+	gtk_label_set_use_underline(GTK_LABEL(widget), false);
+	gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
+	gtk_widget_show(widget);
+	GTK_WIDGET_HALIGN_LEFT(widget);
+
+	if (field->data.date_time == -1) {
+		// Invalid date/time.
+		gtk_label_set_text(GTK_LABEL(widget), "Unknown");
+		return widget;
+	}
+
+	GDateTime *dateTime;
+	if (field->desc.flags & RomFields::RFT_DATETIME_IS_UTC) {
+		dateTime = g_date_time_new_from_unix_utc(field->data.date_time);
+	} else {
+		dateTime = g_date_time_new_from_unix_local(field->data.date_time);
+	}
+
+	gchar *str = nullptr;
+	switch (field->desc.flags &
+		(RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME))
+	{
+		case RomFields::RFT_DATETIME_HAS_DATE:
+			// Date only.
+			str = g_date_time_format(dateTime, "%x");
+			break;
+
+		case RomFields::RFT_DATETIME_HAS_TIME:
+			// Time only.
+			str = g_date_time_format(dateTime, "%X");
+			break;
+
+		case RomFields::RFT_DATETIME_HAS_DATE |
+			RomFields::RFT_DATETIME_HAS_TIME:
+			// Date and time.
+			str = g_date_time_format(dateTime, "%x %X");
+			break;
+
+		default:
+			// Invalid combination.
+			assert(!"Invalid Date/Time formatting.");
+			break;
+	}
+	g_date_time_unref(dateTime);
+
+	if (str) {
+		gtk_label_set_text(GTK_LABEL(widget), str);
+		g_free(str);
+	} else {
+		// Invalid date/time.
+		gtk_widget_destroy(widget);
+		widget = nullptr;
+	}
+	return widget;
+}
+
+/**
+ * Initialize an Age Ratings field.
+ * @param page RomDataView object.
+ * @param field RomFields::Field
+ * @return Display widget, or nullptr on error.
+ */
+static GtkWidget*
+rom_data_view_init_age_ratings(G_GNUC_UNUSED RomDataView *page, const RomFields::Field *field)
+{
+	// Age ratings.
+	GtkWidget *widget = gtk_label_new(nullptr);
+	gtk_label_set_use_underline(GTK_LABEL(widget), false);
+	gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
+	gtk_widget_show(widget);
+	GTK_WIDGET_HALIGN_LEFT(widget);
+
+	const RomFields::age_ratings_t *age_ratings = field->data.age_ratings;
+	assert(age_ratings != nullptr);
+	if (!age_ratings) {
+		// No age ratings data.
+		gtk_label_set_text(GTK_LABEL(widget), "ERROR");
+		return widget;
+	}
+
+	// Convert the age ratings field to a string.
+	ostringstream oss;
+	bool printedOne = false;
+	for (int i = 0; i < (int)age_ratings->size(); i++) {
+		const uint16_t rating = age_ratings->at(i);
+		if (!(rating & RomFields::AGEBF_ACTIVE))
+			continue;
+
+		if (printedOne) {
+			// Append a comma.
+			oss << ", ";
+		}
+		printedOne = true;
+
+		const char *abbrev = RomFields::ageRatingAbbrev(i);
+		if (abbrev) {
+			oss << abbrev;
+		} else {
+			// Invalid age rating.
+			// Use the numeric index.
+			oss << i;
+		}
+		oss << '=' << RomFields::ageRatingDecode(i, rating);
+	}
+
+	if (!printedOne) {
+		// No age ratings.
+		oss << "None";
+	}
+
+	gtk_label_set_text(GTK_LABEL(widget), oss.str().c_str());
+	return widget;
+}
+
 static void
 rom_data_view_update_display(RomDataView *page)
 {
@@ -697,22 +1093,25 @@ rom_data_view_update_display(RomDataView *page)
 	// Initialize the header row.
 	rom_data_view_init_header_row(page);
 
+	// Delete the tabs.
+	for (int i = (int)page->tabs->size()-1; i >= 0; i--) {
+		auto &tab = page->tabs->at(i);
+		if (tab.lblCredits) {
+			gtk_widget_destroy(tab.lblCredits);
+		}
+		if (tab.table) {
+			gtk_widget_destroy(tab.table);
+		}
+		if (tab.vbox && tab.vbox != GTK_WIDGET(page)) {
+			gtk_widget_destroy(tab.vbox);
+		}
+	}
+	page->tabs->clear();
+
 	// Clear the various widget references.
 	page->vecDescLabels->clear();
 	page->setDescLabelIsWarning->clear();
 	page->mapBitfields->clear();
-
-	// Delete the table if it's already present.
-	if (page->table) {
-		gtk_widget_destroy(page->table);
-		page->table = nullptr;
-	}
-
-	// Delete the credits label if it's already present.
-	if (page->lblCredits) {
-		gtk_widget_destroy(page->lblCredits);
-		page->lblCredits = nullptr;
-	}
 
 	if (!page->romData) {
 		// No ROM data...
@@ -728,309 +1127,121 @@ rom_data_view_update_display(RomDataView *page)
 	}
 	const int count = fields->count();
 
+	// Create the GtkNotebook.
+	if (fields->tabCount() > 1) {
+		page->tabs->resize(fields->tabCount());
+		page->tabWidget = gtk_notebook_new();
+		for (int i = 0; i < fields->tabCount(); i++) {
+			// Create a tab.
+			const rp_char *name = fields->tabName(i);
+			if (!name) {
+				// Skip this tab.
+				continue;
+			}
+
+			auto &tab = page->tabs->at(i);
 #if GTK_CHECK_VERSION(3,0,0)
-	// Create the GtkGrid.
-	page->table = gtk_grid_new();
-	gtk_grid_set_row_spacing(GTK_GRID(page->table), 2);
-	gtk_grid_set_column_spacing(GTK_GRID(page->table), 8);
+			tab.vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+			tab.table = gtk_grid_new();
+			gtk_grid_set_row_spacing(GTK_GRID(tab.table), 2);
+			gtk_grid_set_column_spacing(GTK_GRID(tab.table), 8);
 #else
-	// Create the GtkTable.
-	page->table = gtk_table_new(count, 2, FALSE);
-	gtk_table_set_row_spacings(GTK_TABLE(page->table), 2);
-	gtk_table_set_col_spacings(GTK_TABLE(page->table), 8);
+			tab.vbox = gtk_vbox_new(FALSE, 8);
+			// TODO: Adjust the table size?
+			tab.table = gtk_table_new(count, 2, FALSE);
+			gtk_table_set_row_spacings(GTK_TABLE(tab.table), 2);
+			gtk_table_set_col_spacings(GTK_TABLE(tab.table), 8);
 #endif
-	gtk_container_set_border_width(GTK_CONTAINER(page->table), 8);
-	gtk_box_pack_start(GTK_BOX(page), page->table, FALSE, FALSE, 0);
-	gtk_widget_show(page->table);
+
+			gtk_container_set_border_width(GTK_CONTAINER(tab.table), 8);
+			gtk_box_pack_start(GTK_BOX(tab.vbox), tab.table, FALSE, FALSE, 0);
+			gtk_widget_show(tab.table);
+			gtk_widget_show(tab.vbox);
+
+			// Add the tab.
+			GtkWidget *label = gtk_label_new(rp_string_to_utf8(name).c_str());
+			gtk_notebook_append_page(GTK_NOTEBOOK(page->tabWidget), tab.vbox, label);
+		}
+		gtk_box_pack_start(GTK_BOX(page), page->tabWidget, TRUE, TRUE, 0);
+		gtk_widget_show(page->tabWidget);
+	} else {
+		// No tabs.
+		// Don't create a GtkNotebook, but simulate a single
+		// tab in page->tabs[] to make it easier to work with.
+		page->tabs->resize(1);
+		auto &tab = page->tabs->at(0);
+		tab.vbox = GTK_WIDGET(page);
+#if GTK_CHECK_VERSION(3,0,0)
+		tab.table = gtk_grid_new();
+		gtk_grid_set_row_spacing(GTK_GRID(tab.table), 2);
+		gtk_grid_set_column_spacing(GTK_GRID(tab.table), 8);
+#else
+		// TODO: Adjust the table size?
+		tab.table = gtk_table_new(count, 2, FALSE);
+		gtk_table_set_row_spacings(GTK_TABLE(tab.table), 2);
+		gtk_table_set_col_spacings(GTK_TABLE(tab.table), 8);
+#endif
+
+		gtk_container_set_border_width(GTK_CONTAINER(tab.table), 8);
+		gtk_box_pack_start(GTK_BOX(page), tab.table, FALSE, FALSE, 0);
+		gtk_widget_show(tab.table);
+	}
 
 	// Reserve enough space for vecDescLabels.
 	page->vecDescLabels->reserve(count);
+	// Per-tab row counts.
+	vector<int> tabRowCount(page->tabs->size());
+
+	// Use a GtkSizeGroup to ensure that the description
+	// labels on all tabs have the same width.
+	// NOTE: GtkSizeGroup automatically unreferences itself
+	// once all referenced widgets are deleted, so we don't
+	// need to manage it ourselves.
+	GtkSizeGroup *size_group = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
 
 	// Create the data widgets.
-	// TODO: Types other than RFT_STRING.
-#ifndef NDEBUG
-	bool hasStrfCredits = false;
-#endif
 	for (int i = 0; i < count; i++) {
-		const RomFields::Desc *desc = fields->desc(i);
-		const RomFields::Data *data = fields->data(i);
-		if (!desc || !data)
-			continue;
-		if (desc->type != data->type)
-			continue;
-		if (!desc->name || desc->name[0] == '\0')
+		const RomFields::Field *field = fields->field(i);
+		assert(field != nullptr);
+		if (!field || !field->isValid)
 			continue;
 
+		// Verify the tab index.
+		const int tabIdx = field->tabIdx;
+		assert(tabIdx >= 0 && tabIdx < (int)page->tabs->size());
+		if (tabIdx < 0 || tabIdx >= (int)page->tabs->size()) {
+			// Tab index is out of bounds.
+			continue;
+		} else if (!page->tabs->at(tabIdx).table) {
+			// Tab name is empty. Tab is hidden.
+			continue;
+		}
+
 		GtkWidget *widget = nullptr;
-		bool make_desc_warning = false;
-		switch (desc->type) {
+		switch (field->type) {
 			case RomFields::RFT_INVALID:
 				// No data here.
 				break;
 
-			case RomFields::RFT_STRING: {
-				// String type.
-				widget = gtk_label_new(nullptr);
-				gtk_label_set_use_underline(GTK_LABEL(widget), false);
-				gtk_widget_show(widget);
-
-				if (desc->str_desc && (desc->str_desc->formatting & RomFields::StringDesc::STRF_CREDITS)) {
-					// Credits text. Enable formatting and center alignment.
-					gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_CENTER);
-					GTK_WIDGET_HALIGN_CENTER(widget);
-					if (data->str) {
-						// NOTE: Pango markup does not support <br/>.
-						// It uses standard newlines for line breaks.
-						gtk_label_set_markup(GTK_LABEL(widget), data->str);
-					}
-				} else {
-					// Standard text with no formatting.
-					gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
-					gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
-					GTK_WIDGET_HALIGN_LEFT(widget);
-					gtk_label_set_text(GTK_LABEL(widget), data->str);
-				}
-
-				// Check for any formatting options.
-				if (desc->str_desc) {
-					PangoAttrList *attr_lst = pango_attr_list_new();
-
-					// Monospace font?
-					if (desc->str_desc->formatting & RomFields::StringDesc::STRF_MONOSPACE) {
-						PangoAttribute *attr = pango_attr_family_new("monospace");
-						pango_attr_list_insert(attr_lst, attr);
-					}
-
-					// "Warning" font?
-					if (desc->str_desc->formatting & RomFields::StringDesc::STRF_WARNING) {
-						PangoAttribute *attr = pango_attr_weight_new(PANGO_WEIGHT_HEAVY);
-						pango_attr_list_insert(attr_lst, attr);
-						attr = pango_attr_foreground_new(65535, 0, 0);
-						pango_attr_list_insert(attr_lst, attr);
-						make_desc_warning = true;
-					}
-
-					gtk_label_set_attributes(GTK_LABEL(widget), attr_lst);
-					pango_attr_list_unref(attr_lst);
-				}
-
-				if (desc->str_desc && (desc->str_desc->formatting & RomFields::StringDesc::STRF_CREDITS)) {
-					// Credits row goes at the end.
-					// There should be a maximum of one STRF_CREDITS per RomData subclass.
-#ifndef NDEBUG
-					assert(hasStrfCredits == false);
-					hasStrfCredits = true;
-#endif
-
-					// Credits row.
-					gtk_box_pack_end(GTK_BOX(page), widget, FALSE, FALSE, 0);
-
-					// NULL out widget to hide the description field.
-					// NOTE: Not destroying the widget since we still
-					// need it to be displayed.
-					widget = nullptr;
-				}
-
+			case RomFields::RFT_STRING:
+				widget = rom_data_view_init_string(page, field);
 				break;
-			}
 
-			case RomFields::RFT_BITFIELD: {
-				// Bitfield type. Create a grid of checkboxes.
-				// TODO: Description label needs some padding on the top...
-				const RomFields::BitfieldDesc *const bitfieldDesc = desc->bitfield;
-				assert(bitfieldDesc != nullptr);
-
-#if GTK_CHECK_VERSION(3,0,0)
-				widget = gtk_grid_new();
-				//gtk_grid_set_row_spacings(GTK_TABLE(widget), 2);
-				//gtk_grid_set_column_spacings(GTK_TABLE(widget), 8);
-#else
-				// Determine the total number of rows and columns.
-				int totalRows, totalCols;
-				if (bitfieldDesc->elemsPerRow == 0) {
-					// All elements are in one row.
-					totalCols = bitfieldDesc->elements;
-					totalRows = 1;
-				} else {
-					// Multiple rows.
-					totalCols = bitfieldDesc->elemsPerRow;
-					totalRows = bitfieldDesc->elements / bitfieldDesc->elemsPerRow;
-					if ((bitfieldDesc->elements % bitfieldDesc->elemsPerRow) > 0) {
-						totalRows++;
-					}
-				}
-
-				widget = gtk_table_new(totalRows, totalCols, FALSE);
-				//gtk_table_set_row_spacings(GTK_TABLE(widget), 2);
-				//gtk_table_set_col_spacings(GTK_TABLE(widget), 8);
-#endif
-				gtk_widget_show(widget);
-
-				// Reserve space in the bitfield widget map.
-				page->mapBitfields->reserve(page->mapBitfields->size() + bitfieldDesc->elements);
-
-				int row = 0, col = 0;
-				for (int bit = 0; bit < bitfieldDesc->elements; bit++) {
-					const rp_char *name = bitfieldDesc->names[bit];
-					if (!name)
-						continue;
-
-					GtkWidget *checkBox = gtk_check_button_new_with_label(name);
-					gtk_widget_show(checkBox);
-					if (data->bitfield & (1 << bit)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkBox), TRUE);
-					}
-
-					// Save the bitfield checkbox in the map.
-					page->mapBitfields->insert(std::make_pair(checkBox, !!(data->bitfield & (1 << bit))));
-
-					// Disable user modifications.
-					// NOTE: Unlike Qt, both the "clicked" and "toggled" signals are
-					// emitted for both user and program modifications, so we have to
-					// connect this signal *after* setting the initial value.
-					g_signal_connect(checkBox, "toggled",
-						reinterpret_cast<GCallback>(checkbox_no_toggle_signal_handler),
-						page);
-
-#if GTK_CHECK_VERSION(3,0,0)
-					// TODO: GTK_FILL
-					gtk_grid_attach(GTK_GRID(widget), checkBox, col, row, 1, 1);
-#else
-					gtk_table_attach(GTK_TABLE(widget), checkBox, col, col+1, row, row+1,
-						GTK_FILL, GTK_FILL, 0, 0);
-#endif
-					col++;
-					if (col == bitfieldDesc->elemsPerRow) {
-						row++;
-						col = 0;
-					}
-				}
-
+			case RomFields::RFT_BITFIELD:
+				widget = rom_data_view_init_bitfield(page, field);
 				break;
-			}
 
-			case RomFields::RFT_LISTDATA: {
-				// ListData type. Create a QTreeWidget.
-				const RomFields::ListDataDesc *listDataDesc = desc->list_data;
-				assert(listDataDesc != nullptr);
-				const int count = listDataDesc->count;
-				GType *types = new GType[listDataDesc->count];
-				for (int i = 0; i < count; i++) {
-					types[i] = G_TYPE_STRING;
-				}
-				GtkListStore *listStore = gtk_list_store_newv(count, types);
-				delete[] types;
-
-				// Add the row data.
-				const RomFields::ListData *listData = data->list_data;
-				for (int i = 0; i < (int)listData->data.size(); i++) {
-					const vector<rp_string> &data_row = listData->data.at(i);
-					GtkTreeIter treeIter;
-					gtk_list_store_insert_before(listStore, &treeIter, nullptr);
-					int field = 0;
-					for (auto iter = data_row.cbegin(); iter != data_row.cend(); ++iter, ++field) {
-						gtk_list_store_set(listStore, &treeIter, field, iter->c_str(), -1);
-					}
-				}
-
-				// Scroll area for the GtkTreeView.
-				widget = gtk_scrolled_window_new(nullptr, nullptr);
-				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(widget),
-						GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-				gtk_widget_show(widget);
-
-				// Create the GtkTreeView.
-				GtkWidget *treeView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(listStore));
-				gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeView), TRUE);
-				gtk_widget_show(treeView);
-				//treeWidget->setRootIsDecorated(false);
-				//treeWidget->setUniformRowHeights(true);
-				gtk_container_add(GTK_CONTAINER(widget), treeView);
-
-				// Set up the column names.
-				for (int i = 0; i < count; i++) {
-					if (listDataDesc->names[i]) {
-						GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-						GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-							listDataDesc->names[i], renderer,
-							"text", i, nullptr);
-						gtk_tree_view_append_column(GTK_TREE_VIEW(treeView), column);
-					}
-				}
-
-				// Set a minimum height for the scroll area.
-				// TODO: Adjust for DPI, and/or use a font size?
-				// TODO: Force maximum horizontal width somehow?
-				gtk_widget_set_size_request(widget, -1, 128);
-
-				// Resize the columns to fit the contents.
-				gtk_tree_view_columns_autosize(GTK_TREE_VIEW(treeView));
+			case RomFields::RFT_LISTDATA:
+				widget = rom_data_view_init_listdata(page, field);
 				break;
-			}
 
-			case RomFields::RFT_DATETIME: {
-				// Date/Time.
-				const RomFields::DateTimeDesc *const dateTimeDesc = desc->date_time;
-				assert(dateTimeDesc != nullptr);
-
-				widget = gtk_label_new(nullptr);
-				gtk_label_set_use_underline(GTK_LABEL(widget), false);
-				gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
-				gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
-				gtk_widget_show(widget);
-				GTK_WIDGET_HALIGN_LEFT(widget);
-
-				if (data->date_time == -1) {
-					// Invalid date/time.
-					gtk_label_set_text(GTK_LABEL(widget), "Unknown");
-					break;
-				}
-
-				GDateTime *dateTime;
-				if (dateTimeDesc->flags & RomFields::RFT_DATETIME_IS_UTC) {
-					dateTime = g_date_time_new_from_unix_utc(data->date_time);
-				} else {
-					dateTime = g_date_time_new_from_unix_local(data->date_time);
-				}
-
-				gchar *str = nullptr;
-				switch (dateTimeDesc->flags &
-					(RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME))
-				{
-					case RomFields::RFT_DATETIME_HAS_DATE:
-						// Date only.
-						str = g_date_time_format(dateTime, "%x");
-						break;
-
-					case RomFields::RFT_DATETIME_HAS_TIME:
-						// Time only.
-						str = g_date_time_format(dateTime, "%X");
-						break;
-
-					case RomFields::RFT_DATETIME_HAS_DATE |
-					     RomFields::RFT_DATETIME_HAS_TIME:
-						// Date and time.
-						str = g_date_time_format(dateTime, "%x %X");
-						break;
-
-					default:
-						// Invalid combination.
-						assert(!"Invalid Date/Time formatting.");
-						break;
-				}
-				g_date_time_unref(dateTime);
-
-				if (str) {
-					gtk_label_set_text(GTK_LABEL(widget), str);
-					g_free(str);
-				} else {
-					// Invalid date/time.
-					gtk_widget_destroy(widget);
-					widget = nullptr;
-				}
-
+			case RomFields::RFT_DATETIME:
+				widget = rom_data_view_init_datetime(page, field);
 				break;
-			}
+
+			case RomFields::RFT_AGE_RATINGS:
+				widget = rom_data_view_init_age_ratings(page, field);
+				break;
 
 			default:
 				// Unsupported right now.
@@ -1040,37 +1251,44 @@ rom_data_view_update_display(RomDataView *page)
 
 		if (widget) {
 			// Add the widget to the table.
+			auto &tab = page->tabs->at(tabIdx);
 
 			// TODO: Localization.
-			std::string gtkdesc = desc->name;
+			std::string gtkdesc = rp_string_to_utf8(field->name);
 			gtkdesc += ':';
 
 			// Description label.
 			GtkWidget *lblDesc = gtk_label_new(gtkdesc.c_str());
 			gtk_label_set_use_underline(GTK_LABEL(lblDesc), false);
 			gtk_widget_show(lblDesc);
+			gtk_size_group_add_widget(size_group, lblDesc);
 			page->vecDescLabels->push_back(lblDesc);
-			if (make_desc_warning) {
+
+			// Check if this is an RFT_STRING with warning set.
+			if (field->type == RomFields::RFT_STRING &&
+			    field->desc.flags & RomFields::STRF_WARNING)
+			{
 				// Description label should use the "warning" style.
 				page->setDescLabelIsWarning->insert(lblDesc);
 			}
 			set_label_format_type(page, GTK_LABEL(lblDesc), page->desc_format_type);
 
 			// Value widget.
-			// TODO: Left-align for GNOME; right-align for XFCE.
+			int &row = tabRowCount[tabIdx];
 #if GTK_CHECK_VERSION(3,0,0)
 			// TODO: GTK_FILL
-			gtk_grid_attach(GTK_GRID(page->table), lblDesc, 0, i, 1, 1);
+			gtk_grid_attach(GTK_GRID(tab.table), lblDesc, 0, row, 1, 1);
 
 			// Widget halign is set above.
 			gtk_widget_set_valign(widget, GTK_ALIGN_START);
-			gtk_grid_attach(GTK_GRID(page->table), widget, 1, i, 1, 1);
+			gtk_grid_attach(GTK_GRID(tab.table), widget, 1, row, 1, 1);
 #else
-			gtk_table_attach(GTK_TABLE(page->table), lblDesc, 0, 1, i, i+1,
+			gtk_table_attach(GTK_TABLE(tab.table), lblDesc, 0, 1, row, row+1,
 				GTK_FILL, GTK_FILL, 0, 0);
-			gtk_table_attach(GTK_TABLE(page->table), widget, 1, 2, i, i+1,
+			gtk_table_attach(GTK_TABLE(tab.table), widget, 1, 2, row, row+1,
 				GTK_FILL, GTK_FILL, 0, 0);
 #endif
+			row++;
 		}
 	}
 }

@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ExtractImage.hpp: IExtractImage implementation.                      *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -22,10 +22,11 @@
 #ifndef __ROMPROPERTIES_WIN32_RP_EXTRACTIMAGE_HPP__
 #define __ROMPROPERTIES_WIN32_RP_EXTRACTIMAGE_HPP__
 
-// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
-
-#include "RP_ComBase.hpp"
 #include "libromdata/config.libromdata.h"
+#include "libromdata/common.h"
+
+// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
+#include "RP_ComBase.hpp"
 
 // CLSID
 extern "C" {
@@ -40,23 +41,22 @@ class RegKey;
 class RP_ExtractImage_Private;
 
 class UUID_ATTR("{84573BC0-9502-42F8-8066-CC527D0779E5}")
-RP_ExtractImage : public RP_ComBase2<IExtractImage2, IPersistFile>
+RP_ExtractImage : public RP_ComBase2<IPersistFile, IExtractImage2>
 {
 	public:
 		RP_ExtractImage();
 		virtual ~RP_ExtractImage();
 
 	private:
-		typedef RP_ComBase2<IExtractImage2, IPersistFile> super;
-		RP_ExtractImage(const RP_ExtractImage &other);
-		RP_ExtractImage &operator=(const RP_ExtractImage &other);
+		typedef RP_ComBase2<IPersistFile, IExtractImage> super;
+		RP_DISABLE_COPY(RP_ExtractImage)
 	private:
 		friend class RP_ExtractImage_Private;
 		RP_ExtractImage_Private *const d_ptr;
 
 	public:
 		// IUnknown
-		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) final;
+		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override final;
 
 	public:
 		/**
@@ -67,10 +67,11 @@ RP_ExtractImage : public RP_ComBase2<IExtractImage2, IPersistFile>
 
 		/**
 		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG RegisterFileType(RegKey &hkey_Assoc);
+		static LONG RegisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 		/**
 		 * Unregister the COM object.
@@ -80,28 +81,29 @@ RP_ExtractImage : public RP_ComBase2<IExtractImage2, IPersistFile>
 
 		/**
 		 * Unregister the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG UnregisterFileType(RegKey &hkey_Assoc);
+		static LONG UnregisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 	public:
+		// IPersist (IPersistFile base class)
+		IFACEMETHODIMP GetClassID(CLSID *pClassID) override final;
+		// IPersistFile
+		IFACEMETHODIMP IsDirty(void) override final;
+		IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) override final;
+		IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) override final;
+		IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) override final;
+		IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) override final;
+
 		// IExtractImage
 		IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cchMax,
 			DWORD *pdwPriority, const SIZE *prgSize,
-			DWORD dwRecClrDepth, DWORD *pdwFlags) final;
-		IFACEMETHODIMP Extract(HBITMAP *phBmpImage) final;
+			DWORD dwRecClrDepth, DWORD *pdwFlags) override final;
+		IFACEMETHODIMP Extract(HBITMAP *phBmpImage) override final;
 		// IExtractImage2
-		IFACEMETHODIMP GetDateStamp(FILETIME *pDateStamp) final;
-
-		// IPersist (IPersistFile base class)
-		IFACEMETHODIMP GetClassID(CLSID *pClassID) final;
-		// IPersistFile
-		IFACEMETHODIMP IsDirty(void) final;
-		IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) final;
-		IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) final;
-		IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) final;
-		IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) final;
+		IFACEMETHODIMP GetDateStamp(FILETIME *pDateStamp) override final;
 };
 
 #ifdef __CRT_UUID_DECL

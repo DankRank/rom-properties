@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libcachemgr)                      *
  * UrlmonDownloader.hpp: urlmon-based file downloader.                     *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -35,15 +35,14 @@ class UrlmonDownloader : public IDownloader
 
 	private:
 		typedef IDownloader super;
-		UrlmonDownloader(const UrlmonDownloader &);
-		UrlmonDownloader &operator=(const UrlmonDownloader &);
+		RP_DISABLE_COPY(UrlmonDownloader)
 
 	public:
 		/**
 		 * Download the file.
 		 * @return 0 on success; non-zero on error. [TODO: HTTP error codes?]
 		 */
-		virtual int download(void) final;
+		virtual int download(void) override final;
 };
 
 }

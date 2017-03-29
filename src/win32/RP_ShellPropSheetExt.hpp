@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ShellPropSheetExt.hpp: IShellPropSheetExt implementation.            *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -22,14 +22,14 @@
 #ifndef __ROMPROPERTIES_WIN32_RP_SHELLPROPSHEETEXT_HPP__
 #define __ROMPROPERTIES_WIN32_RP_SHELLPROPSHEETEXT_HPP__
 
+#include "libromdata/config.libromdata.h"
+#include "libromdata/common.h"
+
 // References:
 // - http://www.codeproject.com/Articles/338268/COM-in-C
 // - https://code.msdn.microsoft.com/windowsapps/CppShellExtPropSheetHandler-d93b49b7
 // - https://msdn.microsoft.com/en-us/library/ms677109(v=vs.85).aspx
-
 #include "RP_ComBase.hpp"
-#include "libromdata/config.libromdata.h"
-#include "libromdata/RomFields.hpp"
 
 namespace LibRomData {
 	class RomData;
@@ -55,15 +55,37 @@ RP_ShellPropSheetExt : public RP_ComBase2<IShellExtInit, IShellPropSheetExt>
 
 	private:
 		typedef RP_ComBase2<IShellExtInit, IShellPropSheetExt> super;
-		RP_ShellPropSheetExt(const RP_ShellPropSheetExt &other);
-		RP_ShellPropSheetExt&operator=(const RP_ShellPropSheetExt &other);
+		RP_DISABLE_COPY(RP_ShellPropSheetExt)
 	private:
 		friend class RP_ShellPropSheetExt_Private;
 		RP_ShellPropSheetExt_Private *const d_ptr;
 
 	public:
 		// IUnknown
-		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) final;
+		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override final;
+
+	private:
+		/**
+		 * Register the file type handler.
+		 *
+		 * Internal version; this only registers for a single Classes key.
+		 * Called by the public version multiple times if a ProgID is registered.
+		 *
+		 * @param hkey_Assoc File association key to register under.
+		 * @return ERROR_SUCCESS on success; Win32 error code on error.
+		 */
+		static LONG RegisterFileType_int(RegKey &hkey_Assoc);
+
+		/**
+		 * Unregister the file type handler.
+		 *
+		 * Internal version; this only unregisters for a single Classes key.
+		 * Called by the public version multiple times if a ProgID is registered.
+		 *
+		 * @param hkey_Assoc File association key to unregister under.
+		 * @return ERROR_SUCCESS on success; Win32 error code on error.
+		 */
+		static LONG UnregisterFileType_int(RegKey &hkey_Assoc);
 
 	public:
 		/**
@@ -74,10 +96,11 @@ RP_ShellPropSheetExt : public RP_ComBase2<IShellExtInit, IShellPropSheetExt>
 
 		/**
 		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG RegisterFileType(RegKey &hkey_Assoc);
+		static LONG RegisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 		/**
 		 * Unregister the COM object.
@@ -86,19 +109,20 @@ RP_ShellPropSheetExt : public RP_ComBase2<IShellExtInit, IShellPropSheetExt>
 		static LONG UnregisterCLSID(void);
 
 		/**
-		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * Unregister the file type handler.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG UnregisterFileType(RegKey &hkey_Assoc);
+		static LONG UnregisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 	public:
 		// IShellExtInit
-		IFACEMETHODIMP Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hKeyProgID) final;
+		IFACEMETHODIMP Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hKeyProgID) override final;
 
 		// IShellPropSheetExt
-		IFACEMETHODIMP AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) final;
-		IFACEMETHODIMP ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam) final;
+		IFACEMETHODIMP AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override final;
+		IFACEMETHODIMP ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam) override final;
 
 	protected:
 		// Property sheet callback functions.
@@ -116,6 +140,15 @@ RP_ShellPropSheetExt : public RP_ComBase2<IShellExtInit, IShellPropSheetExt>
 		 * @param dwTime
 		 */
 		static void CALLBACK AnimTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+
+		/**
+		 * Dialog procedure for subtabs.
+		 * @param hWnd
+		 * @param uMsg
+		 * @param wParam
+		 * @param lParam
+		 */
+		static INT_PTR CALLBACK SubtabDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #ifdef __CRT_UUID_DECL

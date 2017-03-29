@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ThumbnailProvider.hpp: IThumbnailProvider implementation.            *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -22,10 +22,11 @@
 #ifndef __ROMPROPERTIES_WIN32_RP_THUMBNAILPROVIDER_HPP__
 #define __ROMPROPERTIES_WIN32_RP_THUMBNAILPROVIDER_HPP__
 
-// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
-
-#include "RP_ComBase.hpp"
 #include "libromdata/config.libromdata.h"
+#include "libromdata/common.h"
+
+// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
+#include "RP_ComBase.hpp"
 
 // IThumbnailProvider
 #include "thumbcache.h"
@@ -44,6 +45,7 @@ namespace LibRomData {
 #include <string>
 
 class RegKey;
+class RP_ThumbnailProvider_Private;
 
 class UUID_ATTR("{4723DF58-463E-4590-8F4A-8D9DD4F4355A}")
 RP_ThumbnailProvider : public RP_ComBase2<IInitializeWithStream, IThumbnailProvider>
@@ -51,12 +53,17 @@ RP_ThumbnailProvider : public RP_ComBase2<IInitializeWithStream, IThumbnailProvi
 	public:
 		RP_ThumbnailProvider();
 		virtual ~RP_ThumbnailProvider();
+
 	private:
 		typedef RP_ComBase2<IInitializeWithStream, IThumbnailProvider> super;
+		RP_DISABLE_COPY(RP_ThumbnailProvider)
+	private:
+		friend class RP_ThumbnailProvider_Private;
+		RP_ThumbnailProvider_Private *const d_ptr;
 
 	public:
 		// IUnknown
-		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) final;
+		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override final;
 
 	public:
 		/**
@@ -67,10 +74,11 @@ RP_ThumbnailProvider : public RP_ComBase2<IInitializeWithStream, IThumbnailProvi
 
 		/**
 		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG RegisterFileType(RegKey &hkey_Assoc);
+		static LONG RegisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 		/**
 		 * Unregister the COM object.
@@ -79,22 +87,19 @@ RP_ThumbnailProvider : public RP_ComBase2<IInitializeWithStream, IThumbnailProvi
 		static LONG UnregisterCLSID(void);
 
 		/**
-		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * Unregister the file type handler.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG UnregisterFileType(RegKey &hkey_Assoc);
-
-	protected:
-		// IRpFile IInitializeWithStream::Initialize().
-		LibRomData::IRpFile *m_file;
+		static LONG UnregisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 	public:
 		// IInitializeWithStream
-		IFACEMETHODIMP Initialize(IStream *pstream, DWORD grfMode) final;
+		IFACEMETHODIMP Initialize(IStream *pstream, DWORD grfMode) override final;
 
 		// IThumbnailProvider
-		IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha) final;
+		IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha) override final;
 
 	protected:
 		// Thumbnail resize policy.

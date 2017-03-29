@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ExtractIcon.hpp: IExtractIcon implementation.                        *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -22,10 +22,11 @@
 #ifndef __ROMPROPERTIES_WIN32_RP_EXTRACTICON_H__
 #define __ROMPROPERTIES_WIN32_RP_EXTRACTICON_H__
 
-// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
-
-#include "RP_ComBase.hpp"
 #include "libromdata/config.libromdata.h"
+#include "libromdata/common.h"
+
+// Reference: http://www.codeproject.com/Articles/338268/COM-in-C
+#include "RP_ComBase.hpp"
 
 // CLSID
 extern "C" {
@@ -41,23 +42,22 @@ class RegKey;
 class RP_ExtractIcon_Private;
 
 class UUID_ATTR("{E51BC107-E491-4B29-A6A3-2A4309259802}")
-RP_ExtractIcon : public RP_ComBase2<IExtractIcon, IPersistFile>
+RP_ExtractIcon : public RP_ComBase3<IPersistFile, IExtractIconW, IExtractIconA>
 {
 	public:
 		RP_ExtractIcon();
 		virtual ~RP_ExtractIcon();
 
 	private:
-		typedef RP_ComBase2<IExtractIcon, IPersistFile> super;
-		RP_ExtractIcon(const RP_ExtractIcon &other);
-		RP_ExtractIcon &operator=(const RP_ExtractIcon &other);
+		typedef RP_ComBase3<IPersistFile, IExtractIconW, IExtractIconA> super;
+		RP_DISABLE_COPY(RP_ExtractIcon)
 	private:
 		friend class RP_ExtractIcon_Private;
 		RP_ExtractIcon_Private *const d_ptr;
 
 	public:
 		// IUnknown
-		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) final;
+		IFACEMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override final;
 
 	public:
 		/**
@@ -68,10 +68,11 @@ RP_ExtractIcon : public RP_ComBase2<IExtractIcon, IPersistFile>
 
 		/**
 		 * Register the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG RegisterFileType(RegKey &hkey_Assoc);
+		static LONG RegisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 		/**
 		 * Unregister the COM object.
@@ -81,27 +82,35 @@ RP_ExtractIcon : public RP_ComBase2<IExtractIcon, IPersistFile>
 
 		/**
 		 * Unregister the file type handler.
-		 * @param hkey_Assoc File association key to register under.
+		 * @param hkcr HKEY_CLASSES_ROOT or user-specific classes root.
+		 * @param ext File extension, including the leading dot.
 		 * @return ERROR_SUCCESS on success; Win32 error code on error.
 		 */
-		static LONG UnregisterFileType(RegKey &hkey_Assoc);
+		static LONG UnregisterFileType(RegKey &hkcr, LPCWSTR ext);
 
 	public:
-		// IExtractIcon
-		IFACEMETHODIMP GetIconLocation(UINT uFlags, LPTSTR pszIconFile,
-			UINT cchMax, int *piIndex, UINT *pwFlags) final;
-		IFACEMETHODIMP Extract(LPCTSTR pszFile, UINT nIconIndex,
-			HICON *phiconLarge, HICON *phiconSmall,
-			UINT nIconSize) final;
-
 		// IPersist (IPersistFile base class)
-		IFACEMETHODIMP GetClassID(CLSID *pClassID) final;
+		IFACEMETHODIMP GetClassID(CLSID *pClassID) override final;
 		// IPersistFile
-		IFACEMETHODIMP IsDirty(void) final;
-		IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) final;
-		IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) final;
-		IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) final;
-		IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) final;
+		IFACEMETHODIMP IsDirty(void) override final;
+		IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) override final;
+		IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) override final;
+		IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) override final;
+		IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) override final;
+
+		// IExtractIconW
+		IFACEMETHODIMP GetIconLocation(UINT uFlags, LPWSTR pszIconFile,
+			UINT cchMax, int *piIndex, UINT *pwFlags) override final;
+		IFACEMETHODIMP Extract(LPCWSTR pszFile, UINT nIconIndex,
+			HICON *phiconLarge, HICON *phiconSmall,
+			UINT nIconSize) override final;
+
+		// IExtractIconA
+		IFACEMETHODIMP GetIconLocation(UINT uFlags, LPSTR pszIconFile,
+			UINT cchMax, int *piIndex, UINT *pwFlags) override final;
+		IFACEMETHODIMP Extract(LPCSTR pszFile, UINT nIconIndex,
+			HICON *phiconLarge, HICON *phiconSmall,
+			UINT nIconSize) override final;
 };
 
 #ifdef __CRT_UUID_DECL

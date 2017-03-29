@@ -52,8 +52,7 @@ class DiscReader : public IDiscReader
 		virtual ~DiscReader();
 
 	private:
-		DiscReader(const DiscReader &);
-		DiscReader &operator=(const DiscReader&);
+		RP_DISABLE_COPY(DiscReader)
 
 	public:
 		/** Disc image detection functions. **/
@@ -101,6 +100,12 @@ class DiscReader : public IDiscReader
 		 * Seek to the beginning of the disc image.
 		 */
 		virtual void rewind(void) override;
+
+		/**
+		 * Get the disc image position.
+		 * @return Disc image position on success; -1 on error.
+		 */
+		virtual int64_t tell(void) override final;
 
 		/**
 		 * Get the disc image size.

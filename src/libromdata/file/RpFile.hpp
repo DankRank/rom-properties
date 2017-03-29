@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * RpFile.hpp: Standard file object.                                       *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -33,6 +33,10 @@
 
 namespace LibRomData {
 
+#ifdef _WIN32
+class RpFilePrivate;
+#endif /* _WIN32 */
+
 class RpFile : public IRpFile
 {
 	public:
@@ -58,7 +62,7 @@ class RpFile : public IRpFile
 		RpFile(const rp_char *filename, FileMode mode);
 		RpFile(const rp_string &filename, FileMode mode);
 	private:
-		void init(const rp_char *filename);
+		void init(void);
 	public:
 		virtual ~RpFile();
 
@@ -67,6 +71,11 @@ class RpFile : public IRpFile
 	public:
 		RpFile(const RpFile &other);
 		RpFile &operator=(const RpFile &other);
+#ifdef _WIN32
+	protected:
+		friend class RpFilePrivate;
+		RpFilePrivate *const d_ptr;
+#endif /* _WIN32 */
 
 	public:
 		/**
@@ -74,7 +83,7 @@ class RpFile : public IRpFile
 		 * This usually only returns false if an error occurred.
 		 * @return True if the file is open; false if it isn't.
 		 */
-		virtual bool isOpen(void) const final;
+		virtual bool isOpen(void) const override final;
 
 		/**
 		 * dup() the file handle.
@@ -87,12 +96,12 @@ class RpFile : public IRpFile
 		 *
 		 * @return dup()'d file, or nullptr on error.
 		 */
-		virtual IRpFile *dup(void) final;
+		virtual IRpFile *dup(void) override final;
 
 		/**
 		 * Close the file.
 		 */
-		virtual void close(void) final;
+		virtual void close(void) override final;
 
 		/**
 		 * Read data from the file.
@@ -100,7 +109,7 @@ class RpFile : public IRpFile
 		 * @param size Amount of data to read, in bytes.
 		 * @return Number of bytes read.
 		 */
-		virtual size_t read(void *ptr, size_t size) final;
+		virtual size_t read(void *ptr, size_t size) override final;
 
 		/**
 		 * Write data to the file.
@@ -108,27 +117,27 @@ class RpFile : public IRpFile
 		 * @param size Amount of data to read, in bytes.
 		 * @return Number of bytes written.
 		 */
-		virtual size_t write(const void *ptr, size_t size) final;
+		virtual size_t write(const void *ptr, size_t size) override final;
 
 		/**
 		 * Set the file position.
 		 * @param pos File position.
 		 * @return 0 on success; -1 on error.
 		 */
-		virtual int seek(int64_t pos) final;
+		virtual int seek(int64_t pos) override final;
 
 		/**
 		 * Get the file position.
 		 * @return File position, or -1 on error.
 		 */
-		virtual int64_t tell(void) final;
+		virtual int64_t tell(void) override final;
 
 		/**
 		 * Truncate the file.
 		 * @param size New size. (default is 0)
 		 * @return 0 on success; -1 on error.
 		 */
-		virtual int truncate(int64_t size = 0) final;
+		virtual int truncate(int64_t size = 0) override final;
 
 	public:
 		/** File properties. **/
@@ -137,25 +146,23 @@ class RpFile : public IRpFile
 		 * Get the file size.
 		 * @return File size, or negative on error.
 		 */
-		virtual int64_t fileSize(void) final;
+		virtual int64_t size(void) override final;
 
 		/**
 		 * Get the filename.
 		 * @return Filename. (May be empty if the filename is not available.)
 		 */
-		virtual rp_string filename(void) const final;
+		virtual rp_string filename(void) const override final;
 
+#ifndef _WIN32
 	protected:
-#ifdef _WIN32
-		// Win32: m_file is a HANDLE.
-		std::shared_ptr<void> m_file;
-#else
-		// Other: m_file is an stdio FILE.
+		// On non-Windows platforms, m_file is an stdio FILE.
+		// TODO: Move to a private class?
 		std::shared_ptr<FILE> m_file;
-#endif
 
 		rp_string m_filename;
 		FileMode m_mode;
+#endif /* !_WIN32 */
 };
 
 }

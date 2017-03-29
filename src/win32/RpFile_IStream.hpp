@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RpFile_IStream.hpp: IRpFile using an IStream*.                          *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -47,18 +47,7 @@ class RpFile_IStream : public LibRomData::IRpFile
 		 * This usually only returns false if an error occurred.
 		 * @return True if the file is open; false if it isn't.
 		 */
-		virtual bool isOpen(void) const final;
-
-		/**
-		 * Get the last error.
-		 * @return Last POSIX error, or 0 if no error.
-		 */
-		virtual int lastError(void) const final;
-
-		/**
-		 * Clear the last error.
-		 */
-		virtual void clearError(void) final;
+		virtual bool isOpen(void) const override final;
 
 		/**
 		 * dup() the file handle.
@@ -71,12 +60,12 @@ class RpFile_IStream : public LibRomData::IRpFile
 		 *
 		 * @return dup()'d file, or nullptr on error.
 		 */
-		virtual IRpFile *dup(void) final;
+		virtual IRpFile *dup(void) override final;
 
 		/**
 		 * Close the file.
 		 */
-		virtual void close(void) final;
+		virtual void close(void) override final;
 
 		/**
 		 * Read data from the file.
@@ -84,7 +73,7 @@ class RpFile_IStream : public LibRomData::IRpFile
 		 * @param size Amount of data to read, in bytes.
 		 * @return Number of bytes read.
 		 */
-		virtual size_t read(void *ptr, size_t size) final;
+		virtual size_t read(void *ptr, size_t size) override final;
 
 		/**
 		 * Write data to the file.
@@ -92,27 +81,27 @@ class RpFile_IStream : public LibRomData::IRpFile
 		 * @param size Amount of data to read, in bytes.
 		 * @return Number of bytes written.
 		 */
-		virtual size_t write(const void *ptr, size_t size) final;
+		virtual size_t write(const void *ptr, size_t size) override final;
 
 		/**
 		 * Set the file position.
 		 * @param pos File position.
 		 * @return 0 on success; -1 on error.
 		 */
-		virtual int seek(int64_t pos) final;
+		virtual int seek(int64_t pos) override final;
 
 		/**
 		 * Get the file position.
 		 * @return File position, or -1 on error.
 		 */
-		virtual int64_t tell(void) final;
+		virtual int64_t tell(void) override final;
 
 		/**
 		 * Truncate the file.
 		 * @param size New size. (default is 0)
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int truncate(int64_t size = 0) final;
+		virtual int truncate(int64_t size = 0) override final;
 
 	public:
 		/** File properties. **/
@@ -121,18 +110,17 @@ class RpFile_IStream : public LibRomData::IRpFile
 		 * Get the file size.
 		 * @return File size, or negative on error.
 		 */
-		virtual int64_t fileSize(void) final;
+		virtual int64_t size(void) override final;
 
 		/**
 		 * Get the filename.
 		 * @return Filename. (May be empty if the filename is not available.)
 		 */
-		LibRomData::rp_string filename(void) const;
+		virtual LibRomData::rp_string filename(void) const override final;
 
 	protected:
 		IStream *m_pStream;
 		LibRomData::rp_string m_filename;
-		int m_lastError;
 };
 
 #endif /* __ROMPROPERTIES_WIN32_RPFILE_ISTREAM_HPP__ */

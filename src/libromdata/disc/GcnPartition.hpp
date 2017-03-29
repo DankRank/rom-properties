@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * GcnPartition.hpp: GameCube partition reader.                            *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -49,8 +49,7 @@ class GcnPartition : public IPartition
 
 	private:
 		typedef IPartition super;
-		GcnPartition(const GcnPartition &other);
-		GcnPartition &operator=(const GcnPartition &other);
+		RP_DISABLE_COPY(GcnPartition)
 
 	protected:
 		friend class GcnPartitionPrivate;
@@ -64,7 +63,7 @@ class GcnPartition : public IPartition
 		 * This usually only returns false if an error occurred.
 		 * @return True if the partition is open; false if it isn't.
 		 */
-		virtual bool isOpen(void) const final;
+		virtual bool isOpen(void) const override final;
 
 		/**
 		 * Read data from the partition.
@@ -84,7 +83,13 @@ class GcnPartition : public IPartition
 		/**
 		 * Seek to the beginning of the partition.
 		 */
-		virtual void rewind(void) final;
+		virtual void rewind(void) override final;
+
+		/**
+		 * Get the partition position.
+		 * @return Partition position on success; -1 on error.
+		 */
+		virtual int64_t tell(void) override;
 
 		/**
 		 * Get the data size.
@@ -92,7 +97,7 @@ class GcnPartition : public IPartition
 		 * and it's adjusted to exclude hashes.
 		 * @return Data size, or -1 on error.
 		 */
-		virtual int64_t size(void) final;
+		virtual int64_t size(void) override final;
 
 		/** IPartition **/
 
@@ -101,7 +106,7 @@ class GcnPartition : public IPartition
 		 * This size includes the partition header and hashes.
 		 * @return Partition size, or -1 on error.
 		 */
-		virtual int64_t partition_size(void) const final;
+		virtual int64_t partition_size(void) const override final;
 
 		/**
 		 * Get the used partition size.
@@ -109,7 +114,7 @@ class GcnPartition : public IPartition
 		 * but does not include "empty" sectors.
 		 * @return Used partition size, or -1 on error.
 		 */
-		virtual int64_t partition_size_used(void) const final;
+		virtual int64_t partition_size_used(void) const override final;
 
 		/** IFst wrapper functions. **/
 

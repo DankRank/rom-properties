@@ -20,7 +20,6 @@
  ***************************************************************************/
 
 #include "AmiiboData.hpp"
-#include "common.h"
 
 namespace LibRomData {
 
@@ -53,8 +52,7 @@ class AmiiboDataPrivate {
 		// Static class.
 		AmiiboDataPrivate();
 		~AmiiboDataPrivate();
-		AmiiboDataPrivate(const AmiiboDataPrivate &other);
-		AmiiboDataPrivate &operator=(const AmiiboDataPrivate &other);
+		RP_DISABLE_COPY(AmiiboDataPrivate)
 
 	public:
 		/** Page 21 (raw offset 0x54): Character series **/
@@ -84,6 +82,7 @@ class AmiiboDataPrivate {
 		static const char_variant_t smb_rosalina_variants[];
 		static const char_variant_t smb_bowser_variants[];
 		static const char_variant_t smb_donkey_kong_variants[];
+		static const char_variant_t yoshi_poochy_variants[];
 		static const char_variant_t tloz_link_variants[];
 		static const char_variant_t tloz_zelda_variants[];
 		static const char_variant_t tloz_ganondorf_variants[];
@@ -91,6 +90,26 @@ class AmiiboDataPrivate {
 		static const char_variant_t pikmin_olimar_variants[];
 		static const char_variant_t mii_variants[];
 		static const char_variant_t splatoon_inkling_variants[];
+
+		static const char_variant_t mss_mario_variants[];
+		static const char_variant_t mss_luigi_variants[];
+		static const char_variant_t mss_peach_variants[];
+		static const char_variant_t mss_daisy_variants[];
+		static const char_variant_t mss_yoshi_variants[];
+		static const char_variant_t mss_wario_variants[];
+		static const char_variant_t mss_waluigi_variants[];
+		static const char_variant_t mss_donkey_kong_variants[];
+		static const char_variant_t mss_diddy_kong_variants[];
+		static const char_variant_t mss_bowser_variants[];
+		static const char_variant_t mss_bowser_jr_variants[];
+		static const char_variant_t mss_boo_variants[];
+		static const char_variant_t mss_baby_mario_variants[];
+		static const char_variant_t mss_baby_luigi_variants[];
+		static const char_variant_t mss_birdo_variants[];
+		static const char_variant_t mss_rosalina_variants[];
+		static const char_variant_t mss_metal_mario_variants[];
+		static const char_variant_t mss_pink_gold_peach_variants[];
+
 		static const char_variant_t ac_isabelle_variants[];
 		static const char_variant_t ac_kk_slider_variants[];
 		static const char_variant_t ac_tom_nook_variants[];
@@ -153,10 +172,10 @@ class AmiiboDataPrivate {
 const rp_char *const AmiiboDataPrivate::char_series_names[] = {
 	_RP("Super Mario Bros."),	// 0x000
 	nullptr,			// 0x004
-	nullptr,			// 0x008
+	_RP("Yoshi"),			// 0x008
 	nullptr,			// 0x00C
 	_RP("The Legend of Zelda"),	// 0x010
-	nullptr,			// 0x014
+	_RP("The Legend of Zelda"),	// 0x014
 
 	// Animal Crossing
 	_RP("Animal Crossing"),		// 0x018
@@ -188,9 +207,13 @@ const rp_char *const AmiiboDataPrivate::char_series_names[] = {
 	_RP("Mii"),			// 0x07C
 	_RP("Splatoon"),		// 0x080
 
-	// 0x084 - 0x18C
+	// 0x084 - 0x098
 	nullptr, nullptr, nullptr,	// 0x084
-	nullptr, nullptr, nullptr, nullptr,	// 0x090
+	nullptr, nullptr, nullptr, 	// 0x090
+
+	_RP("Mario Sports Superstars"),	// 0x09C
+
+	// 0x0A0-0x18C
 	nullptr, nullptr, nullptr, nullptr,	// 0x0A0
 	nullptr, nullptr, nullptr, nullptr,	// 0x0B0
 	nullptr, nullptr, nullptr, nullptr,	// 0x0C0
@@ -313,6 +336,11 @@ const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::smb_donkey_kong_varia
 	//{0xFF, _RP("Dark Turbo Charge Donkey Kong")},
 };
 
+const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::yoshi_poochy_variants[] = {
+	{0x00, nullptr},	// TODO
+	{0x01, _RP("Yarn Poochy")},
+};
+
 const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::tloz_link_variants[] = {
 	{0x00, _RP("Link")},
 	{0x01, _RP("Toon Link")},
@@ -350,6 +378,38 @@ const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::splatoon_inkling_vari
 	{0x02, _RP("Inkling Boy")},
 	{0x03, _RP("Inkling Squid")},
 };
+
+// Mario Sports Superstars
+// Each character has five variants (0x01-0x05).
+// NOTE: Variant 0x00 is not actually assigned.
+#define MSS_VARIANT_ARRAY_DEF(char_name, c_name) \
+	const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::mss_##c_name##_variants[] = { \
+		{0x00, _RP(char_name)}, \
+		{0x01, _RP2(char_name, " (Soccer)")}, \
+		{0x02, _RP2(char_name, " (Baseball")}, \
+		{0x03, _RP2(char_name, " (Tennis)")}, \
+		{0x04, _RP2(char_name, " (Golf)")}, \
+		{0x05, _RP2(char_name, " (Horse Racing")}, \
+	}
+
+MSS_VARIANT_ARRAY_DEF("Mario", mario);
+MSS_VARIANT_ARRAY_DEF("Luigi", luigi);
+MSS_VARIANT_ARRAY_DEF("Peach", peach);
+MSS_VARIANT_ARRAY_DEF("Daisy", daisy);
+MSS_VARIANT_ARRAY_DEF("Yoshi", yoshi);
+MSS_VARIANT_ARRAY_DEF("Wario", wario);
+MSS_VARIANT_ARRAY_DEF("Waluigi", waluigi);
+MSS_VARIANT_ARRAY_DEF("Donkey Kong", donkey_kong);
+MSS_VARIANT_ARRAY_DEF("Diddy Kong", diddy_kong);
+MSS_VARIANT_ARRAY_DEF("Bowser", bowser);
+MSS_VARIANT_ARRAY_DEF("Bowser Jr.", bowser_jr);
+MSS_VARIANT_ARRAY_DEF("Boo", boo);
+MSS_VARIANT_ARRAY_DEF("Baby Mario", baby_mario);
+MSS_VARIANT_ARRAY_DEF("Baby Luigi", baby_luigi);
+MSS_VARIANT_ARRAY_DEF("Birdo", birdo);
+MSS_VARIANT_ARRAY_DEF("Rosalina", rosalina);
+MSS_VARIANT_ARRAY_DEF("Metal Mario", metal_mario);
+MSS_VARIANT_ARRAY_DEF("Pink Gold Peach", pink_gold_peach);
 
 const AmiiboDataPrivate::char_variant_t AmiiboDataPrivate::ac_isabelle_variants[] = {
 	{0x00, _RP("Isabelle (Summer Outfit)")},
@@ -473,18 +533,23 @@ const AmiiboDataPrivate::char_id_t AmiiboDataPrivate::char_ids[] = {
 	{0x0005, _RP("Bowser"), smb_bowser_variants, ARRAY_SIZE(smb_bowser_variants)},
 	{0x0006, _RP("Bowser Jr."), nullptr, 0},
 	{0x0007, _RP("Wario"), nullptr, 0},
-	{0x0008, _RP("Donkey Kong"), smb_donkey_kong_variants, ARRAY_SIZE(smb_donkey_kong_variants)},	// FIXME: Listed as 0x0080 on Amiibo DB's SSB tab.
+	{0x0008, _RP("Donkey Kong"), smb_donkey_kong_variants, ARRAY_SIZE(smb_donkey_kong_variants)},
 	{0x0009, _RP("Diddy Kong"), nullptr, 0},
 	{0x000A, _RP("Toad"), nullptr, 0},
 	{0x0013, _RP("Daisy"), nullptr, 0},
 	{0x0014, _RP("Waluigi"), nullptr, 0},
 	{0x0017, _RP("Boo"), nullptr, 0},
 
+	// Yoshi (character series = 0x008)
+	{0x0080, _RP("Poochy"), yoshi_poochy_variants, ARRAY_SIZE(yoshi_poochy_variants)},
+
 	// The Legend of Zelda (character series = 0x010)
 	{0x0100, _RP("Link"), tloz_link_variants, ARRAY_SIZE(tloz_link_variants)},
 	{0x0101, _RP("Zelda"), tloz_zelda_variants, ARRAY_SIZE(tloz_zelda_variants)},
 	{0x0102, _RP("Ganondorf"), tloz_ganondorf_variants, ARRAY_SIZE(tloz_ganondorf_variants)},
 	{0x0103, _RP("Midna & Wolf Link"), nullptr, 0},
+	// The Legend of Zelda (character series = 0x014)
+	{0x0141, _RP("Bokoblin"), nullptr, 0},
 
 	// Animal Crossing (character series = 0x018)
 	{0x0180, _RP("Villager"), nullptr, 0},
@@ -983,7 +1048,27 @@ const AmiiboDataPrivate::char_id_t AmiiboDataPrivate::char_ids[] = {
 	// Splatoon (character series = 0x080)
 	{0x0800, _RP("Inkling"), splatoon_inkling_variants, ARRAY_SIZE(splatoon_inkling_variants)},
 	{0x0801, _RP("Callie"), nullptr, 0},
-	{0x0801, _RP("Marie"), nullptr, 0},
+	{0x0802, _RP("Marie"), nullptr, 0},
+
+	// Mario Sports Superstars (character series = 0x09C)
+	{0x09C0, _RP("Mario"), mss_mario_variants, ARRAY_SIZE(mss_mario_variants)},
+	{0x09C1, _RP("Luigi"), mss_luigi_variants, ARRAY_SIZE(mss_luigi_variants)},
+	{0x09C2, _RP("Peach"), mss_peach_variants, ARRAY_SIZE(mss_peach_variants)},
+	{0x09C3, _RP("Daisy"), mss_daisy_variants, ARRAY_SIZE(mss_daisy_variants)},
+	{0x09C4, _RP("Yoshi"), mss_yoshi_variants, ARRAY_SIZE(mss_yoshi_variants)},
+	{0x09C5, _RP("Wario"), mss_wario_variants, ARRAY_SIZE(mss_wario_variants)},
+	{0x09C6, _RP("Waluigi"), mss_waluigi_variants, ARRAY_SIZE(mss_waluigi_variants)},
+	{0x09C7, _RP("Donkey Kong"), mss_donkey_kong_variants, ARRAY_SIZE(mss_donkey_kong_variants)},
+	{0x09C8, _RP("Diddy Kong"), mss_diddy_kong_variants, ARRAY_SIZE(mss_diddy_kong_variants)},
+	{0x09C9, _RP("Bowser"), mss_bowser_variants, ARRAY_SIZE(mss_bowser_variants)},
+	{0x09CA, _RP("Bowser Jr."), mss_bowser_jr_variants, ARRAY_SIZE(mss_bowser_jr_variants)},
+	{0x09CB, _RP("Boo"), mss_boo_variants, ARRAY_SIZE(mss_boo_variants)},
+	{0x09CC, _RP("Baby Mario"), mss_baby_mario_variants, ARRAY_SIZE(mss_baby_mario_variants)},
+	{0x09CD, _RP("Baby Luigi"), mss_baby_luigi_variants, ARRAY_SIZE(mss_baby_luigi_variants)},
+	{0x09CE, _RP("Birdo"), mss_birdo_variants, ARRAY_SIZE(mss_birdo_variants)},
+	{0x09CF, _RP("Rosalina"), mss_rosalina_variants, ARRAY_SIZE(mss_rosalina_variants)},
+	{0x09D0, _RP("Metal Mario"), mss_metal_mario_variants, ARRAY_SIZE(mss_metal_mario_variants)},
+	{0x09D1, _RP("Pink Gold Peach"), mss_pink_gold_peach_variants, ARRAY_SIZE(mss_pink_gold_peach_variants)},
 
 	// Pokémon (character series = 0x190 - 0x1BC)
 	{0x1900+  6, _RP("Charizard"), nullptr, 0},
@@ -1001,6 +1086,9 @@ const AmiiboDataPrivate::char_id_t AmiiboDataPrivate::char_ids[] = {
 	{0x1F01, _RP("Meta Knight"), nullptr, 0},
 	{0x1F02, _RP("King Dedede"), nullptr, 0},
 	{0x1F03, _RP("Waddle Dee"), nullptr, 0},
+
+	// BoxBoy! (character series = 0x1F4)
+	{0x1F40, _RP("Qbby"), nullptr, 0},
 
 	// Fire Emblem (character series = 0x210)
 	{0x2100, _RP("Marth"), nullptr, 0},
@@ -1082,6 +1170,7 @@ const rp_char *const AmiiboDataPrivate::amiibo_series_names[] = {
 #endif
 	nullptr,					// 0x0E
 	_RP("Monster Hunter"),				// 0x0F
+	_RP("BoxBoy!"),					// 0x10
 };
 
 // amiibo IDs.
@@ -1171,9 +1260,9 @@ const AmiiboDataPrivate::amiibo_id_t AmiiboDataPrivate::amiibo_ids[] = {
 	{  0, 1, _RP("Inkling Squid")},		// 0x0040
 
 	// Yarn Yoshi [0x0041-0x0043]
-	{  0, 0, _RP("Green Yarn Yoshi")},	// 0x0041
-	{  0, 0, _RP("Pink Yarn Yoshi")},	// 0x0042
-	{  0, 0, _RP("Light Blue Yarn Yoshi")},	// 0x0043
+	{  1, 0, _RP("Green Yarn Yoshi")},	// 0x0041
+	{  2, 0, _RP("Pink Yarn Yoshi")},	// 0x0042
+	{  3, 0, _RP("Light Blue Yarn Yoshi")},	// 0x0043
 
 	// Animal Crossing Cards: Series 1 [0x0044-0x00A7]
 	{  1, 1, _RP("Isabelle")},		// 0x0044
@@ -1679,7 +1768,7 @@ const AmiiboDataPrivate::amiibo_id_t AmiiboDataPrivate::amiibo_ids[] = {
 	{ 51, 7, _RP("Mewtwo")},		// 0x023D
 
 	// Yarn Yoshi: Mega Yarn Yoshi [0x023E]
-	{  0, 0, _RP("Mega Yarn Yoshi")},	// 0x023E
+	{  4, 0, _RP("Mega Yarn Yoshi")},	// 0x023E
 
 	// Animal Crossing Figurines: Wave 1 [0x023F-0x0246]
 	{  0, 1, _RP("Isabelle")},		// 0x023F
@@ -1748,65 +1837,100 @@ const AmiiboDataPrivate::amiibo_id_t AmiiboDataPrivate::amiibo_ids[] = {
 	{ 10, 2, _RP("Waluigi")},		// 0x0267
 	{ 15, 2, _RP("Boo")},			// 0x0268
 
-	// Unused [0x0269-0x026F]
-	{  0, 0, nullptr},			// 0x0269
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x026A,0x026B
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x026C,0x026D
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x026E,0x026F
+	// Mario Sports Superstars Cards [0x0269-0x02C2]
+	{  1,  1, _RP("Mario (Soccer)")},		// 0x0269
+	{  2,  1, _RP("Mario (Baseball)")},		// 0x026A
+	{  3,  1, _RP("Mario (Tennis)")},		// 0x026B
+	{  4,  1, _RP("Mario (Golf)")},			// 0x026C
+	{  5,  1, _RP("Mario (Horse Racing)")},		// 0x026D
+	{  6,  1, _RP("Luigi (Soccer)")},		// 0x026E
+	{  7,  1, _RP("Luigi (Baseball)")},		// 0x026F
+	{  8,  1, _RP("Luigi (Tennis)")},		// 0x0270
+	{  9,  1, _RP("Luigi (Golf)")},			// 0x0271
+	{ 10,  1, _RP("Luigi (Horse Racing)")},		// 0x0272
+	{ 11,  1, _RP("Peach (Soccer)")},		// 0x0273
+	{ 12,  1, _RP("Peach (Baseball)")},		// 0x0274
+	{ 13,  1, _RP("Peach (Tennis)")},		// 0x0275
+	{ 14,  1, _RP("Peach (Golf)")},			// 0x0276
+	{ 15,  1, _RP("Peach (Horse Racing)")},		// 0x0277
+	{ 16,  1, _RP("Daisy (Soccer)")},		// 0x0278
+	{ 17,  1, _RP("Daisy (Baseball)")},		// 0x0279
+	{ 18,  1, _RP("Daisy (Tennis)")},		// 0x027A
+	{ 19,  1, _RP("Daisy (Golf)")},			// 0x027B
+	{ 20,  1, _RP("Daisy (Horse Racing)")},		// 0x027C
+	{ 21,  1, _RP("Yoshi (Soccer)")},		// 0x027D
+	{ 22,  1, _RP("Yoshi (Baseball)")},		// 0x027E
+	{ 23,  1, _RP("Yoshi (Tennis)")},		// 0x027F
+	{ 24,  1, _RP("Yoshi (Golf)")},			// 0x0280
+	{ 25,  1, _RP("Yoshi (Horse Racing)")},		// 0x0281
+	{ 26,  1, _RP("Wario (Soccer)")},		// 0x0282
+	{ 27,  1, _RP("Wario (Baseball)")},		// 0x0283
+	{ 28,  1, _RP("Wario (Tennis)")},		// 0x0284
+	{ 29,  1, _RP("Wario (Golf)")},			// 0x0285
+	{ 30,  1, _RP("Wario (Horse Racing)")},		// 0x0286
+	{ 31,  1, _RP("Waluigi (Soccer)")},		// 0x0287
+	{ 32,  1, _RP("Waluigi (Baseball)")},		// 0x0288
+	{ 33,  1, _RP("Waluigi (Tennis)")},		// 0x0289
+	{ 34,  1, _RP("Waluigi (Golf)")},		// 0x028A
+	{ 35,  1, _RP("Waluigi (Horse Racing)")},	// 0x028B
+	{ 36,  1, _RP("Donkey Kong (Soccer)")},		// 0x028C
+	{ 37,  1, _RP("Donkey Kong (Baseball)")},	// 0x028D
+	{ 38,  1, _RP("Donkey Kong (Tennis)")},		// 0x028E
+	{ 39,  1, _RP("Donkey Kong (Golf)")},		// 0x028F
+	{ 40,  1, _RP("Donkey Kong (Horse Racing)")},	// 0x0290
+	{ 41,  1, _RP("Diddy Kong (Soccer)")},		// 0x0291
+	{ 42,  1, _RP("Diddy Kong (Baseball)")},	// 0x0292
+	{ 43,  1, _RP("Diddy Kong (Tennis)")},		// 0x0293
+	{ 44,  1, _RP("Diddy Kong (Golf)")},		// 0x0294
+	{ 45,  1, _RP("Diddy Kong (Horse Racing)")},	// 0x0295
+	{ 46,  1, _RP("Bowser (Soccer)")},		// 0x0296
+	{ 47,  1, _RP("Bowser (Baseball)")},		// 0x0297
+	{ 48,  1, _RP("Bowser (Tennis)")},		// 0x0298
+	{ 49,  1, _RP("Bowser (Golf)")},		// 0x0299
+	{ 50,  1, _RP("Bowser (Horse Racing)")},	// 0x029A
+	{ 51,  1, _RP("Bowser Jr. (Soccer)")},		// 0x029B
+	{ 52,  1, _RP("Bowser Jr. (Baseball)")},	// 0x029C
+	{ 53,  1, _RP("Bowser Jr. (Tennis)")},		// 0x029D
+	{ 54,  1, _RP("Bowser Jr. (Golf)")},		// 0x029E
+	{ 55,  1, _RP("Bowser Jr. (Horse Racing)")},	// 0x029F
+	{ 56,  1, _RP("Boo (Soccer)")},			// 0x02A0
+	{ 57,  1, _RP("Boo (Baseball)")},		// 0x02A1
+	{ 58,  1, _RP("Boo (Tennis)")},			// 0x02A2
+	{ 59,  1, _RP("Boo (Golf)")},			// 0x02A3
+	{ 60,  1, _RP("Boo (Horse Racing)")},		// 0x02A4
+	{ 61,  1, _RP("Baby Mario (Soccer)")},		// 0x02A5
+	{ 62,  1, _RP("Baby Mario (Baseball)")},	// 0x02A6
+	{ 63,  1, _RP("Baby Mario (Tennis)")},		// 0x02A7
+	{ 64,  1, _RP("Baby Mario (Golf)")},		// 0x02A8
+	{ 65,  1, _RP("Baby Mario (Horse Racing)")},	// 0x02A9
+	{ 66,  1, _RP("Baby Luigi (Soccer)")},		// 0x02AA
+	{ 67,  1, _RP("Baby Luigi (Baseball)")},	// 0x02AB
+	{ 68,  1, _RP("Baby Luigi (Tennis)")},		// 0x02AC
+	{ 69,  1, _RP("Baby Luigi (Golf)")},		// 0x02AD
+	{ 70,  1, _RP("Baby Luigi (Horse Racing)")},	// 0x02AE
+	{ 71,  1, _RP("Birdo (Soccer)")},		// 0x02AF
+	{ 72,  1, _RP("Birdo (Baseball)")},		// 0x02B0
+	{ 73,  1, _RP("Birdo (Tennis)")},		// 0x02B1
+	{ 74,  1, _RP("Birdo (Golf)")},			// 0x02B2
+	{ 75,  1, _RP("Birdo (Horse Racing)")},		// 0x02B3
+	{ 76,  1, _RP("Rosalina (Soccer)")},		// 0x02B4
+	{ 77,  1, _RP("Rosalina (Baseball)")},		// 0x02B5
+	{ 78,  1, _RP("Rosalina (Tennis)")},		// 0x02B6
+	{ 79,  1, _RP("Rosalina (Golf)")},		// 0x02B7
+	{ 80,  1, _RP("Rosalina (Horse Racing)")},	// 0x02B8
+	{ 81,  1, _RP("Metal Mario (Soccer)")},		// 0x02B9
+	{ 82,  1, _RP("Metal Mario (Baseball)")},	// 0x02BA
+	{ 83,  1, _RP("Metal Mario (Tennis)")},		// 0x02BB
+	{ 84,  1, _RP("Metal Mario (Golf)")},		// 0x02BC
+	{ 85,  1, _RP("Metal Mario (Horse Racing)")},	// 0x02BD
+	{ 86,  1, _RP("Pink Gold Peach (Soccer)")},		// 0x02BE
+	{ 87,  1, _RP("Pink Gold Peach (Baseball)")},		// 0x02BF
+	{ 88,  1, _RP("Pink Gold Peach (Tennis)")},		// 0x02C0
+	{ 89,  1, _RP("Pink Gold Peach (Golf)")},		// 0x02C1
+	{ 90,  1, _RP("Pink Gold Peach (Horse Racing)")},	// 0x02C2
 
-	// Unused [0x0270-0x027F]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0270,0x0271
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0272,0x0273
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0274,0x0275
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0276,0x0277
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0278,0x0279
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x027A,0x027B
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x027C,0x027D
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x027E,0x027F
-
-	// Unused [0x0280-0x028F]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0280,0x0281
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0282,0x0283
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0284,0x0285
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0286,0x0287
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0288,0x0289
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x028A,0x028B
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x028C,0x028D
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x028E,0x028F
-
-	// Unused [0x0290-0x029F]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0290,0x0291
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0292,0x0293
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0294,0x0295
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0296,0x0297
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x0298,0x0299
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x029A,0x029B
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x029C,0x029D
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x029E,0x029F
-
-	// Unused [0x02A0-0x02AF]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02A0,0x02A1
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02A2,0x02A3
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02A4,0x02A5
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02A6,0x02A7
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02A8,0x02A9
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02AA,0x02AB
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02AC,0x02AD
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02AE,0x02AF
-
-	// Unused [0x02B0-0x02BF]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02B0,0x02B1
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02B2,0x02B3
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02B4,0x02B5
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02B6,0x02B7
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02B8,0x02B9
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02BA,0x02BB
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02BC,0x02BD
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02BE,0x02BF
-
-	// Unused [0x02C0-0x02CF]
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02C0,0x02C1
-	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02C2,0x02C3
+	// Unused [0x02C3-0x02CF]
+	{  0, 0, nullptr},			// 0x02C3
 	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02C4,0x02C5
 	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02C6,0x02C7
 	{  0, 0, nullptr}, {  0, 0, nullptr},	// 0x02C8,0x02C9
@@ -1930,13 +2054,31 @@ const AmiiboDataPrivate::amiibo_id_t AmiiboDataPrivate::amiibo_ids[] = {
 
 	// The Legend of Zelda: 30th Anniversary Series
 	{  0, 2, _RP("Link (Ocarina of Time)")},	// 0x034B
-	{  0, 0, nullptr},				// 0x034C
-	{  0, 0, nullptr},				// 0x034D
-	{  0, 0, nullptr},				// 0x034E
+	{  0, 0, _RP("Unreleased (Majora's Mask)")},	// 0x034C
+	{  0, 0, _RP("Unreleased (Twilight Princess)")},// 0x034D
+	{  0, 0, _RP("Unreleased (Skyward Sword)")},	// 0x034E
 	{  0, 2, _RP("Link (8-bit)")},			// 0x034F
 	{  0, 2, _RP("Toon Link (The Wind Waker)")},	// 0x0350
 	{  0, 0, nullptr},				// 0x0351
 	{  0, 2, _RP("Zelda (The Wind Waker)")},	// 0x0352
+
+	// The Legend of Zelda: Breath of the Wild Series
+	{  0, 3, _RP("Link (Archer)")},			// 0x0353
+	{  0, 3, _RP("Link (Rider)")},			// 0x0354
+	{  0, 3, _RP("Guardian")},			// 0x0355
+	{  0, 3, _RP("Zelda")},				// 0x0356
+	// Unused [0x0357-0x35B]
+	{  0, 0, nullptr},				// 0x0357
+	{  0, 0, nullptr}, {  0, 0, nullptr},		// 0x0358,0x0359
+	{  0, 0, nullptr}, {  0, 0, nullptr},		// 0x035A,0x035B
+	// The Legend of Zelda: Breath of the Wild Series (continued)
+	{  0, 3, _RP("Bokoblin")},			// 0x035C
+
+	// Yarn Yoshi: Poochy [0x035D]
+	{  5, 0, _RP("Poochy")},			// 0x035D
+
+	// BoxBoy!: Qbby [0x035E]
+	{  0, 0, _RP("Qbby")},				// 0x035E
 
 #if 0
 	// TODO: Not released yet.
@@ -1945,11 +2087,6 @@ const AmiiboDataPrivate::amiibo_id_t AmiiboDataPrivate::amiibo_ids[] = {
 	{ 57, 10, _RP("Bayonetta")},			// 0x0xxx
 	{ 58, 10, _RP("Cloud")},			// 0x0xxx
 	{ 59, 10, _RP("Corrin")},			// 0x0xxx
-
-	// The Legend of Zelda: Breath of the Wild Series
-	{  0, 3, _RP("Link (Archer)")},			// 0x0xxx
-	{  0, 3, _RP("Link (Rider)")},			// 0x0xxx
-	{  0, 3, _RP("Guardian")},			// 0x0xxx
 #endif
 };
 
@@ -2029,7 +2166,10 @@ const rp_char *AmiiboData::lookup_char_name(uint32_t char_id)
  */
 const rp_char *AmiiboData::lookup_amiibo_series_name(uint32_t amiibo_id)
 {
-	static_assert(ARRAY_SIZE(AmiiboDataPrivate::amiibo_ids) == 0x0353,
+	// FIXME: gcc-6.3.0 is trying to interpret 0x035E+1 as a
+	// floating-point hex constant:
+	// error: unable to find numeric literal operator ‘operator""+1’
+	static_assert(ARRAY_SIZE(AmiiboDataPrivate::amiibo_ids) == ((0x035E)+1),
 		"amiibo_ids[] is out of sync with the amiibo ID list.");
 
 	const unsigned int series_id = (amiibo_id >> 8) & 0xFF;

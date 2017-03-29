@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * RomDataFactory.hpp: RomData factory class.                              *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -21,9 +21,10 @@
 
 #include "config.libromdata.h"
 
+#include "common.h"
 #include "RomDataFactory.hpp"
 #include "file/RpFile.hpp"
-#include "common.h"
+#include "file/FileSystem.hpp"
 
 // C++ includes.
 #include <unordered_map>
@@ -51,6 +52,8 @@ using std::vector;
 #include "PlayStationSave.hpp"
 #include "Amiibo.hpp"
 #include "NES.hpp"
+#include "WiiU.hpp"
+#include "EXE.hpp"
 #include "touhou/TouhouReplay.hpp"
 
 // Special case for Dreamcast save files.
@@ -65,8 +68,7 @@ class RomDataFactoryPrivate
 		~RomDataFactoryPrivate();
 
 	private:
-		RomDataFactoryPrivate(const RomDataFactoryPrivate &other);
-		RomDataFactoryPrivate &operator=(const RomDataFactoryPrivate &other);
+		RP_DISABLE_COPY(RomDataFactoryPrivate)
 
 	public:
 		typedef int (*pFnIsRomSupported)(const RomData::DetectInfo *info);
@@ -127,7 +129,13 @@ const RomDataFactoryPrivate::RomDataFns RomDataFactoryPrivate::romDataFns_header
 	GetRomDataFns(PlayStationSave, true),
 	GetRomDataFns(Amiibo, true),
 	GetRomDataFns(NES, false),
-	GetRomDataFns(TouhouReplay, false),
+	GetRomDataFns(WiiU, true),
+  GetRomDataFns(TouhouReplay, false),
+
+	// NOTE: EXE has a 16-bit magic number,
+	// so it should go at the end.
+	// TODO: Thumbnailing on non-Windows platforms.
+	GetRomDataFns(EXE, false),
 	{nullptr, nullptr, nullptr, false}
 };
 
@@ -147,7 +155,7 @@ RomData *RomDataFactoryPrivate::openDreamcastVMSandVMI(IRpFile *file)
 	// VMS files are always a multiple of 512 bytes,
 	// or 160 bytes for some monochrome ICONDATA_VMS.
 	// VMI files are always 108 bytes;
-	int64_t filesize = file->fileSize();
+	int64_t filesize = file->size();
 	bool has_dc_vms = (filesize % DC_VMS_BLOCK_SIZE == 0) ||
 			  (filesize == DC_VMS_ICONDATA_MONO_MINSIZE);
 	bool has_dc_vmi = (filesize == DC_VMI_Header_SIZE);
@@ -258,7 +266,7 @@ RomData *RomDataFactory::getInstance(IRpFile *file, bool thumbnail)
 	RomData::DetectInfo info;
 
 	// Get the file size.
-	info.szFile = file->fileSize();
+	info.szFile = file->size();
 
 	// Read 4,096+256 bytes from the ROM header.
 	// This should be enough to detect most systems.
@@ -276,21 +284,7 @@ RomData *RomDataFactory::getInstance(IRpFile *file, bool thumbnail)
 	info.ext = nullptr;
 	const rp_string filename = file->filename();
 	if (!filename.empty()) {
-		// Get the last dot position.
-		size_t dot_pos = filename.find_last_of(_RP_CHR('.'));
-		if (dot_pos != rp_string::npos) {
-			// Dot must be after the last slash.
-			// Or backslash on Windows.)
-#ifdef _WIN32
-			size_t slash_pos = filename.find_last_of(_RP("/\\"));
-#else /* !_WIN32 */
-			size_t slash_pos = filename.find_last_of(_RP_CHR('/'));
-#endif /* _WIN32 */
-			if (slash_pos == rp_string::npos || slash_pos < dot_pos) {
-				// Valid file extension.
-				info.ext = filename.c_str() + dot_pos;
-			}
-		}
+		info.ext = FileSystem::file_ext(filename);
 	}
 
 	// Special handling for Dreamcast .VMI+.VMS pairs.

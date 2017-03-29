@@ -9,7 +9,8 @@ ENDIF()
 # - MSVCRT "deprecated" functions
 SET(RP_C_FLAGS_COMMON "/nologo /wd4355 /wd4482 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE")
 SET(RP_CXX_FLAGS_COMMON "${RP_C_FLAGS_COMMON}")
-# NOTE: -tsaware is automatically set for Windows 2000 and later. (as of at least Visual Studio .NET 2003)
+# NOTE: /TSAWARE is automatically set for Windows 2000 and later. (as of at least Visual Studio .NET 2003)
+# NOTE 2: /TSAWARE is not applicable for DLLs.
 SET(RP_EXE_LINKER_FLAGS_COMMON "/NOLOGO /DYNAMICBASE /NXCOMPAT /LARGEADDRESSAWARE")
 SET(RP_SHARED_LINKER_FLAGS_COMMON "${RP_EXE_LINKER_FLAGS_COMMON}")
 SET(RP_MODULE_LINKER_FLAGS_COMMON "${RP_EXE_LINKER_FLAGS_COMMON}")
@@ -31,6 +32,11 @@ FOREACH(FLAG_TEST "-sdl")
 	ENDIF(CFLAG_${FLAG_TEST})
 	UNSET(CFLAG_${FLAG_TEST})
 ENDFOREACH()
+
+# Disable warning C4996 (deprecated), then re-enable it.
+# Otherwise, it gets handled as an error due to /sdl.
+SET(RP_C_FLAGS_COMMON "${RP_C_FLAGS_COMMON} /wd4996 /w34996")
+SET(RP_CXX_FLAGS_COMMON "${RP_CXX_FLAGS_COMMON} /wd4996 /w34996")
 
 # Disable the RC and MASM "logo".
 # FIXME: Setting CMAKE_RC_FLAGS causes msbuild to fail,

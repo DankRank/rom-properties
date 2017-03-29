@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * PlayStationSave.hpp: Sony PlayStation save file reader.                 *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -53,17 +53,11 @@ class PlayStationSavePrivate : public RomDataPrivate
 {
 	public:
 		PlayStationSavePrivate(PlayStationSave *q, IRpFile *file);
+		virtual ~PlayStationSavePrivate();
 
 	private:
 		typedef RomDataPrivate super;
-		PlayStationSavePrivate(const PlayStationSavePrivate &other);
-		PlayStationSavePrivate &operator=(const PlayStationSavePrivate &other);
-
-	public:
-		/** RomFields **/
-
-		// ROM fields.
-		static const struct RomFields::Desc ps1_fields[];
+		RP_DISABLE_COPY(PlayStationSavePrivate)
 
 	public:
 		// Save file type.
@@ -96,20 +90,26 @@ class PlayStationSavePrivate : public RomDataPrivate
 
 /** PlayStationSavePrivate **/
 
-// ROM fields.
-// TODO: Add more.
-const struct RomFields::Desc PlayStationSavePrivate::ps1_fields[] = {
-	{_RP("Filename"), RomFields::RFT_STRING, {nullptr}},
-	{_RP("Description"), RomFields::RFT_STRING, {nullptr}},
-};
-
 PlayStationSavePrivate::PlayStationSavePrivate(PlayStationSave *q, IRpFile *file)
-	: super(q, file, ps1_fields, ARRAY_SIZE(ps1_fields))
+	: super(q, file)
 	, saveType(SAVE_TYPE_UNKNOWN)
 	, iconAnimData(nullptr)
 {
 	// Clear the save header struct.
 	memset(&psvHeader, 0, sizeof(psvHeader));
+}
+
+PlayStationSavePrivate::~PlayStationSavePrivate()
+{
+	if (iconAnimData) {
+		// Delete all except the first animated icon frame.
+		// (The first frame is owned by the RomData superclass.)
+		// TODO: Optimize by checking for "> 0" instead of ">= 1"?
+		for (int i = iconAnimData->count-1; i >= 1; i--) {
+			delete iconAnimData->frames[i];
+		}
+		delete iconAnimData;
+	}
 }
 
 /**
@@ -378,6 +378,50 @@ uint32_t PlayStationSave::supportedImageTypes(void) const
 }
 
 /**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> PlayStationSave::supportedImageSizes_static(ImageType imageType)
+{
+	assert(imageType >= IMG_INT_MIN && imageType <= IMG_EXT_MAX);
+	if (imageType < IMG_INT_MIN || imageType > IMG_EXT_MAX) {
+		// ImageType is out of range.
+		return std::vector<ImageSizeDef>();
+	}
+
+	if (imageType != IMG_INT_ICON) {
+		// Only icons are supported.
+		return std::vector<ImageSizeDef>();
+	}
+
+	// PlayStation save files have 16x16 icons.
+	static const ImageSizeDef sz_INT_ICON[] = {
+		{nullptr, 16, 16, 0},
+	};
+	return vector<ImageSizeDef>(sz_INT_ICON,
+		sz_INT_ICON + ARRAY_SIZE(sz_INT_ICON));
+}
+
+/**
+ * Get a list of all available image sizes for the specified image type.
+ *
+ * The first item in the returned vector is the "default" size.
+ * If the width/height is 0, then an image exists, but the size is unknown.
+ *
+ * @param imageType Image type.
+ * @return Vector of available image sizes, or empty vector if no images are available.
+ */
+std::vector<RomData::ImageSizeDef> PlayStationSave::supportedImageSizes(ImageType imageType) const
+{
+	return supportedImageSizes_static(imageType);
+}
+
+/**
  * Load field data.
  * Called by RomData::fields() if the field data hasn't been loaded yet.
  * @return Number of fields read on success; negative POSIX error code on error.
@@ -398,13 +442,14 @@ int PlayStationSave::loadFieldData(void)
 
 	// PSV (PS1 on PS3) save file header.
 	const PS1_PSV_Header *psvHeader = &d->psvHeader;
+	d->fields->reserve(2);	// Maximum of 2 fields.
 
 	// Filename.
-	d->fields->addData_string(
+	d->fields->addField_string(_RP("Filename"),
 		cp1252_sjis_to_rp_string(psvHeader->filename, sizeof(psvHeader->filename)));
 
 	// Description.
-	d->fields->addData_string(
+	d->fields->addField_string(_RP("Description"),
 		cp1252_sjis_to_rp_string(psvHeader->sc.title, sizeof(psvHeader->sc.title)));
 
 	// TODO: Moar fields.

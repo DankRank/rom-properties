@@ -1,8 +1,9 @@
 /***************************************************************************
  * ROM Properties Page shell extension. (libromdata)                       *
- * INESMappers.cpp: List of iNES mappers                                   *
+ * NESMappers.cpp: NES mapper data.                                        *
  *                                                                         *
- * Copyright (c) 2016 by Egor.                                             *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2017 by Egor.                                        *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -20,7 +21,6 @@
  ***************************************************************************/
 
 #include "NESMappers.hpp"
-#include "common.h"
 
 namespace LibRomData {
 
@@ -36,8 +36,7 @@ class NESMappersPrivate
 		// Static class.
 		NESMappersPrivate();
 		~NESMappersPrivate();
-		NESMappersPrivate(const NESMappersPrivate &other);
-		NESMappersPrivate &operator=(const NESMappersPrivate &other);
+		RP_DISABLE_COPY(NESMappersPrivate)
 
 	public:
 		// iNES mapper list.

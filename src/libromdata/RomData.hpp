@@ -22,8 +22,9 @@
 #ifndef __ROMPROPERTIES_LIBROMDATA_ROMDATA_HPP__
 #define __ROMPROPERTIES_LIBROMDATA_ROMDATA_HPP__
 
-#include "TextFuncs.hpp"
+#include "config.libromdata.h"
 #include "RomFields.hpp"
+#include "common.h"
 
 // C includes.
 #include <stdint.h>
@@ -56,13 +57,9 @@ class RomData
 		 *
 		 * NOTE: Check isValid() to determine if this is a valid ROM.
 		 *
-		 * In addition, subclasses must pass an array of RomFieldDesc structs.
-		 *
 		 * @param file ROM file.
-		 * @param fields Array of ROM Field descriptions.
-		 * @param count Number of ROM Field descriptions.
 		 */
-		RomData(IRpFile* file, const RomFields::Desc* fields, int count);
+		explicit RomData(IRpFile* file);
 
 		/**
 		 * ROM data base class.
@@ -74,9 +71,6 @@ class RomData
 		 * To close the file, either delete this object or call close().
 		 *
 		 * NOTE: Check isValid() to determine if this is a valid ROM.
-		 *
-		 * In addition, subclasses must pass an array of RomFieldDesc structs
-		 * using an allocated RomDataPrivate subclass.
 		 *
 		 * @param d RomDataPrivate subclass.
 		 */
@@ -90,8 +84,7 @@ class RomData
 		virtual ~RomData();
 
 	private:
-		RomData(const RomData &);
-		RomData &operator=(const RomData &);
+		RP_DISABLE_COPY(RomData)
 	protected:
 		friend class RomDataPrivate;
 		RomDataPrivate *const d_ptr;
@@ -115,6 +108,12 @@ class RomData
 		 * @return True if it is; false if it isn't.
 		 */
 		bool isValid(void) const;
+
+		/**
+		 * Is the file open?
+		 * @return True if the file is open; false if it isn't.
+		 */
+		bool isOpen(void) const;
 
 		/**
 		 * Close the opened file.
@@ -205,33 +204,20 @@ class RomData
 		enum FileType {
 			FTYPE_UNKNOWN = 0,
 
-			// ROM image.
-			FTYPE_ROM_IMAGE,
+			FTYPE_ROM_IMAGE,		// ROM image
+			FTYPE_DISC_IMAGE,		// Optical disc image
+			FTYPE_SAVE_FILE,		// Save file
+			FTYPE_EMBEDDED_DISC_IMAGE,	// "Embedded" disc image, e.g. GameCube TGC
+			FTYPE_APPLICATION_PACKAGE,	// Application package, e.g. WAD, CIA
+			FTYPE_NFC_DUMP,			// NFC dump, e.g. amiibo
+			FTYPE_DISK_IMAGE,		// Floppy and/or hard disk image
+			FTYPE_EXECUTABLE,		// Executable, e.g. EXE
+			FTYPE_DLL,			// Dynamic Link Library
+			FTYPE_DEVICE_DRIVER,		// Device driver
+			FTYPE_RESOURCE_LIBRARY,		// Resource library
+			FTYPE_REPLAY_FILE,		// Replay file e.g. Touhou.
 
-			// Optical disc image.
-			FTYPE_DISC_IMAGE,
-
-			// Save file.
-			FTYPE_SAVE_FILE,
-
-			// "Embedded" disc image.
-			// Commonly seen on GameCube demo discs.
-			FTYPE_EMBEDDED_DISC_IMAGE,
-
-			// Application package, e.g. WAD, CIA.
-			FTYPE_APPLICATION_PACKAGE,
-
-			// NFC dump, e.g. amiibo.
-			FTYPE_NFC_DUMP,
-
-			// Floppy and/or hard disk image.
-			FTYPE_DISK_IMAGE,
-
-			// Replay file e.g. Touhou.
-			FTYPE_REPLAY_FILE,
-
-			// End of FileType.
-			FTYPE_LAST
+			FTYPE_LAST			// End of FileType.
 		};
 
 		/**
@@ -274,22 +260,22 @@ class RomData
 		enum ImageType {
 			// Internal images are contained with the ROM or disc image.
 			IMG_INT_ICON = 0,	// Internal icon, e.g. DS launcher icon
-			//IMG_INT_ICON_SMALL,	// Internal small icon. (3DS) [TODO]
 			IMG_INT_BANNER,		// Internal banner, e.g. GameCube discs
 			IMG_INT_MEDIA,		// Internal media scan, e.g. Dreamcast discs
 
 			// External images are downloaded from websites,
 			// such as GameTDB.
 			IMG_EXT_MEDIA,		// External media scan
-			IMG_EXT_BOX,		// External box scan
-			IMG_EXT_BOX_FULL,	// External box scan (both sides)
-			IMG_EXT_BOX_3D,		// External box scan (3D version)
+			IMG_EXT_COVER,		// External cover scan
+			IMG_EXT_COVER_3D,	// External cover scan (3D version)
+			IMG_EXT_COVER_FULL,	// External cover scan (front and back)
+			IMG_EXT_BOX,		// External box scan (cover + outer box)
 
 			// Ranges.
 			IMG_INT_MIN = IMG_INT_ICON,
 			IMG_INT_MAX = IMG_INT_MEDIA,
 			IMG_EXT_MIN = IMG_EXT_MEDIA,
-			IMG_EXT_MAX = IMG_EXT_BOX_3D
+			IMG_EXT_MAX = IMG_EXT_BOX,
 		};
 
 		/**
@@ -299,16 +285,16 @@ class RomData
 		enum ImageTypeBF {
 			// Internal images are contained with the ROM or disc image.
 			IMGBF_INT_ICON   = (1 << IMG_INT_ICON),		// Internal icon, e.g. DS launcher icon
-			//IMGBF_INT_ICON_SMALL = (1 << IMG_INT_ICON_SMALL),	// Internal small icon. (3DS) [TODO]
 			IMGBF_INT_BANNER = (1 << IMG_INT_BANNER),	// Internal banner, e.g. GameCube discs
 			IMGBF_INT_MEDIA  = (1 << IMG_INT_MEDIA),	// Internal media scan, e.g. Dreamcast discs
 
 			// External images are downloaded from websites,
 			// such as GameTDB.
-			IMGBF_EXT_MEDIA    = (1 << IMG_EXT_MEDIA),	// External media scan, e.g. GameTDB
-			IMGBF_EXT_BOX      = (1 << IMG_EXT_BOX),	// External box scan
-			IMGBF_EXT_BOX_FULL = (1 << IMG_EXT_BOX_FULL),	// External box scan (both sides)
-			IMGBF_EXT_BOX_3D   = (1 << IMG_EXT_BOX_3D),	// External box scan (3D version)
+			IMGBF_EXT_MEDIA      = (1 << IMG_EXT_MEDIA),      // External media scan, e.g. GameTDB
+			IMGBF_EXT_COVER      = (1 << IMG_EXT_COVER),      // External cover scan
+			IMGBF_EXT_COVER_3D   = (1 << IMG_EXT_COVER_3D),   // External cover scan (3D version)
+			IMGBF_EXT_COVER_FULL = (1 << IMG_EXT_COVER_FULL), // External cover scan (front and back)
+			IMGBF_EXT_BOX	     = (1 << IMG_EXT_BOX),        // External box scan (cover + outer box)
 		};
 
 		/**
@@ -335,6 +321,27 @@ class RomData
 		 */
 		virtual uint32_t supportedImageTypes(void) const;
 
+		struct ImageSizeDef {
+			const char *name;	// Size name, if applicable. [UTF-8] (May be nullptr.)
+			uint16_t width;		// Image width. (May be 0 if unknown.)
+			uint16_t height;	// Image height. (May be 0 if unknown.)
+
+			// System-dependent values.
+			// Don't use these outside of a RomData subclass.
+			uint16_t index;		// Image index.
+		};
+
+		/**
+		 * Get a list of all available image sizes for the specified image type.
+		 *
+		 * The first item in the returned vector is the "default" size.
+		 * If the width/height is 0, then an image exists, but the size is unknown.
+		 *
+		 * @param imageType Image type.
+		 * @return Vector of available image sizes, or empty vector if no images are available.
+		 */
+		virtual std::vector<ImageSizeDef> supportedImageSizes(ImageType imageType) const;
+
 	protected:
 		/**
 		 * Load field data.
@@ -352,12 +359,11 @@ class RomData
 		virtual int loadInternalImage(ImageType imageType);
 
 		/**
-		 * Load URLs for an external media type.
-		 * Called by RomData::extURL() if the URLs haven't been loaded yet.
+		 * Get the imgpf value for external image types.
 		 * @param imageType Image type to load.
-		 * @return 0 on success; negative POSIX error code on error.
+		 * @return imgpf value.
 		 */
-		virtual int loadURLs(ImageType imageType);
+		virtual uint32_t imgpf_extURL(ImageType imageType) const;
 
 	public:
 		/**
@@ -388,23 +394,54 @@ class RomData
 
 		/**
 		 * External URLs for a media type.
-		 * Includes URL and "cache key" for local caching.
+		 * Includes URL and "cache key" for local caching,
+		 * plus the expected image size (if available).
 		 */
 		struct ExtURL {
 			rp_string url;		// URL
 			rp_string cache_key;	// Cache key
+			uint16_t width;		// Expected image width. (0 for unknown)
+			uint16_t height;	// Expected image height. (0 for unknown)
+
+			// Set this to true if this is a "high-resolution" image.
+			// This will be used to determine if it should be
+			// downloaded if high-resolution downloads are
+			// disabled.
+			//
+			// NOTE: If only one image size is available, set this
+			// to 'false' to allow it to be downloaded. Otherwise,
+			// no images will be downloaded.
+			bool high_res;
 		};
 
 		/**
-		 * Get a list of URLs for an external media type.
-		 *
-		 * NOTE: The std::vector<extURL> is owned by this object.
-		 * Do NOT delete this object until you're done using this rp_image.
-		 *
-		 * @param imageType Image type.
-		 * @return List of URLs and cache keys, or nullptr if the ROM doesn't have one.
+		 * Special image size values.
 		 */
-		const std::vector<ExtURL> *extURLs(ImageType imageType) const;
+		enum ImageSizeType {
+			IMAGE_SIZE_DEFAULT	=  0,
+			IMAGE_SIZE_SMALLEST	= -1,
+			IMAGE_SIZE_LARGEST	= -2,
+
+			// Minimum allowed value.
+			IMAGE_SIZE_MIN_VALUE	= IMAGE_SIZE_LARGEST
+		};
+
+		/**
+		 * Get a list of URLs for an external image type.
+		 *
+		 * A thumbnail size may be requested from the shell.
+		 * If the subclass supports multiple sizes, it should
+		 * try to get the size that most closely matches the
+		 * requested size.
+		 *
+		 * @param imageType	[in]     Image type.
+		 * @param pExtURLs	[out]    Output vector.
+		 * @param size		[in,opt] Requested image size. This may be a requested
+		 *                               thumbnail size in pixels, or an ImageSizeType
+		 *                               enum value.
+		 * @return 0 on success; negative POSIX error code on error.
+		 */
+		virtual int extURLs(ImageType imageType, std::vector<ExtURL> *pExtURLs, int size = IMAGE_SIZE_DEFAULT) const;
 
 		/**
 		 * Scrape an image URL from a downloaded HTML page.

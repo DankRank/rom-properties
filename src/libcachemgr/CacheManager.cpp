@@ -39,12 +39,12 @@ using namespace LibRomData::FileSystem;
 #include "libromdata/RpWin32.hpp"
 #endif /* _WIN32 */
 
-// POSIX includes.
-#ifndef _WIN32
-#include <sys/stat.h>
+// gettimeofday()
+#ifdef _MSC_VER
+#include <time.h>
+#else
 #include <sys/time.h>
-#include <sys/types.h>
-#endif /* !_WIN32 */
+#endif
 
 // C++ includes.
 #include <memory>
@@ -254,7 +254,7 @@ rp_string CacheManager::download(
 
 			// More than a week old.
 			// Delete the cache file and redownload it.
-			if (delete_file(cache_filename.c_str()) != 0)
+			if (delete_file(cache_filename) != 0)
 				return rp_string();
 		} else if (sz > 0) {
 			// File is larger than 0 bytes, which indicates

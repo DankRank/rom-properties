@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * stdafx.h: Common definitions and includes for COM.                      *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -36,5 +36,8 @@
 #include <commctrl.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <shlwapi.h>
+#include <comdef.h>
+#include <shlwapi.h>
 
 #endif /* __ROMPROPERTIES_WIN32_STDAFX_H__ */

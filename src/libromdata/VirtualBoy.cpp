@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * DMG.hpp: Virtual Boy ROM reader.                                        *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  * Copyright (c) 2016 by Egor.                                             *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
@@ -52,13 +52,8 @@ class VirtualBoyPrivate : public RomDataPrivate
 
 	private:
 		typedef RomDataPrivate super;
-		VirtualBoyPrivate(const VirtualBoyPrivate &other);
-		VirtualBoyPrivate &operator=(const VirtualBoyPrivate &other);
+		RP_DISABLE_COPY(VirtualBoyPrivate)
 
-	public:
-		/** RomFields **/
-		static const struct RomFields::Desc vb_fields[];
-	
 	public:
 		/**
 		 * Is character a valid JIS X 0201 codepoint?
@@ -88,17 +83,8 @@ class VirtualBoyPrivate : public RomDataPrivate
 
 /** VirtualBoyPrivate **/
 
-// ROM fields.
-const struct RomFields::Desc VirtualBoyPrivate::vb_fields[] = {
-	{_RP("Title"), RomFields::RFT_STRING, nullptr},
-	{_RP("Game ID"), RomFields::RFT_STRING, nullptr},
-	{_RP("Publisher"), RomFields::RFT_STRING, nullptr},
-	{_RP("Revision"), RomFields::RFT_STRING, nullptr},
-	{_RP("Region"), RomFields::RFT_STRING, nullptr},
-};
-
 VirtualBoyPrivate::VirtualBoyPrivate(VirtualBoy *q, IRpFile *file)
-	: super(q, file, vb_fields, ARRAY_SIZE(vb_fields))
+	: super(q, file)
 {
 	// Clear the ROM header struct.
 	memset(&romHeader, 0, sizeof(romHeader));
@@ -164,7 +150,7 @@ VirtualBoy::VirtualBoy(IRpFile *file)
 	}
 
 	// Seek to the beginning of the header.
-	const int64_t filesize = d->file->fileSize();
+	const int64_t filesize = d->file->size();
 	// File must be at least 0x220 bytes,
 	// and cannot be larger than 16 MB.
 	if (filesize < 0x220 || filesize > (16*1024*1024)) {
@@ -325,16 +311,12 @@ const rp_char *VirtualBoy::systemName(uint32_t type) const
  */
 vector<const rp_char*> VirtualBoy::supportedFileExtensions_static(void)
 {
-	// FIXME: ".vb" can't be associated until we
-	// implement fallbacks, since it conflicts
-	// with VB.NET source files.
-#if 0
+	// NOTE: These extensions may cause conflicts on
+	// Windows if fallback handling isn't working.
 	static const rp_char *const exts[] = {
-		_RP(".vb")
+		_RP(".vb")	// Visual Basic .NET source files
 	};
 	return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
-#endif
-	return vector<const rp_char*>();
 }
 
 /**
@@ -376,25 +358,30 @@ int VirtualBoy::loadFieldData(void)
 
 	// Virtual Boy ROM header, excluding the vector table.
 	const VB_RomHeader *const romHeader = &d->romHeader;
+	d->fields->reserve(5);	// Maximum of 5 fields.
 
 	// Title
-	d->fields->addData_string(cp1252_sjis_to_rp_string(romHeader->title,sizeof(romHeader->title)));
+	d->fields->addField_string(_RP("Title"),
+		cp1252_sjis_to_rp_string(romHeader->title, sizeof(romHeader->title)));
 
 	// Game ID and publisher.
 	string id6(romHeader->gameid, sizeof(romHeader->gameid));
 	id6 += string(romHeader->publisher, sizeof(romHeader->publisher));
-	d->fields->addData_string(latin1_to_rp_string(id6.data(), (int)id6.size()));
+	d->fields->addField_string(_RP("Game ID"),
+		latin1_to_rp_string(id6.data(), (int)id6.size()));
 
 	// Look up the publisher.
 	const rp_char* publisher = NintendoPublishers::lookup(romHeader->publisher);
-	d->fields->addData_string(publisher?publisher:_RP("Unknown"));
+	d->fields->addField_string(_RP("Publisher"),
+		publisher ? publisher : _RP("Unknown"));
 
 	// Revision
-	d->fields->addData_string_numeric(romHeader->version, RomFields::FB_DEC, 2);
+	d->fields->addField_string_numeric(_RP("Revision"),
+		romHeader->version, RomFields::FB_DEC, 2);
 
 	// Region
 	const rp_char* region;
-	switch(romHeader->gameid[3]){
+	switch (romHeader->gameid[3]) {
 		case 'J':
 			region = _RP("Japan");
 			break;
@@ -405,7 +392,7 @@ int VirtualBoy::loadFieldData(void)
 			region = _RP("Unknown");
 			break;
 	}
-	d->fields->addData_string(region);
+	d->fields->addField_string(_RP("Region"), region);
 
 	return (int)d->fields->count();
 }

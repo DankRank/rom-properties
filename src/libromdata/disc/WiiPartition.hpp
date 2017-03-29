@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * WiiPartition.hpp: Wii partition reader.                                 *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -45,8 +45,7 @@ class WiiPartition : public GcnPartition
 
 	private:
 		typedef GcnPartition super;
-		WiiPartition(const WiiPartition &other);
-		WiiPartition &operator=(const WiiPartition &other);
+		RP_DISABLE_COPY(WiiPartition)
 
 	protected:
 		friend class WiiPartitionPrivate;
@@ -62,14 +61,20 @@ class WiiPartition : public GcnPartition
 		 * @param size Amount of data to read, in bytes.
 		 * @return Number of bytes read.
 		 */
-		virtual size_t read(void *ptr, size_t size) final;
+		virtual size_t read(void *ptr, size_t size) override final;
 
 		/**
 		 * Set the partition position.
 		 * @param pos Partition position.
 		 * @return 0 on success; -1 on error.
 		 */
-		virtual int seek(int64_t pos) final;
+		virtual int seek(int64_t pos) override final;
+
+		/**
+		 * Get the partition position.
+		 * @return Partition position on success; -1 on error.
+		 */
+		virtual int64_t tell(void) override final;
 
 		/** WiiPartition **/
 
