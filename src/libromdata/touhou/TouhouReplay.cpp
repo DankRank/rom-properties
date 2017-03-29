@@ -70,29 +70,9 @@ namespace LibRomData {
 	};
 
 	/** TouhouReplayPrivate **/
-	const RomFields::StringDesc TouhouReplayPrivate::th_string_warning = {
-		RomFields::StringDesc::STRF_WARNING
-	};
-	const struct RomFields::DateTimeDesc TouhouReplayPrivate::th_datetime = {
-		RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME
-	};
-	// ROM fields.
-	const struct RomFields::Desc TouhouReplayPrivate::th_fields[] = {
-		{ _RP("Warning"), RomFields::RFT_STRING, &th_string_warning },
-		{ _RP("Game Version"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Name"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Date"), RomFields::RFT_DATETIME, &th_datetime },
-		{ _RP("Character"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Rank"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Stage"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Game Cleared"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Score"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Slow Rate"), RomFields::RFT_STRING, nullptr },
-		{ _RP("Comments"), RomFields::RFT_STRING, nullptr },
-	};
 
 	TouhouReplayPrivate::TouhouReplayPrivate(TouhouReplay *q, IRpFile *file)
-		: super(q, file, th_fields, ARRAY_SIZE(th_fields))
+		: super(q, file)
 		, gameType(TouhouReplay::TH_UNKNOWN)
 	{
 		// Clear the various structs.
@@ -328,7 +308,7 @@ namespace LibRomData {
 	/**
 	* Load field data.
 	* Called by RomData::fields() if the field data hasn't been loaded yet.
-	* @return Number of fields read on success; negative POSIX error code on error.
+	* @return 0 on success; negative POSIX error code on error.
 	*/
 	int TouhouReplay::loadFieldData(void)
 	{
@@ -351,29 +331,31 @@ namespace LibRomData {
 		ITouhouUserParser* mofParse = ITouhouUserParser::getInstance(d->gameType, d->file);
 		assert(mofParse);
 		if (!mofParse || !mofParse->isValid()) {
-			d->fields->addData_string(_RP("Parsing error has occured."));
-			return (int)d->fields->count();
+			// TODO: maybe return posix error?
+			d->fields->addField_string(_RP("Warning")
+				,_RP("Parsing error has occured.")
+				,RomFields::StringDesc::STRF_WARNING);
+			return 0;
 		}
 
 		// Read the strings from the header.
 		if (mofParse->isBroken()) {
-			d->fields->addData_string(_RP("This file seems to have invalid format. The information displayed below may be inaccurate."));
+			d->fields->addField_string(_RP("Warning")
+				,_RP("This file seems to have invalid format. The information displayed below may be inaccurate.")
+				,RomFields::StringDesc::STRF_WARNING);
 		}
-		else {
-			d->fields->addData_invalid();
-		}
-		d->fields->addData_string(mofParse->getVersion());
-		d->fields->addData_string(mofParse->getName());
-		d->fields->addData_dateTime(mofParse->getTime());
-		d->fields->addData_string(mofParse->getChara());
-		d->fields->addData_string(mofParse->getRank());
-		d->fields->addData_string(mofParse->getStage());
-		d->fields->addData_string(mofParse->isClear());
-		d->fields->addData_string_numeric(mofParse->getScore());
-		d->fields->addData_string(mofParse->getSlowRate());
-		d->fields->addData_string(mofParse->getComment());
+		d->fields->addField_string(_RP("Game Version"), mofParse->getVersion());
+		d->fields->addField_string(_RP("Name"), mofParse->getName());
+		d->fields->addField_dateTime(_RP("Date"), mofParse->getTime(), RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME);
+		d->fields->addField_string(_RP("Character"), mofParse->getChara());
+		d->fields->addField_string(_RP("Rank"), mofParse->getRank());
+		d->fields->addField_string(_RP("Stage"), mofParse->getStage());
+		d->fields->addField_string(_RP("Game Cleared"), mofParse->isClear());
+		d->fields->addField_string_numeric(_RP("Score"), mofParse->getScore());
+		d->fields->addField_string(_RP("Slow Rate"), mofParse->getSlowRate());
+		d->fields->addField_string(_RP("Comments"), mofParse->getComment());
 
 		// Finished reading the field data.
-		return (int)d->fields->count();
+		return 0;
 	}
 }

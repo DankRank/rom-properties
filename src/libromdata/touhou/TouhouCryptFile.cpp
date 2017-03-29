@@ -79,9 +79,9 @@ namespace LibRomData {
 	int TouhouCryptFile::truncate(int64_t size) {
 		return -1; // read-only
 	}
-	int64_t TouhouCryptFile::fileSize(void) {
+	int64_t TouhouCryptFile::size(void) {
 		if (!isOpen()) return -1;
-		return file->fileSize();
+		return file->size();
 	}
 	rp_string TouhouCryptFile::filename(void) const {
 		if (!isOpen()) rp_string(_RP(""));

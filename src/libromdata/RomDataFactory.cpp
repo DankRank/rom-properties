@@ -130,7 +130,7 @@ const RomDataFactoryPrivate::RomDataFns RomDataFactoryPrivate::romDataFns_header
 	GetRomDataFns(Amiibo, true),
 	GetRomDataFns(NES, false),
 	GetRomDataFns(WiiU, true),
-  GetRomDataFns(TouhouReplay, false),
+	GetRomDataFns(TouhouReplay, false),
 
 	// NOTE: EXE has a 16-bit magic number,
 	// so it should go at the end.

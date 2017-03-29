@@ -42,7 +42,7 @@ namespace LibRomData {
 
 			file->seek(offset);
 			// Read all USER sections
-			while ((uint64_t)file->tell() <= file->fileSize() - sizeof(THRP_USERHeader)) {
+			while ((uint64_t)file->tell() <= file->size() - sizeof(THRP_USERHeader)) {
 				// TODO: don't allocate/read stuff until last section is found
 				// this doesn't really matter, since there's never going to be 2 sections with same type
 				// Why do we support duplicate sections? Because replayview.exe does

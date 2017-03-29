@@ -42,7 +42,7 @@ namespace LibRomData {
 		virtual int seek(int64_t pos) final;
 		virtual int64_t tell(void) final;
 		virtual int truncate(int64_t size = 0) final;
-		virtual int64_t fileSize(void) final;
+		virtual int64_t size(void) final;
 		virtual rp_string filename(void) const final;
 
 	};
