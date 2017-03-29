@@ -146,8 +146,7 @@ namespace LibRomData {
 
 		d->isValid = (d->gameType == TH_06
 			|| d->gameType >= TH_095
-			   && d->gameType != TH_128
-			   && d->gameType != TH_ALCO); // TODO: add support for other games later -Egor
+			   && d->gameType != TH_128); // TODO: add support for other games later -Egor
 	}
 
 	/** ROM detection functions. **/

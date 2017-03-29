@@ -87,6 +87,7 @@ SET(libromdata_SRCS
 	touhou/Touhou125UserParser.cpp
 	touhou/Touhou143UserParser.cpp
 	touhou/Touhou06UserParser.cpp
+	touhou/AlcostgUserParser.cpp
 	touhou/ITouhouUserParser.cpp
 	data/MegaDrivePublishers.cpp
 	data/NintendoPublishers.cpp
@@ -154,6 +155,7 @@ SET(libromdata_H
 	touhou/Touhou125UserParser.hpp
 	touhou/Touhou143UserParser.hpp
 	touhou/Touhou06UserParser.hpp
+	touhou/AlcostgUserParser.hpp
 	touhou/ITouhouUserParser.hpp
 	md_structs.h
 	gcn_structs.h

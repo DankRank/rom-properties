@@ -26,6 +26,7 @@
 #include "Touhou143UserParser.hpp"
 #include "Touhou10UserParser.hpp"
 #include "Touhou06UserParser.hpp"
+#include "AlcostgUserParser.hpp"
 
 #include <cassert>
 
@@ -178,6 +179,8 @@ namespace LibRomData {
 			return construct<Touhou125UserParser>(gameType, file);
 		case TouhouReplay::TH_143:
 			return construct<Touhou143UserParser>(gameType, file);
+		case TouhouReplay::TH_ALCO:
+			return construct<AlcostgUserParser>(gameType, file);
 		case TouhouReplay::TH_10:
 		case TouhouReplay::TH_11:
 		case TouhouReplay::TH_12:
