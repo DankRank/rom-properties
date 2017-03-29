@@ -148,6 +148,9 @@ namespace LibRomData {
 		snprintf(buf, sizeof(buf), "%2.2f", slowrate);
 		return cp1252_sjis_to_rp_string(buf, -1);
 	}
+	bool ITouhouUserParser::isCommentPresent() {
+		return comment_present;
+	}
 	rp_string ITouhouUserParser::getComment() {
 		if (comment_present) {
 			return cp1252_sjis_to_rp_string(comment.c_str(), -1);

@@ -68,6 +68,7 @@ namespace LibRomData {
 		virtual rp_string isClear();
 		virtual int getScore();
 		virtual rp_string getSlowRate();
+		virtual bool isCommentPresent();
 		virtual rp_string getComment();
 
 		virtual ~ITouhouUserParser();
