@@ -42,16 +42,36 @@ namespace LibRomData {
 
 		return strings[value];
 	}
-	std::string ITouhouUserParser::spaceString(std::string line, const std::string& keyword) {
-		size_t pos = line.find(' ');
+	std::string ITouhouUserParser::spaceString(std::string line, const std::string& keyword, char split) {
+		// This function tries to find a value in a string formated like "keyword value"
+		// The keyword might be translated, and might itself contain a space.
+		// Value might also contain space, so we can't just go to the latest space and read from there.
+
+		// Count the split characters in the keyword itself.
+		size_t splitCount = 1;
+		for (size_t i = 0; i < keyword.size(); i++) {
+			if (keyword[i] == split) ++splitCount;
+		}
+		
+		size_t pos = std::string::npos;
+		for (size_t i = 0; i < splitCount; i++) {
+			size_t newpos = line.find(split, pos+1);
+			if (newpos == std::string::npos)
+				break;
+			pos = newpos;
+		}
 
 		if (pos != std::string::npos) {
 			// Check the keyword
-			if (line.substr(0, pos) != keyword) is_broken = true;
+			if (line.substr(0, pos) != keyword) {
+				//assert(!"ITouhouUserParser::spaceString - keyword mismatch");
+				is_broken = true;
+			}
 
 			return line.substr(pos + 1);
 		}
 		else {
+			//assert(!"ITouhouUserParser::spaceString - broken line");
 			is_broken = true;
 			return "";
 		}
@@ -69,6 +89,26 @@ namespace LibRomData {
 		t.tm_mday = std::stoi(datestr.substr(3));
 		t.tm_hour = 0;
 		t.tm_min = 0;
+		t.tm_sec = 0;
+		t.tm_isdst = 0; // unknown
+						// other fields don't need to be set for mktime to work.
+		return mktime(&t);
+	}
+
+	time_t ITouhouUserParser::parseDate08(std::string datestr) {
+		// format: yyyy/mm/dd hh:mm
+		if (datestr.length() != 16
+			|| datestr[4] != '/'
+			|| datestr[7] != '/'
+			|| datestr[10] != ' '
+			|| datestr[13] != ':') return -1;
+
+		tm t;
+		t.tm_year = std::stoi(datestr) - 1900;
+		t.tm_mon = std::stoi(datestr.substr(3)) - 1;
+		t.tm_mday = std::stoi(datestr.substr(6));
+		t.tm_hour = std::stoi(datestr.substr(9));
+		t.tm_min = std::stoi(datestr.substr(12));
 		t.tm_sec = 0;
 		t.tm_isdst = 0; // unknown
 						// other fields don't need to be set for mktime to work.
@@ -131,6 +171,9 @@ namespace LibRomData {
 	}
 	time_t ITouhouUserParser::getTime() {
 		return time;
+	}
+	uint32_t ITouhouUserParser::getTimeFlags() {
+		return RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME;
 	}
 	rp_string ITouhouUserParser::getChara() {
 		return cp1252_sjis_to_rp_string(chara.c_str(), -1);

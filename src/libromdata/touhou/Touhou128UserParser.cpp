@@ -76,8 +76,7 @@ namespace LibRomData {
 		score = std::stol(spaceString(lines[7], "Score"));
 
 		// Line 8 - "Slow Rate %2.2f"
-		// TODO: maybe make it less hacky?
-		slowrate = std::stof(spaceString(spaceString(lines[8], "Slow"), "Rate"));
+		slowrate = std::stof(spaceString(lines[8], "Slow Rate"));
 
 		// In FW you always play as Cirno.
 		chara = "Cirno";

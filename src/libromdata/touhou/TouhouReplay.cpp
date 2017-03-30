@@ -99,8 +99,6 @@ namespace LibRomData {
 	TouhouReplay::TouhouReplay(IRpFile *file)
 		: super(new TouhouReplayPrivate(this, file))
 	{
-		// TODO: Only validate that this is an TH replay here.
-		// Load fields elsewhere.
 		RP_D(TouhouReplay);
 		if (!d->file) {
 			// Could not dup() the file handle.
@@ -316,8 +314,6 @@ namespace LibRomData {
 		}
 		else if (!d->file || !d->file->isOpen()) {
 			// File isn't open.
-			// NOTE: We already loaded the header,
-			// so *maybe* this is okay?
 			return -EBADF;
 		}
 		else if (!d->isValid || d->gameType < 0) {
@@ -325,6 +321,7 @@ namespace LibRomData {
 			return -EIO;
 		}
 
+		// Run the USER parser
 		ITouhouUserParser* mofParse = ITouhouUserParser::getInstance(d->gameType, d->file);
 		assert(mofParse);
 		if (!mofParse || !mofParse->isValid()) {
@@ -335,7 +332,7 @@ namespace LibRomData {
 			return 0;
 		}
 
-		// Read the strings from the header.
+		// Put the information into RomFields
 		if (mofParse->isBroken()) {
 			d->fields->addField_string(_RP("Warning")
 				,_RP("This file seems to have invalid format. The information displayed below may be inaccurate.")
@@ -343,18 +340,17 @@ namespace LibRomData {
 		}
 		d->fields->addField_string(_RP("Game Version"), mofParse->getVersion());
 		d->fields->addField_string(_RP("Name"), mofParse->getName());
-		d->fields->addField_dateTime(_RP("Date"), mofParse->getTime(), RomFields::RFT_DATETIME_HAS_DATE | RomFields::RFT_DATETIME_HAS_TIME);
+		d->fields->addField_dateTime(_RP("Date"), mofParse->getTime(), mofParse->getTimeFlags());
 		d->fields->addField_string(_RP("Character"), mofParse->getChara());
 		d->fields->addField_string(_RP("Rank"), mofParse->getRank());
 		d->fields->addField_string(_RP("Stage"), mofParse->getStage());
 		d->fields->addField_string(_RP("Game Cleared"), mofParse->isClear());
 		d->fields->addField_string_numeric(_RP("Score"), mofParse->getScore());
 		d->fields->addField_string(_RP("Slow Rate"), mofParse->getSlowRate());
-		if (d->gameType >= TH_08 && mofParse->isCommentPresent()) { // comments have been added in th08
+		if (mofParse->isCommentPresent()) {
 			d->fields->addField_string(_RP("Comments"), mofParse->getComment());
 		}
 
-		// Finished reading the field data.
 		return 0;
 	}
 }

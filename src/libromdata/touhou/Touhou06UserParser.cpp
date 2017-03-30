@@ -23,6 +23,7 @@
 #include "TouhouUserReader.hpp"
 #include "TextFuncs.hpp"
 #include "TouhouCryptFile.hpp"
+#include "RomFields.hpp"
 
 #include <string>
 
@@ -102,5 +103,9 @@ namespace LibRomData {
 		comment_present = false;
 
 		is_valid = true;
+	}
+
+	uint32_t Touhou06UserParser::getTimeFlags() {
+		return RomFields::RFT_DATETIME_HAS_DATE;
 	}
 }

@@ -33,6 +33,7 @@ namespace LibRomData {
 	public:
 		rp_string getStage();
 		rp_string isClear();
+		uint32_t getTimeFlags();
 		Touhou06UserParser(int gameType, IRpFile* file);
 	};
 }

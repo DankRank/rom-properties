@@ -49,8 +49,9 @@ namespace LibRomData {
 
 		/* Utility functions */
 		std::string rangeString(unsigned value, const std::string *strings, unsigned count);
-		std::string spaceString(std::string line, const std::string& keyword);
+		std::string spaceString(std::string line, const std::string& keyword, char split=' ');
 		time_t parseDate06(std::string datestr);
+		time_t parseDate08(std::string datestr);
 		time_t parseDate(std::string datestr);
 		bool breakLines(char* text, uint32_t size, std::string *lines, int linecount);
 
@@ -62,6 +63,7 @@ namespace LibRomData {
 		virtual rp_string getVersion();
 		virtual rp_string getName();
 		virtual time_t getTime();
+		virtual uint32_t getTimeFlags();
 		virtual rp_string getChara();
 		virtual rp_string getRank();
 		virtual rp_string getStage() = 0; // NOTE: pure virtual

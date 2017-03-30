@@ -60,10 +60,7 @@ namespace LibRomData {
 		score = std::stol(spaceString(lines[6], "Score"));
 
 		// Line 7 - "Slow Rate %2.2f"
-		// TODO: maybe make it less hacky?
-		slowrate = std::stof(spaceString(spaceString(lines[7], "Slow"), "Rate"));
-
-
+		slowrate = std::stof(spaceString(lines[7], "Slow Rate"));
 
 		// In StB you always play as Aya.
 		chara = "Aya Shameimaru";
