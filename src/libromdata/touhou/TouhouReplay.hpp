@@ -51,7 +51,8 @@ namespace LibRomData {
 			TH_14,
 			TH_143,
 			TH_15,
-			TH_LAST = TH_15
+			TH_16,
+			TH_LAST = TH_16
 		};
 
 		/**

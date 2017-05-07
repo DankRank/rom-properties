@@ -186,6 +186,7 @@ namespace LibRomData {
 			{ 0 },// kishinjou (ddc) - has the same id as th13 for some reason
 			{ 't', '1', '4', '3' }, // danmaku amanojaku (isc)
 			{ 't', '1', '5', 'r' }, // kanjuden (lolk)
+			{ 't', '1', '6', 'r' }, // tenkuushou (hsifs)
 
 		};
 		for (int i = 0; i < ARRAY_SIZE(thrp_magic); i++) {
@@ -221,7 +222,7 @@ namespace LibRomData {
 
 		static_assert(SYSNAME_TYPE_MASK == 3,
 			"TouhouReplay::systemName() array index optimization needs to be updated.");
-		static_assert(TH_LAST == 14,
+		static_assert(TH_LAST == 15,
 			"TouhouReplay::systemName() array needs to be updated.");
 
 		uint32_t romSys = d->gameType;
@@ -235,7 +236,7 @@ namespace LibRomData {
 		// - Bits 2-...: Game type.
 		uint32_t idx = (romSys << 2) | (type & SYSNAME_TYPE_MASK);
 
-		static const rp_char *const sysNames[4 * 15] = {
+		static const rp_char *const sysNames[4 * 16] = {
 			_RP("Touhou Koumakyou ~ the Embodiment of Scarlet Devil"), _RP("Embodiment of Scarlet Devil"),   _RP("EoSD"), nullptr,
 			_RP("Touhou Youyoumu ~ Perfect Cherry Blossom"),           _RP("Perfect Cherry Blossom"),        _RP("PCB"), nullptr,
 			_RP("Touhou Eiyashou ~ Imperishable Night"),               _RP("Imperishable Night"),            _RP("IN"), nullptr,
@@ -251,6 +252,7 @@ namespace LibRomData {
 			_RP("Touhou Kishinjou ~ Double Dealing Character"),        _RP("Double Dealing Character"),      _RP("DDC"), nullptr,
 			_RP("Danmaku Amanojaku ~ Impossible Spell Card"),          _RP("Impossible Spell Card"),         _RP("ISC"), nullptr,
 			_RP("Touhou Kanjuden ~ Legacy of Lunatic Kingdom"),        _RP("Legacy of Lunatic Kingdom"),     _RP("LoLK"), nullptr,
+			_RP("Touhou Tenkuushou ~ Hidden Star in Four Seasons"),    _RP("Hidden Star in Four Seasons"),   _RP("HSiFS"), nullptr,
 		};
 
 		if (idx >= ARRAY_SIZE(sysNames)) {

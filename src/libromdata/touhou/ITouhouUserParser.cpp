@@ -233,6 +233,7 @@ namespace LibRomData {
 		case TouhouReplay::TH_13:
 		case TouhouReplay::TH_14:
 		case TouhouReplay::TH_15:
+		case TouhouReplay::TH_16:
 			return construct<Touhou10UserParser>(gameType, file);
 		default:
 			return nullptr; // not supported
