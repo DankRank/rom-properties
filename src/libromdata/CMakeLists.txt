@@ -79,6 +79,7 @@ SET(libromdata_SRCS
 	NES.cpp
 	EXE.cpp
 	WiiU.cpp
+	Nintendo3DS.cpp
 	touhou/TouhouCryptFile.cpp
 	touhou/TouhouReplay.cpp
 	touhou/TouhouUserReader.cpp
@@ -119,6 +120,7 @@ SET(libromdata_SRCS
 	disc/SparseDiscReader.cpp
 	disc/PEResourceReader.cpp
 	disc/NEResourceReader.cpp
+	disc/NCCHReader.cpp
 	img/pngcheck/pngcheck.cpp
 	)
 SET(libromdata_H
@@ -146,8 +148,10 @@ SET(libromdata_H
 	DreamcastSave.hpp
 	VirtualBoy.hpp
 	Amiibo.hpp
+	NES.hpp
 	EXE.hpp
 	WiiU.hpp
+	Nintendo3DS.hpp
 	touhou/TouhouCryptFile.hpp
 	touhou/TouhouReplay.hpp
 	touhou/TouhouUserReader.hpp
@@ -173,6 +177,7 @@ SET(libromdata_H
 	nfp_structs.h
 	nes_structs.h
 	wiiu_structs.h
+	n3ds_structs.h
 	th_structs.h
 	data/MegaDrivePublishers.hpp
 	data/NintendoPublishers.hpp
@@ -212,7 +217,8 @@ SET(libromdata_H
 	disc/IResourceReader.hpp
 	disc/PEResourceReader.hpp
 	disc/NEResourceReader.hpp
-	NES.hpp
+	disc/NCCHReader.hpp
+	disc/NCCHReader_p.hpp
 	)
 
 IF(NOT USE_INTERNAL_PNG OR (USE_INTERNAL_PNG AND USE_INTERNAL_PNG_DLL))
@@ -234,6 +240,7 @@ IF(WIN32)
 		file/win32/IStreamWrapper.cpp
 		img/GdiplusHelper.cpp
 		img/RpGdiplusBackend.cpp
+		threads/InitOnceExecuteOnceXP.c
 		)
 	SET(libromdata_OS_H
 		RpWin32.hpp
@@ -241,6 +248,8 @@ IF(WIN32)
 		file/win32/IStreamWrapper.hpp
 		img/GdiplusHelper.hpp
 		img/RpGdiplusBackend.hpp
+		threads/InitOnceExecuteOnceXP.h
+		Win32_ExeInit.hpp
 		)
 ELSE(WIN32)
 	SET(libromdata_OS_SRCS
@@ -254,10 +263,13 @@ IF(ENABLE_DECRYPTION)
 	SET(libromdata_CRYPTO_SRCS
 		crypto/AesCipherFactory.cpp
 		crypto/KeyManager.cpp
+		crypto/CtrKeyScrambler.cpp
+		disc/NCCHReader_VerifyKeys.cpp
 		)
 	SET(libromdata_CRYPTO_H
 		crypto/IAesCipher.hpp
 		crypto/KeyManager.hpp
+		crypto/CtrKeyScrambler.hpp
 		)
 	IF(WIN32)
 		SET(libromdata_CRYPTO_OS_SRCS
@@ -277,6 +289,7 @@ IF(ENABLE_DECRYPTION)
 			)
 	ENDIF(WIN32)
 ENDIF(ENABLE_DECRYPTION)
+
 IF(HAVE_ZLIB)
 	# Enable zlib in pngcheck.
 	SET_SOURCE_FILES_PROPERTIES(img/pngcheck/pngcheck.cpp
@@ -288,6 +301,28 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		PROPERTIES COMPILE_FLAGS "-Wno-unused")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
+# Find the system threading library.
+FIND_PACKAGE(Threads REQUIRED)
+# Threading implementation.
+SET(libromdata_THREAD_H
+	threads/Atomics.h
+	threads/Semaphore.hpp
+	threads/Mutex.hpp
+	)
+IF(CMAKE_USE_WIN32_THREADS_INIT)
+	SET(libromdata_THREAD_SRCS
+		threads/SemaphoreWin32.cpp
+		threads/MutexWin32.cpp
+		)
+ELSEIF(CMAKE_USE_PTHREADS_INIT)
+	SET(libromdata_THREAD_SRCS
+		threads/SemaphorePosix.cpp
+		threads/MutexPosix.cpp
+		)
+ELSE()
+	MESSAGE(FATAL_ERROR "No threading model is supported on this system.")
+ENDIF()
+
 ######################
 # Build the library. #
 ######################
@@ -298,6 +333,7 @@ ADD_LIBRARY(romdata8 STATIC
 	${libromdata_OS_SRCS} ${libromdata_OS_H}
 	${libromdata_CRYPTO_SRCS} ${libromdata_CRYPTO_H}
 	${libromdata_CRYPTO_OS_SRCS} ${libromdata_CRYPTO_OS_H}
+	${libromdata_THREAD_SRCS} ${libromdata_THREAD_H}
 	)
 TARGET_COMPILE_DEFINITIONS(romdata8 PUBLIC -DRP_UTF8)
 
@@ -306,7 +342,8 @@ ADD_LIBRARY(romdata16 STATIC
 	${libromdata_SRCS} ${libromdata_H}
 	${libromdata_OS_SRCS} ${libromdata_OS_H}
 	${libromdata_CRYPTO_SRCS} ${libromdata_CRYPTO_H}
-	${libromdata_CRYPTO_OS_SRCS}
+	${libromdata_CRYPTO_OS_SRCS} ${libromdata_CRYPTO_OS_H}
+	${libromdata_THREAD_SRCS} ${libromdata_THREAD_H}
 	)
 TARGET_COMPILE_DEFINITIONS(romdata16 PUBLIC -DRP_UTF16)
 
@@ -333,6 +370,7 @@ FOREACH(_target romdata8 romdata16)
 	ENDIF(libromdata_NEEDS_DL AND CMAKE_DL_LIBS)
 
 	# Other libraries.
+	TARGET_LINK_LIBRARIES(${_target} inih)
 	IF(ICONV_LIBRARY)
 		TARGET_LINK_LIBRARIES(${_target} ${ICONV_LIBRARY})
 	ENDIF(ICONV_LIBRARY)
@@ -360,6 +398,9 @@ FOREACH(_target romdata8 romdata16)
 			TARGET_LINK_LIBRARIES(${_target} advapi32)
 		ENDIF(ENABLE_DECRYPTION)
 	ENDIF(WIN32)
+	IF(CMAKE_THREAD_LIBS_INIT)
+		TARGET_LINK_LIBRARIES(${_target} ${CMAKE_THREAD_LIBS_INIT})
+	ENDIF(CMAKE_THREAD_LIBS_INIT)
 ENDFOREACH()
 
 # Unix: Add -fpic/-fPIC in order to use this static library in plugins.

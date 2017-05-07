@@ -112,12 +112,12 @@ class DreamcastSave : public RomData
 		 * NOTE: The extensions include the leading dot,
 		 * e.g. ".bin" instead of "bin".
 		 *
-		 * NOTE 2: The strings in the std::vector should *not*
-		 * be freed by the caller.
+		 * NOTE 2: The array and the strings in the array should
+		 * *not* be freed by the caller.
 		 *
-		 * @return List of all supported file extensions.
+		 * @return NULL-terminated array of all supported file extensions, or nullptr on error.
 		 */
-		static std::vector<const rp_char*> supportedFileExtensions_static(void);
+		static const rp_char *const *supportedFileExtensions_static(void);
 
 		/**
 		 * Get a list of all supported file extensions.
@@ -127,12 +127,12 @@ class DreamcastSave : public RomData
 		 * NOTE: The extensions include the leading dot,
 		 * e.g. ".bin" instead of "bin".
 		 *
-		 * NOTE 2: The strings in the std::vector should *not*
-		 * be freed by the caller.
+		 * NOTE 2: The array and the strings in the array should
+		 * *not* be freed by the caller.
 		 *
-		 * @return List of all supported file extensions.
+		 * @return NULL-terminated array of all supported file extensions, or nullptr on error.
 		 */
-		virtual std::vector<const rp_char*> supportedFileExtensions(void) const override final;
+		virtual const rp_char *const *supportedFileExtensions(void) const override final;
 
 		/**
 		 * Get a bitfield of image types this class can retrieve.
@@ -168,6 +168,17 @@ class DreamcastSave : public RomData
 		 */
 		virtual std::vector<RomData::ImageSizeDef> supportedImageSizes(ImageType imageType) const override final;
 
+		/**
+		 * Get image processing flags.
+		 *
+		 * These specify post-processing operations for images,
+		 * e.g. applying transparency masks.
+		 *
+		 * @param imageType Image type.
+		 * @return Bitfield of ImageProcessingBF operations to perform.
+		 */
+		virtual uint32_t imgpf(ImageType imageType) const override final;
+
 	protected:
 		/**
 		 * Load field data.
@@ -178,11 +189,12 @@ class DreamcastSave : public RomData
 
 		/**
 		 * Load an internal image.
-		 * Called by RomData::image() if the image data hasn't been loaded yet.
-		 * @param imageType Image type to load.
+		 * Called by RomData::image().
+		 * @param imageType	[in] Image type to load.
+		 * @param pImage	[out] Pointer to const rp_image* to store the image in.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int loadInternalImage(ImageType imageType) override final;
+		virtual int loadInternalImage(ImageType imageType, const rp_image **pImage) override final;
 
 	public:
 		/**

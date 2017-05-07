@@ -289,12 +289,12 @@ const rp_char *Amiibo::systemName(uint32_t type) const
  * NOTE: The extensions include the leading dot,
  * e.g. ".bin" instead of "bin".
  *
- * NOTE 2: The strings in the std::vector should *not*
- * be freed by the caller.
+ * NOTE 2: The array and the strings in the array should
+ * *not* be freed by the caller.
  *
- * @return List of all supported file extensions.
+ * @return NULL-terminated array of all supported file extensions, or nullptr on error.
  */
-vector<const rp_char*> Amiibo::supportedFileExtensions_static(void)
+const rp_char *const *Amiibo::supportedFileExtensions_static(void)
 {
 	static const rp_char *const exts[] = {
 		// NOTE: These extensions may cause conflicts on
@@ -306,8 +306,10 @@ vector<const rp_char*> Amiibo::supportedFileExtensions_static(void)
 		// be removed later.
 		_RP(".nfc"),
 		_RP(".nfp"),
+
+		nullptr
 	};
-	return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
+	return exts;
 }
 
 /**
@@ -318,12 +320,12 @@ vector<const rp_char*> Amiibo::supportedFileExtensions_static(void)
  * NOTE: The extensions include the leading dot,
  * e.g. ".bin" instead of "bin".
  *
- * NOTE 2: The strings in the std::vector should *not*
- * be freed by the caller.
+ * NOTE 2: The array and the strings in the array should
+ * *not* be freed by the caller.
  *
- * @return List of all supported file extensions.
+ * @return NULL-terminated array of all supported file extensions, or nullptr on error.
  */
-vector<const rp_char*> Amiibo::supportedFileExtensions(void) const
+const rp_char *const *Amiibo::supportedFileExtensions(void) const
 {
 	return supportedFileExtensions_static();
 }
@@ -388,6 +390,28 @@ std::vector<RomData::ImageSizeDef> Amiibo::supportedImageSizes_static(ImageType 
 std::vector<RomData::ImageSizeDef> Amiibo::supportedImageSizes(ImageType imageType) const
 {
 	return supportedImageSizes_static(imageType);
+}
+
+/**
+ * Get image processing flags.
+ *
+ * These specify post-processing operations for images,
+ * e.g. applying transparency masks.
+ *
+ * @param imageType Image type.
+ * @return Bitfield of ImageProcessingBF operations to perform.
+ */
+uint32_t Amiibo::imgpf(ImageType imageType) const
+{
+	assert(imageType >= IMG_INT_MIN && imageType <= IMG_EXT_MAX);
+	if (imageType < IMG_INT_MIN || imageType > IMG_EXT_MAX) {
+		// ImageType is out of range.
+		return 0;
+	}
+
+	// NOTE: amiibo.life's amiibo images have alpha transparency.
+	// Hence, no image processing is required.
+	return 0;
 }
 
 /**
@@ -529,24 +553,6 @@ int Amiibo::loadFieldData(void)
 
 	// Finished reading the field data.
 	return (int)d->fields->count();
-}
-
-/**
- * Get the imgpf value for external image types.
- * @param imageType Image type to load.
- * @return imgpf value.
- */
-uint32_t Amiibo::imgpf_extURL(ImageType imageType) const
-{
-	assert(imageType >= IMG_EXT_MIN && imageType <= IMG_EXT_MAX);
-	if (imageType < IMG_EXT_MIN || imageType > IMG_EXT_MAX) {
-		// ImageType is out of range.
-		return 0;
-	}
-
-	// NOTE: amiibo.life's amiibo images have alpha transparency.
-	// Hence, no image processing is required.
-	return 0;
 }
 
 /**

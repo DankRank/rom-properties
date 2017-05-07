@@ -41,7 +41,9 @@
 #include <cstring>
 
 // C++ includes.
+#include <memory>
 #include <vector>
+using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
@@ -319,11 +321,12 @@ MegaDrive::MegaDrive(IRpFile *file)
 				memcpy(&d->smdHeader, header, sizeof(d->smdHeader));
 
 				// First bank needs to be deinterleaved.
-				uint8_t smd_data[MegaDrivePrivate::SMD_BLOCK_SIZE];
-				uint8_t bin_data[MegaDrivePrivate::SMD_BLOCK_SIZE];
+				unique_ptr<uint8_t[]> block(new uint8_t[MegaDrivePrivate::SMD_BLOCK_SIZE * 2]);
+				uint8_t *const smd_data = block.get();
+				uint8_t *const bin_data = block.get() + MegaDrivePrivate::SMD_BLOCK_SIZE;
 				d->file->seek(512);
-				size = d->file->read(smd_data, sizeof(smd_data));
-				if (size != sizeof(smd_data)) {
+				size = d->file->read(smd_data, MegaDrivePrivate::SMD_BLOCK_SIZE);
+				if (size != MegaDrivePrivate::SMD_BLOCK_SIZE) {
 					// Short read. ROM is invalid.
 					d->romType = MegaDrivePrivate::ROM_UNKNOWN;
 					break;
@@ -598,12 +601,12 @@ const rp_char *MegaDrive::systemName(uint32_t type) const
  * NOTE: The extensions include the leading dot,
  * e.g. ".bin" instead of "bin".
  *
- * NOTE 2: The strings in the std::vector should *not*
- * be freed by the caller.
+ * NOTE 2: The array and the strings in the array should
+ * *not* be freed by the caller.
  *
- * @return List of all supported file extensions.
+ * @return NULL-terminated array of all supported file extensions, or nullptr on error.
  */
-vector<const rp_char*> MegaDrive::supportedFileExtensions_static(void)
+const rp_char *const *MegaDrive::supportedFileExtensions_static(void)
 {
 	static const rp_char *const exts[] = {
 		_RP(".gen"), _RP(".smd"),
@@ -614,8 +617,10 @@ vector<const rp_char*> MegaDrive::supportedFileExtensions_static(void)
 		_RP(".md"),	// conflicts with Markdown
 		_RP(".bin"),	// too generic
 		_RP(".iso"),	// too generic
+
+		nullptr
 	};
-	return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
+	return exts;
 }
 
 /**
@@ -626,12 +631,12 @@ vector<const rp_char*> MegaDrive::supportedFileExtensions_static(void)
  * NOTE: The extensions include the leading dot,
  * e.g. ".bin" instead of "bin".
  *
- * NOTE 2: The strings in the std::vector should *not*
- * be freed by the caller.
+ * NOTE 2: The array and the strings in the array should
+ * *not* be freed by the caller.
  *
- * @return List of all supported file extensions.
+ * @return NULL-terminated array of all supported file extensions, or nullptr on error.
  */
-vector<const rp_char*> MegaDrive::supportedFileExtensions(void) const
+const rp_char *const *MegaDrive::supportedFileExtensions(void) const
 {
 	return supportedFileExtensions_static();
 }

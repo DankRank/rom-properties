@@ -118,7 +118,7 @@ class RomData
 		/**
 		 * Close the opened file.
 		 */
-		void close(void);
+		virtual void close(void);
 
 	public:
 		/** ROM detection functions. **/
@@ -215,6 +215,11 @@ class RomData
 			FTYPE_DLL,			// Dynamic Link Library
 			FTYPE_DEVICE_DRIVER,		// Device driver
 			FTYPE_RESOURCE_LIBRARY,		// Resource library
+			FTYPE_ICON_FILE,		// Icon file, e.g. SMDH.
+			FTYPE_BANNER_FILE,		// Banner file, e.g. GameCube opening.bnr.
+			FTYPE_HOMEBREW,			// Homebrew application, e.g. 3DSX.
+			FTYPE_EMMC_DUMP,		// eMMC dump
+			FTYPE_TITLE_CONTENTS,		// Title contents, e.g. NCCH.
 			FTYPE_REPLAY_FILE,		// Replay file e.g. Touhou.
 
 			FTYPE_LAST			// End of FileType.
@@ -247,12 +252,12 @@ class RomData
 		 * NOTE: The extensions include the leading dot,
 		 * e.g. ".bin" instead of "bin".
 		 *
-		 * NOTE 2: The strings in the std::vector should *not*
-		 * be freed by the caller.
+		 * NOTE 2: The array and the strings in the array should
+		 * *not* be freed by the caller.
 		 *
-		 * @return List of all supported file extensions.
+		 * @return NULL-terminated array of all supported file extensions, or nullptr on error.
 		 */
-		virtual std::vector<const rp_char*> supportedFileExtensions(void) const = 0;
+		virtual const rp_char *const *supportedFileExtensions(void) const = 0;
 
 		/**
 		 * Image types supported by a RomData subclass.
@@ -298,6 +303,12 @@ class RomData
 		};
 
 		/**
+		 * Get a bitfield of image types this class can retrieve.
+		 * @return Bitfield of supported image types. (ImageTypesBF)
+		 */
+		virtual uint32_t supportedImageTypes(void) const;
+
+		/**
 		 * Image processing flags.
 		 */
 		enum ImageProcessingBF {
@@ -314,12 +325,6 @@ class RomData
 			// icon frames and control information.
 			IMGPF_ICON_ANIMATED	= (1 << 3),
 		};
-
-		/**
-		 * Get a bitfield of image types this class can retrieve.
-		 * @return Bitfield of supported image types. (ImageTypesBF)
-		 */
-		virtual uint32_t supportedImageTypes(void) const;
 
 		struct ImageSizeDef {
 			const char *name;	// Size name, if applicable. [UTF-8] (May be nullptr.)
@@ -342,6 +347,17 @@ class RomData
 		 */
 		virtual std::vector<ImageSizeDef> supportedImageSizes(ImageType imageType) const;
 
+		/**
+		 * Get image processing flags.
+		 *
+		 * These specify post-processing operations for images,
+		 * e.g. applying transparency masks.
+		 *
+		 * @param imageType Image type.
+		 * @return Bitfield of ImageProcessingBF operations to perform.
+		 */
+		virtual uint32_t imgpf(ImageType imageType) const;
+
 	protected:
 		/**
 		 * Load field data.
@@ -352,18 +368,12 @@ class RomData
 
 		/**
 		 * Load an internal image.
-		 * Called by RomData::image() if the image data hasn't been loaded yet.
-		 * @param imageType Image type to load.
+		 * Called by RomData::image().
+		 * @param imageType	[in] Image type to load.
+		 * @param pImage	[out] Pointer to const rp_image* to store the image in.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int loadInternalImage(ImageType imageType);
-
-		/**
-		 * Get the imgpf value for external image types.
-		 * @param imageType Image type to load.
-		 * @return imgpf value.
-		 */
-		virtual uint32_t imgpf_extURL(ImageType imageType) const;
+		virtual int loadInternalImage(ImageType imageType, const rp_image **pImage);
 
 	public:
 		/**
@@ -451,17 +461,6 @@ class RomData
 		 * @return Image URL, or empty string if not found or not supported.
 		 */
 		virtual rp_string scrapeImageURL(const char *html, size_t size) const;
-
-		/**
-		 * Get image processing flags.
-		 *
-		 * These specify post-processing operations for images,
-		 * e.g. applying transparency masks.
-		 *
-		 * @param imageType Image type.
-		 * @return Bitfield of ImageProcessingBF operations to perform.
-		 */
-		uint32_t imgpf(ImageType imageType) const;
 
 		/**
 		 * Get name of an image type

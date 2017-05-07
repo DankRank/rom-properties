@@ -49,6 +49,22 @@ class NintendoDS : public RomData
 		 */
 		explicit NintendoDS(IRpFile *file);
 
+		/**
+		 * Read a Nintendo DS ROM image.
+		 *
+		 * A ROM image must be opened by the caller. The file handle
+		 * will be dup()'d and must be kept open in order to load
+		 * data from the ROM image.
+		 *
+		 * To close the file, either delete this object or call close().
+		 *
+		 * NOTE: Check isValid() to determine if this is a valid ROM.
+		 *
+		 * @param file Open ROM image.
+		 * @param cia If true, hide fields that aren't relevant to DSiWare in 3DS CIA packages.
+		 */
+		explicit NintendoDS(IRpFile *file, bool cia);
+
 	protected:
 		/**
 		 * RomData destructor is protected.
@@ -60,6 +76,11 @@ class NintendoDS : public RomData
 		typedef RomData super;
 		friend class NintendoDSPrivate;
 		RP_DISABLE_COPY(NintendoDS)
+
+		/**
+		 * Common initialization function for the constructors.
+		 */
+		void init(void);
 
 	public:
 		/** ROM detection functions. **/
@@ -94,12 +115,12 @@ class NintendoDS : public RomData
 		 * NOTE: The extensions include the leading dot,
 		 * e.g. ".bin" instead of "bin".
 		 *
-		 * NOTE 2: The strings in the std::vector should *not*
-		 * be freed by the caller.
+		 * NOTE 2: The array and the strings in the array should
+		 * *not* be freed by the caller.
 		 *
-		 * @return List of all supported file extensions.
+		 * @return NULL-terminated array of all supported file extensions, or nullptr on error.
 		 */
-		static std::vector<const rp_char*> supportedFileExtensions_static(void);
+		static const rp_char *const *supportedFileExtensions_static(void);
 
 		/**
 		 * Get a list of all supported file extensions.
@@ -109,12 +130,12 @@ class NintendoDS : public RomData
 		 * NOTE: The extensions include the leading dot,
 		 * e.g. ".bin" instead of "bin".
 		 *
-		 * NOTE 2: The strings in the std::vector should *not*
-		 * be freed by the caller.
+		 * NOTE 2: The array and the strings in the array should
+		 * *not* be freed by the caller.
 		 *
-		 * @return List of all supported file extensions.
+		 * @return NULL-terminated array of all supported file extensions, or nullptr on error.
 		 */
-		virtual std::vector<const rp_char*> supportedFileExtensions(void) const override final;
+		virtual const rp_char *const *supportedFileExtensions(void) const override final;
 
 		/**
 		 * Get a bitfield of image types this class can retrieve.
@@ -150,6 +171,17 @@ class NintendoDS : public RomData
 		 */
 		virtual std::vector<RomData::ImageSizeDef> supportedImageSizes(ImageType imageType) const override final;
 
+		/**
+		 * Get image processing flags.
+		 *
+		 * These specify post-processing operations for images,
+		 * e.g. applying transparency masks.
+		 *
+		 * @param imageType Image type.
+		 * @return Bitfield of ImageProcessingBF operations to perform.
+		 */
+		virtual uint32_t imgpf(ImageType imageType) const override final;
+
 	protected:
 		/**
 		 * Load field data.
@@ -160,11 +192,12 @@ class NintendoDS : public RomData
 
 		/**
 		 * Load an internal image.
-		 * Called by RomData::image() if the image data hasn't been loaded yet.
-		 * @param imageType Image type to load.
+		 * Called by RomData::image().
+		 * @param imageType	[in] Image type to load.
+		 * @param pImage	[out] Pointer to const rp_image* to store the image in.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int loadInternalImage(ImageType imageType) override final;
+		virtual int loadInternalImage(ImageType imageType, const rp_image **pImage) override final;
 
 	public:
 		/**
@@ -176,14 +209,6 @@ class NintendoDS : public RomData
 		 * @return Animated icon data, or nullptr if no animated icon is present.
 		 */
 		virtual const IconAnimData *iconAnimData(void) const override final;
-
-	protected:
-		/**
-		 * Get the imgpf value for external image types.
-		 * @param imageType Image type to load.
-		 * @return imgpf value.
-		 */
-		virtual uint32_t imgpf_extURL(ImageType imageType) const override final;
 
 	public:
 		/**

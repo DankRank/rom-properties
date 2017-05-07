@@ -274,12 +274,12 @@ namespace LibRomData {
 	*
 	* @return List of all supported file extensions.
 	*/
-	vector<const rp_char*> TouhouReplay::supportedFileExtensions_static(void)
+	const rp_char *const * TouhouReplay::supportedFileExtensions_static(void)
 	{
 		static const rp_char *const exts[] = {
 			_RP(".rpy")
 		};
-		return vector<const rp_char*>(exts, exts + ARRAY_SIZE(exts));
+		return exts;
 	}
 
 	/**
@@ -295,7 +295,7 @@ namespace LibRomData {
 	*
 	* @return List of all supported file extensions.
 	*/
-	vector<const rp_char*> TouhouReplay::supportedFileExtensions(void) const
+	const rp_char *const * TouhouReplay::supportedFileExtensions(void) const
 	{
 		return supportedFileExtensions_static();
 	}

@@ -478,7 +478,7 @@ IF(arch MATCHES "^(i.|x)86$|^x86_64$|^amd64$")
 		# TODO: Other compilers?
 		SET(SSE2_FLAG "-msse2")
 	ENDIF()
-	SET_SOURCE_FILES_PROPERTIES(contrib/intel/filter_sse2_intrinsics.c
+	SET_SOURCE_FILES_PROPERTIES(intel/filter_sse2_intrinsics.c
 		APPEND_STRING PROPERTIES COMPILE_FLAGS " ${SSE2_FLAG} ")
 ENDIF(arch MATCHES "^(i.|x)86$|^x86_64$|^amd64$")
 
@@ -576,9 +576,8 @@ if(PNG_STATIC)
     set_target_properties(png_static PROPERTIES PREFIX "lib")
   endif()
   target_link_libraries(png_static ${ZLIB_LIBRARY} ${M_LIBRARY})
-  # rom-properties: Split debug functionality; Windows subsystem.
-  DO_SPLIT_DEBUG(png)
-  SET_WINDOWS_SUBSYSTEM(png WIN32)
+  # rom-properties: Set the MSVC debug path.
+  SET_MSVC_DEBUG_PATH(png_static)
 endif()
 
 if(PNG_FRAMEWORK)

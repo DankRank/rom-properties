@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * FileSystem_posix.cpp: File system functions. (Win32 implementation)     *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2017 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -23,6 +23,8 @@
 
 // libromdata
 #include "TextFuncs.hpp"
+#include "threads/Atomics.h"
+#include "threads/InitOnceExecuteOnceXP.h"
 
 // C includes.
 #include <sys/utime.h>
@@ -45,9 +47,11 @@ using std::wstring;
 
 namespace LibRomData { namespace FileSystem {
 
+// InitOnceExecuteOnce() control variable.
+static INIT_ONCE once_control = INIT_ONCE_STATIC_INIT;
+
 // Configuration directories.
-static LONG init_counter = -1;
-static volatile LONG dir_is_init = 0;
+
 // User's cache directory.
 static rp_string cache_dir;
 // User's configuration directory.
@@ -152,25 +156,14 @@ int64_t filesize(const rp_string &filename)
 
 /**
  * Initialize the configuration directory paths.
+ * Called by InitOnceExecuteOnce().
  */
-static void initConfigDirectories(void)
+static BOOL WINAPI initConfigDirectories(_Inout_ PINIT_ONCE_XP once, _In_ PVOID param, _Out_opt_ LPVOID *context)
 {
-	// How this works:
-	// - init_counter is initially -1.
-	// - Incrementing it returns 0; this means that the
-	//   directories have not been initialized yet.
-	// - dir_is_init is set when initializing.
-	// - If the counter wraps around, the directories won't be
-	//   reinitialized because dir_is_init will be set.
-	if (InterlockedIncrement(&init_counter) != 0 || dir_is_init) {
-		// Function has already been called.
-		// Wait for directories to be initialized.
-		while (InterlockedExchangeAdd(&dir_is_init, 0) == 0) {
-			// TODO: Timeout counter?
-			Sleep(0);
-		}
-		return;
-	}
+	// We aren't using any of the InitOnceExecuteOnce() parameters.
+	((void)once);
+	((void)param);
+	((void)context);
 
 	wchar_t path[MAX_PATH];
 	HRESULT hr;
@@ -216,7 +209,7 @@ static void initConfigDirectories(void)
 	}
 
 	// Directories have been initialized.
-	dir_is_init = true;
+	return TRUE;
 }
 
 /**
@@ -230,11 +223,8 @@ static void initConfigDirectories(void)
  */
 const rp_string &getCacheDirectory(void)
 {
-	// NOTE: It's safe to check dir_is_init here, since it's
-	// only ever set to 1 by our code.
-	if (!dir_is_init) {
-		initConfigDirectories();
-	}
+	// TODO: Handle errors.
+	InitOnceExecuteOnce(&once_control, initConfigDirectories, nullptr, nullptr);
 	return cache_dir;
 }
 
@@ -248,11 +238,8 @@ const rp_string &getCacheDirectory(void)
  */
 const rp_string &getConfigDirectory(void)
 {
-	// NOTE: It's safe to check dir_is_init here, since it's
-	// only ever set to 1 by our code.
-	if (!dir_is_init) {
-		initConfigDirectories();
-	}
+	// TODO: Handle errors.
+	InitOnceExecuteOnce(&once_control, initConfigDirectories, nullptr, nullptr);
 	return config_dir;
 }
 
