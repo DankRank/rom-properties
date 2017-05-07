@@ -190,7 +190,7 @@ namespace LibRomData {
 
 		};
 		for (int i = 0; i < ARRAY_SIZE(thrp_magic); i++) {
-			if (thrp_magic[i] == 0) continue;
+			if (thrp_magic[i][0] == 0) continue;
 			if (!memcmp(pHeader, thrp_magic[i], 4)) {
 				return i;
 			}
