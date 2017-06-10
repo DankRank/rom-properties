@@ -157,10 +157,12 @@ int AmigaModule::isRomSupported_static(const DetectInfo *info)
 		{{'M','.','K','.'}, 4},
 		{{'M','!','K','!'}, 4},
 		
-		// StartTracker modules
+		// StarTrekker modules
 		{{'F','L','T','4'}, 4},
 		{{'F','L','T','8'}, 8},
-		
+		{{'E','X','0','4'}, 4},
+		{{'E','X','0','8'}, 8},
+
 		// FastTracker modules
 		{{'2','C','H','N'}, 2},
 		{{'4','C','H','N'}, 4},
