@@ -60,6 +60,7 @@ using std::vector;
 #include "EXE.hpp"
 #include "Nintendo3DS.hpp"
 #include "Nintendo3DSFirm.hpp"
+#include "AmigaModule.hpp"
 
 // Special case for Dreamcast save files.
 #include "dc_structs.h"
@@ -132,6 +133,7 @@ const RomDataFactoryPrivate::RomDataFns RomDataFactoryPrivate::romDataFns_header
 	GetRomDataFns(WiiU, true),
 	GetRomDataFns(Nintendo3DS, true),
 	GetRomDataFns(Nintendo3DSFirm, false),
+	GetRomDataFns(AmigaModule, false),
 
 	// NOTE: EXE has a 16-bit magic number,
 	// so it should go at the end.
