@@ -238,7 +238,7 @@ const rp_char *AmigaModule::systemName(uint32_t type) const
 	static const rp_char *const sysNames[4] = {
 		_RP("Amiga Module"), _RP("Module"), _RP("MOD"), nullptr,
 	};
-	return sysNames[type];
+	return sysNames[type & SYSNAME_TYPE_MASK];
 }
 
 /**
