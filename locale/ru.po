@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-03-18 16:17-0400\n"
-"PO-Revision-Date: 2018-03-18 16:17-0400\n"
-"Last-Translator: Automatically generated\n"
+"PO-Revision-Date: 2018-03-22 07:25+0200\n"
+"Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 2.0.6\n"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:254
 #: ../build/src/kde/kde5/ui_AboutTab.h:254
@@ -154,7 +155,7 @@ msgstr ""
 #: ../src/win32/RP_ShellPropSheetExt.cpp:1429
 msgctxt "RomDataView"
 msgid "ERROR"
-msgstr ""
+msgstr "ОШИБКА"
 
 #. tr: Field description label.
 #: ../src/gtk/RomDataView.cpp:1335 ../src/kde/RomDataView.cpp:840
@@ -195,7 +196,7 @@ msgstr ""
 #: ../src/kde/config/AboutTab.cpp:199 ../src/win32/config/AboutTab.cpp:579
 msgctxt "AboutTab|Credits"
 msgid "Developers:"
-msgstr ""
+msgstr "Разработчики:"
 
 #: ../src/kde/config/AboutTab.cpp:202 ../src/win32/config/AboutTab.cpp:582
 msgctxt "AboutTab|Credits"
@@ -205,7 +206,7 @@ msgstr ""
 #: ../src/kde/config/AboutTab.cpp:205 ../src/win32/config/AboutTab.cpp:585
 msgctxt "AboutTab|Credits"
 msgid "Translators:"
-msgstr ""
+msgstr "Переводчики:"
 
 #. tr: Sub-credit.
 #: ../src/kde/config/AboutTab.cpp:237 ../src/win32/config/AboutTab.cpp:609
@@ -487,7 +488,7 @@ msgstr ""
 #: ../src/libromdata/config/TImageTypesConfig.cpp:417
 msgctxt "TImageTypesConfig|SysName"
 msgid "amiibo"
-msgstr ""
+msgstr "amiibo"
 
 #. tr: NintendoBadge
 #: ../src/libromdata/config/TImageTypesConfig.cpp:419
@@ -495,53 +496,58 @@ msgctxt "TImageTypesConfig|SysName"
 msgid "Badge Arcade"
 msgstr ""
 
+# intentionally untranslated
 #. tr: Dreamcast
 #: ../src/libromdata/config/TImageTypesConfig.cpp:421
 msgctxt "TImageTypesConfig|SysName"
 msgid "Dreamcast"
-msgstr ""
+msgstr "Dreamcast"
 
 #. tr: DreamcastSave
 #: ../src/libromdata/config/TImageTypesConfig.cpp:423
 msgctxt "TImageTypesConfig|SysName"
 msgid "Dreamcast Saves"
-msgstr ""
+msgstr "Сохранения Dreamcast"
 
+# intentionally untranslated
 #. tr: GameCube
 #: ../src/libromdata/config/TImageTypesConfig.cpp:425
 msgctxt "TImageTypesConfig|SysName"
 msgid "GameCube / Wii"
-msgstr ""
+msgstr "GameCube / Wii"
 
 #. tr: GameCubeSave
 #: ../src/libromdata/config/TImageTypesConfig.cpp:427
 msgctxt "TImageTypesConfig|SysName"
 msgid "GameCube Saves"
-msgstr ""
+msgstr "Сохранения GameCube"
 
+# intentionally untranslated
 #. tr: NintendoDS
 #: ../src/libromdata/config/TImageTypesConfig.cpp:429
 msgctxt "TImageTypesConfig|SysName"
 msgid "Nintendo DS(i)"
-msgstr ""
+msgstr "Nintendo DS(i)"
 
+# intentionally untranslated
 #. tr: Nintendo3DS
 #: ../src/libromdata/config/TImageTypesConfig.cpp:431
 msgctxt "TImageTypesConfig|SysName"
 msgid "Nintendo 3DS"
-msgstr ""
+msgstr "Nintendo 3DS"
 
 #. tr: PlayStationSave
 #: ../src/libromdata/config/TImageTypesConfig.cpp:433
 msgctxt "TImageTypesConfig|SysName"
 msgid "PlayStation Saves"
-msgstr ""
+msgstr "Сохранения PlayStation"
 
+# intentionally untranslated
 #. tr: WiiU
 #: ../src/libromdata/config/TImageTypesConfig.cpp:435
 msgctxt "TImageTypesConfig|SysName"
 msgid "Wii U"
-msgstr ""
+msgstr "Wii U"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:559
 msgctxt "Dreamcast"
@@ -552,7 +558,7 @@ msgstr ""
 #: ../src/libromdata/Console/Dreamcast.cpp:586
 msgctxt "Dreamcast"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:594
 msgctxt "Dreamcast"
@@ -569,11 +575,16 @@ msgctxt "Dreamcast"
 msgid "Release Date"
 msgstr ""
 
+# There's two ways "Disc #: %d" can be parsed.
+# (1) "number of the disk is %d" (NP is N)
+# (2) "disk number %d" (NP)
+# The meaning is the same in this context, but I decided to go with (2), because it sounds more concise.
+# (1) can be translated as "Номер диска" or "№ диска".
 #: ../src/libromdata/Console/Dreamcast.cpp:627
 #: ../src/libromdata/Console/Dreamcast.cpp:631
 msgctxt "Dreamcast"
 msgid "Disc #"
-msgstr ""
+msgstr "Диск №"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:628
 #, c-format
@@ -596,7 +607,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:393
 msgctxt "Region"
 msgid "Japan"
-msgstr ""
+msgstr "Япония"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:646
 #: ../src/libromdata/Console/GameCube.cpp:435
@@ -607,7 +618,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:396
 msgctxt "Region"
 msgid "USA"
-msgstr ""
+msgstr "США"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:647
 #: ../src/libromdata/Console/MegaDrive.cpp:410
@@ -617,7 +628,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1166
 msgctxt "Region"
 msgid "Europe"
-msgstr ""
+msgstr "Европа"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:651
 msgctxt "Dreamcast"
@@ -633,7 +644,7 @@ msgstr ""
 #: ../src/libromdata/Console/Dreamcast.cpp:694
 msgctxt "Dreamcast"
 msgid "Checksum"
-msgstr ""
+msgstr "Контрольная сумма"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:685
 #, c-format
@@ -875,7 +886,7 @@ msgstr ""
 #: ../src/libromdata/Console/DreamcastSave.cpp:1430
 msgctxt "DreamcastSave"
 msgid "Filename"
-msgstr ""
+msgstr "Имя файла"
 
 #: ../src/libromdata/Console/DreamcastSave.cpp:1435
 msgctxt "DreamcastSave"
@@ -901,57 +912,57 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:391
 msgctxt "Region|GameCube"
 msgid "Taiwan (JPN)"
-msgstr ""
+msgstr "Тайвань (JPN)"
 
 #: ../src/libromdata/Console/GameCube.cpp:396
 msgctxt "Region|GameCube"
 msgid "South Korea (JPN)"
-msgstr ""
+msgstr "Южная Корея (JPN)"
 
 #: ../src/libromdata/Console/GameCube.cpp:398
 msgctxt "Region|GameCube"
 msgid "China (JPN)"
-msgstr ""
+msgstr "Китай (JPN)"
 
 #: ../src/libromdata/Console/GameCube.cpp:409
 msgctxt "Region|GameCube"
 msgid "Europe / Australia (PAL)"
-msgstr ""
+msgstr "Европа / Австралия (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:412
 msgctxt "Region|GameCube"
 msgid "Germany (PAL)"
-msgstr ""
+msgstr "Германия (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:414
 msgctxt "Region|GameCube"
 msgid "France (PAL)"
-msgstr ""
+msgstr "Франция (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:416
 msgctxt "Region|GameCube"
 msgid "Netherlands (PAL)"
-msgstr ""
+msgstr "Нидерланды (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:418
 msgctxt "Region|GameCube"
 msgid "Italy (PAL)"
-msgstr ""
+msgstr "Италия (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:420
 msgctxt "Region|GameCube"
 msgid "Russia (PAL)"
-msgstr ""
+msgstr "Россия (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:422
 msgctxt "Region|GameCube"
 msgid "Spain (PAL)"
-msgstr ""
+msgstr "Испания (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:424
 msgctxt "Region|GameCube"
 msgid "Australia (PAL)"
-msgstr ""
+msgstr "Австралия (PAL)"
 
 #: ../src/libromdata/Console/GameCube.cpp:442
 #: ../src/libromdata/Console/SNES.cpp:867
@@ -960,7 +971,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1169
 msgctxt "Region"
 msgid "South Korea"
-msgstr ""
+msgstr "Южная Корея"
 
 #: ../src/libromdata/Console/GameCube.cpp:903
 msgctxt "GameCube"
@@ -981,28 +992,29 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:1492
 msgctxt "GameCube"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/GameCube.cpp:1493
 msgctxt "GameCube"
 msgid "Unknown"
 msgstr ""
 
+# See [Dreamcast] Disc #
 #: ../src/libromdata/Console/GameCube.cpp:1496
 msgctxt "GameCube"
 msgid "Disc #"
-msgstr ""
+msgstr "Диск №"
 
 #: ../src/libromdata/Console/GameCube.cpp:1498
 msgctxt "GameCube"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Console/GameCube.cpp:1515
 #: ../src/libromdata/Console/GameCube.cpp:1518
 msgctxt "GameCube"
 msgid "Region"
-msgstr ""
+msgstr "Регион"
 
 #: ../src/libromdata/Console/GameCube.cpp:1519
 #, c-format
@@ -1104,7 +1116,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCubeSave.cpp:908
 msgctxt "GameCubeSave"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/GameCubeSave.cpp:909
 msgctxt "GameCubeSave"
@@ -1114,7 +1126,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCubeSave.cpp:913
 msgctxt "GameCubeSave"
 msgid "Filename"
-msgstr ""
+msgstr "Имя файла"
 
 #: ../src/libromdata/Console/GameCubeSave.cpp:945
 msgctxt "GameCubeSave"
@@ -1156,7 +1168,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:299
 msgctxt "MegaDrive"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:303
 msgctxt "MegaDrive"
@@ -1176,7 +1188,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:314
 msgctxt "MegaDrive"
 msgid "Checksum"
-msgstr ""
+msgstr "Контрольная сумма"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:321
 msgctxt "MegaDrive|I/O"
@@ -1297,7 +1309,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:408
 msgctxt "Region"
 msgid "Asia"
-msgstr ""
+msgstr "Азия"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:414
 msgctxt "MegaDrive"
@@ -1328,7 +1340,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:927
 msgctxt "MegaDrive"
 msgid "ROM Header"
-msgstr ""
+msgstr "Заголовок ПЗУ"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:979
 msgctxt "MegaDrive"
@@ -1348,7 +1360,7 @@ msgstr ""
 #: ../src/libromdata/Console/N64.cpp:326
 msgctxt "N64"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Console/N64.cpp:330
 msgctxt "N64"
@@ -1358,22 +1370,24 @@ msgstr ""
 #: ../src/libromdata/Console/N64.cpp:334
 msgctxt "N64"
 msgid "Checksum"
-msgstr ""
+msgstr "Контрольная сумма"
 
+# архаический?
 #: ../src/libromdata/Console/NES.cpp:637
+#, fuzzy
 msgctxt "NES|Format"
 msgid "Archaic iNES"
-msgstr ""
+msgstr "Архаичный iNES"
 
 #: ../src/libromdata/Console/NES.cpp:651
 msgctxt "NES|Format"
 msgid "iNES"
-msgstr ""
+msgstr "iNES"
 
 #: ../src/libromdata/Console/NES.cpp:678
 msgctxt "NES|Format"
 msgid "NES 2.0"
-msgstr ""
+msgstr "NES 2.0"
 
 #: ../src/libromdata/Console/NES.cpp:709
 msgctxt "NES|Format"
@@ -1427,12 +1441,12 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:773 ../src/libromdata/Console/NES.cpp:780
 msgctxt "NES"
 msgid "Mapper"
-msgstr ""
+msgstr "Маппер"
 
 #: ../src/libromdata/Console/NES.cpp:800
 msgctxt "NES"
 msgid "Submapper"
-msgstr ""
+msgstr "Подмаппер"
 
 #: ../src/libromdata/Console/NES.cpp:806
 msgctxt "NES"
@@ -1512,12 +1526,12 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:877
 msgctxt "NES"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/NES.cpp:881
 msgctxt "NES"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Console/NES.cpp:886
 msgctxt "NES"
@@ -1562,7 +1576,7 @@ msgstr ""
 #: ../src/libromdata/Console/PlayStationSave.cpp:561
 msgctxt "PlayStationSave"
 msgid "Filename"
-msgstr ""
+msgstr "Имя файла"
 
 #: ../src/libromdata/Console/PlayStationSave.cpp:566
 msgctxt "PlayStationSave"
@@ -1583,13 +1597,13 @@ msgstr ""
 #: ../src/libromdata/Console/Sega8Bit.cpp:351
 msgctxt "Sega8Bit|SysID"
 msgid "Sega Master System"
-msgstr ""
+msgstr "Sega Master System"
 
 #: ../src/libromdata/Console/Sega8Bit.cpp:348
 #: ../src/libromdata/Console/Sega8Bit.cpp:356
 msgctxt "Sega8Bit|SysID"
 msgid "Japan"
-msgstr ""
+msgstr "Япония"
 
 #: ../src/libromdata/Console/Sega8Bit.cpp:352
 #: ../src/libromdata/Console/Sega8Bit.cpp:360
@@ -1602,7 +1616,7 @@ msgstr ""
 #: ../src/libromdata/Console/Sega8Bit.cpp:363
 msgctxt "Sega8Bit|SysID"
 msgid "Game Gear"
-msgstr ""
+msgstr "Game Gear"
 
 #: ../src/libromdata/Console/Sega8Bit.cpp:364
 msgctxt "Sega8Bit|SysID"
@@ -1628,7 +1642,7 @@ msgstr ""
 #: ../src/libromdata/Console/Sega8Bit.cpp:376
 msgctxt "Sega8Bit"
 msgid "Checksum"
-msgstr ""
+msgstr "Контрольная сумма"
 
 #: ../src/libromdata/Console/Sega8Bit.cpp:389
 #: ../src/libromdata/Console/Sega8Bit.cpp:441
@@ -1696,7 +1710,7 @@ msgstr ""
 #: ../src/libromdata/Console/SegaSaturn.cpp:496
 msgctxt "SegaSaturn"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:504
 msgctxt "SegaSaturn"
@@ -1717,18 +1731,19 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1848
 msgctxt "Region"
 msgid "Taiwan"
-msgstr ""
+msgstr "Тайвань"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:534
 msgctxt "SegaSaturn"
 msgid "Region Code"
 msgstr ""
 
+# See [Dreamcast] Disc #
 #: ../src/libromdata/Console/SegaSaturn.cpp:554
 #: ../src/libromdata/Console/SegaSaturn.cpp:558
 msgctxt "SegaSaturn"
 msgid "Disc #"
-msgstr ""
+msgstr "Диск №"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:555
 #, c-format
@@ -1779,7 +1794,7 @@ msgstr ""
 #: ../src/libromdata/Console/SegaSaturn.cpp:571
 msgctxt "SegaSaturn|Peripherals"
 msgid "RAM Cartridge"
-msgstr ""
+msgstr "Картридж ОЗУ"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:572
 msgctxt "SegaSaturn|Peripherals"
@@ -1809,7 +1824,7 @@ msgstr ""
 #: ../src/libromdata/Console/SegaSaturn.cpp:577
 msgctxt "SegaSaturn|Peripherals"
 msgid "ROM Cartridge"
-msgstr ""
+msgstr "Картридж ПЗУ"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:578
 msgctxt "SegaSaturn|Peripherals"
@@ -1843,7 +1858,7 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:801
 msgctxt "SNES"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Console/SNES.cpp:840
 #: ../src/libromdata/Console/SNES.cpp:843
@@ -1865,37 +1880,37 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:856
 msgctxt "Region"
 msgid "North America"
-msgstr ""
+msgstr "Северная Америка"
 
 #: ../src/libromdata/Console/SNES.cpp:858
 msgctxt "Region"
 msgid "Scandinavia"
-msgstr ""
+msgstr "Скандинавия"
 
 #: ../src/libromdata/Console/SNES.cpp:860
 msgctxt "Region"
 msgid "France"
-msgstr ""
+msgstr "Франция"
 
 #: ../src/libromdata/Console/SNES.cpp:861
 msgctxt "Region"
 msgid "Netherlands"
-msgstr ""
+msgstr "Нидерланды"
 
 #: ../src/libromdata/Console/SNES.cpp:862
 msgctxt "Region"
 msgid "Spain"
-msgstr ""
+msgstr "Испания"
 
 #: ../src/libromdata/Console/SNES.cpp:863
 msgctxt "Region"
 msgid "Germany"
-msgstr ""
+msgstr "Германия"
 
 #: ../src/libromdata/Console/SNES.cpp:864
 msgctxt "Region"
 msgid "Italy"
-msgstr ""
+msgstr "Италия"
 
 #: ../src/libromdata/Console/SNES.cpp:865
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1846
@@ -1903,7 +1918,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1168
 msgctxt "Region"
 msgid "China"
-msgstr ""
+msgstr "Китай"
 
 #: ../src/libromdata/Console/SNES.cpp:868
 msgctxt "Region"
@@ -1913,19 +1928,19 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:869
 msgctxt "Region"
 msgid "Canada"
-msgstr ""
+msgstr "Канада"
 
 #: ../src/libromdata/Console/SNES.cpp:870
 msgctxt "Region"
 msgid "Brazil"
-msgstr ""
+msgstr "Бразилия"
 
 #: ../src/libromdata/Console/SNES.cpp:871
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1845
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1167
 msgctxt "Region"
 msgid "Australia"
-msgstr ""
+msgstr "Австралия"
 
 #: ../src/libromdata/Console/SNES.cpp:872
 #: ../src/libromdata/Console/SNES.cpp:873
@@ -1937,12 +1952,12 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:883
 msgctxt "SNES"
 msgid "Region"
-msgstr ""
+msgstr "Регион"
 
 #: ../src/libromdata/Console/SNES.cpp:887
 msgctxt "SNES"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Console/SNES.cpp:925
 msgctxt "SNES"
@@ -1994,7 +2009,7 @@ msgstr ""
 #: ../src/libromdata/Console/WiiU.cpp:423
 msgctxt "WiiU"
 msgid "Region"
-msgstr ""
+msgstr "Регион"
 
 #: ../src/libromdata/crypto/KeyStoreUI.cpp:843
 msgctxt "KeyStoreUI|Section"
@@ -2217,7 +2232,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:594
 msgctxt "DMG"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Handheld/DMG.cpp:603
 msgctxt "DMG|Features"
@@ -2261,7 +2276,7 @@ msgstr ""
 #, c-format
 msgctxt "DMG"
 msgid "%u KiB"
-msgstr ""
+msgstr "%u КиБ"
 
 #: ../src/libromdata/Handheld/DMG.cpp:630
 #: ../src/libromdata/Handheld/DMG.cpp:636
@@ -2274,7 +2289,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:638
 msgctxt "DMG"
 msgid "512 x 4 bits"
-msgstr ""
+msgstr "512 x 4 бита"
 
 #: ../src/libromdata/Handheld/DMG.cpp:640
 msgctxt "DMG"
@@ -2286,7 +2301,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:663
 msgctxt "DMG"
 msgid "Region"
-msgstr ""
+msgstr "Регион"
 
 #: ../src/libromdata/Handheld/DMG.cpp:656
 msgctxt "Region|DMG"
@@ -2307,13 +2322,13 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:669
 msgctxt "DMG"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Handheld/DMG.cpp:683
 #: ../src/libromdata/Handheld/DMG.cpp:687
 msgctxt "DMG"
 msgid "Checksum"
-msgstr ""
+msgstr "Контрольная сумма"
 
 #: ../src/libromdata/Handheld/DMG.cpp:684
 #, c-format
@@ -2340,7 +2355,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:309
 msgctxt "GameBoyAdvance"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:310
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:349
@@ -2351,7 +2366,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:313
 msgctxt "GameBoyAdvance"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:329
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:334
@@ -2466,7 +2481,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1835
 msgctxt "Nintendo3DS"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1852
 msgctxt "Nintendo3DS"
@@ -2806,7 +2821,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1090
 msgctxt "NintendoDS"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1091
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1108
@@ -2817,7 +2832,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1094
 msgctxt "NintendoDS"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1099
 msgctxt "NintendoDS"
@@ -2858,7 +2873,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1187
 msgctxt "NintendoDS"
 msgid "Cartridge"
-msgstr ""
+msgstr "Картридж"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1190
 msgctxt "NintendoDS"
@@ -2915,7 +2930,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:382
 msgctxt "VirtualBoy"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:383
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:399
@@ -2926,12 +2941,12 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:386
 msgctxt "VirtualBoy"
 msgid "Revision"
-msgstr ""
+msgstr "Ревизия"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:402
 msgctxt "VirtualBoy"
 msgid "Region"
-msgstr ""
+msgstr "Регион"
 
 #: ../src/libromdata/Other/Amiibo.cpp:481
 msgctxt "Amiibo"
@@ -3085,7 +3100,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:189
 msgctxt "EXE|FileType"
 msgid "Application"
-msgstr ""
+msgstr "Приложение"
 
 #. tr: VFT_DLL
 #: ../src/libromdata/Other/EXE.cpp:191
@@ -3103,7 +3118,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:195
 msgctxt "EXE|FileType"
 msgid "Font"
-msgstr ""
+msgstr "Шрифт"
 
 #. tr: VFT_VXD
 #: ../src/libromdata/Other/EXE.cpp:197
@@ -3257,7 +3272,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:450
 msgctxt "EXE"
 msgid "NE Header"
-msgstr ""
+msgstr "Заголовок NE"
 
 #: ../src/libromdata/Other/EXE.cpp:467 ../src/libromdata/Other/EXE.cpp:469
 #: ../src/libromdata/Other/EXE.cpp:620 ../src/libromdata/Other/EXE.cpp:622
@@ -3418,7 +3433,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:600
 msgctxt "EXE"
 msgid "LE Header"
-msgstr ""
+msgstr "Заголовок LE"
 
 #: ../src/libromdata/Other/EXE.cpp:607 ../src/libromdata/Other/EXE.cpp:609
 #: ../src/libromdata/Other/EXE.cpp:817
@@ -3435,7 +3450,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:774
 msgctxt "EXE"
 msgid "PE Header"
-msgstr ""
+msgstr "Заголовок PE"
 
 #: ../src/libromdata/Other/EXE.cpp:820
 msgctxt "EXE"
@@ -3617,7 +3632,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:1426
 msgctxt "EXE"
 msgid "MZ Header"
-msgstr ""
+msgstr "Заголовок MZ"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:160
 msgctxt "EXE"
@@ -3760,7 +3775,7 @@ msgstr ""
 #: ../src/libromdata/Other/NintendoBadge.cpp:661
 msgctxt "NintendoBadge"
 msgid "Filename"
-msgstr ""
+msgstr "Имя файла"
 
 #: ../src/libromdata/Other/NintendoBadge.cpp:665
 #: ../src/libromdata/Other/NintendoBadge.cpp:753
@@ -4403,55 +4418,57 @@ msgstr[2] ""
 #: ../src/librpbase/RomData.cpp:123
 msgctxt "RomData|FileSize"
 msgid "KB"
-msgstr ""
+msgstr "КиБ"
 
 #. tr: Megabytes
 #: ../src/librpbase/RomData.cpp:128
 msgctxt "RomData|FileSize"
 msgid "MB"
-msgstr ""
+msgstr "МиБ"
 
 #. tr: Gigabytes
 #: ../src/librpbase/RomData.cpp:133
 msgctxt "RomData|FileSize"
 msgid "GB"
-msgstr ""
+msgstr "ГиБ"
 
 #. tr: Terabytes
 #: ../src/librpbase/RomData.cpp:138
 msgctxt "RomData|FileSize"
 msgid "TB"
-msgstr ""
+msgstr "ТиБ"
 
 #. tr: Petabytes
 #: ../src/librpbase/RomData.cpp:143
 msgctxt "RomData|FileSize"
 msgid "PB"
-msgstr ""
+msgstr "ПиБ"
 
 #. tr: Exabytes
 #: ../src/librpbase/RomData.cpp:148
 msgctxt "RomData|FileSize"
 msgid "EB"
-msgstr ""
+msgstr "ЭиБ"
 
 #. tr: FTYPE_ROM_IMAGE
 #: ../src/librpbase/RomData.cpp:507
 msgctxt "RomData|FileType"
 msgid "ROM Image"
-msgstr ""
+msgstr "Образ ПЗУ"
 
+# Needs to be changed, if I don't come up with anything for Disk Image
 #. tr: FTYPE_DISC_IMAGE
 #: ../src/librpbase/RomData.cpp:509
+#, fuzzy
 msgctxt "RomData|FileType"
 msgid "Disc Image"
-msgstr ""
+msgstr "Образ диска"
 
 #. tr: FTYPE_SAVE_FILE
 #: ../src/librpbase/RomData.cpp:511
 msgctxt "RomData|FileType"
 msgid "Save File"
-msgstr ""
+msgstr "Файл сохранения"
 
 #. tr: FTYPE_EMBEDDED_DISC_IMAGE
 #: ../src/librpbase/RomData.cpp:513
@@ -4481,13 +4498,13 @@ msgstr ""
 #: ../src/librpbase/RomData.cpp:521
 msgctxt "RomData|FileType"
 msgid "Executable"
-msgstr ""
+msgstr "Исполняемый файл"
 
 #. tr: FTYPE_DLL
 #: ../src/librpbase/RomData.cpp:523
 msgctxt "RomData|FileType"
 msgid "Dynamic Link Library"
-msgstr ""
+msgstr "Динамически подключаемая библиотека"
 
 #. tr: FTYPE_DEVICE_DRIVER
 #: ../src/librpbase/RomData.cpp:525
@@ -4505,7 +4522,7 @@ msgstr ""
 #: ../src/librpbase/RomData.cpp:529
 msgctxt "RomData|FileType"
 msgid "Icon File"
-msgstr ""
+msgstr "Иконка"
 
 #. tr: FTYPE_BANNER_FILE
 #: ../src/librpbase/RomData.cpp:531
@@ -4541,7 +4558,7 @@ msgstr ""
 #: ../src/librpbase/RomData.cpp:541
 msgctxt "RomData|FileType"
 msgid "Texture File"
-msgstr ""
+msgstr "Файл текстур"
 
 #. tr: FTYPE_RELOCATABLE_OBJECT
 #: ../src/librpbase/RomData.cpp:543
@@ -4615,40 +4632,42 @@ msgctxt "RomData|ImageType"
 msgid "External box scan"
 msgstr ""
 
+# bad style?
 #: ../src/rpcli/rpcli.cpp:89
-#, c-format
+#, fuzzy, c-format
 msgctxt "rpcli"
 msgid "Extracting %1$s into '%2$s'"
-msgstr ""
+msgstr "Извлекаем %1$s в '%2$s'"
 
 #: ../src/rpcli/rpcli.cpp:95
 #, c-format
 msgctxt "rpcli"
 msgid "Couldn't create file '%s'"
-msgstr ""
+msgstr "Не удалось создать файл '%s'"
 
 #: ../src/rpcli/rpcli.cpp:97 ../src/rpcli/rpcli.cpp:105
 #: ../src/rpcli/rpcli.cpp:128
 msgctxt "rpcli"
 msgid "Done"
-msgstr ""
+msgstr "Готово"
 
 #: ../src/rpcli/rpcli.cpp:102 ../src/rpcli/rpcli.cpp:125
 #, c-format
 msgctxt "rpcli"
 msgid "Couldn't create file '%1$s': %2$s"
-msgstr ""
+msgstr "Не удалось создать файл '%1$s': %2$s"
 
+# bad style?
 #: ../src/rpcli/rpcli.cpp:116
-#, c-format
+#, fuzzy, c-format
 msgctxt "rpcli"
 msgid "Extracting animated icon into '%s'"
-msgstr ""
+msgstr "Извлекаем анимированную иконку в '%s'"
 
 #: ../src/rpcli/rpcli.cpp:119
 msgctxt "rpcli"
 msgid "APNG not supported, extracting only the first frame"
-msgstr ""
+msgstr "Нет поддержки APNG — только первый кард будет извлечён"
 
 #: ../src/rpcli/rpcli.cpp:134
 msgctxt "rpcli"
@@ -4659,7 +4678,7 @@ msgstr ""
 #, c-format
 msgctxt "rpcli"
 msgid "Image '%s' not found"
-msgstr ""
+msgstr "Изображение '%s' не найдено"
 
 #: ../src/rpcli/rpcli.cpp:151
 #, c-format
@@ -4667,10 +4686,12 @@ msgctxt "rpcli"
 msgid "Reading file '%s'..."
 msgstr ""
 
+# bad style?
 #: ../src/rpcli/rpcli.cpp:157
+#, fuzzy
 msgctxt "rpcli"
 msgid "Outputting JSON data"
-msgstr ""
+msgstr "Выводим данные в JSON"
 
 #: ../src/rpcli/rpcli.cpp:165
 msgctxt "rpcli"
@@ -4681,7 +4702,7 @@ msgstr ""
 #, c-format
 msgctxt "rpcli"
 msgid "Couldn't open file: %s"
-msgstr ""
+msgstr "Не удалось открыть файл: %s"
 
 #: ../src/rpcli/rpcli.cpp:195
 #, c-format
@@ -4692,7 +4713,7 @@ msgstr ""
 #: ../src/rpcli/rpcli.cpp:196 ../src/rpcli/rpcli.cpp:209
 msgctxt "rpcli"
 msgid "0 (this is a bug!)"
-msgstr ""
+msgstr "0 (это баг!)"
 
 #: ../src/rpcli/rpcli.cpp:208
 #, c-format
@@ -4728,32 +4749,32 @@ msgstr ""
 #: ../src/rpcli/rpcli.cpp:233
 msgctxt "rpcli"
 msgid "Extract image N to outfile in PNG format."
-msgstr ""
+msgstr "Извлечь изображение N в outfile в формате PNG."
 
 #: ../src/rpcli/rpcli.cpp:234
 msgctxt "rpcli"
 msgid "Extract image N to outfile in BMP format."
-msgstr ""
+msgstr "Извлечь изображение N в outfile в формате BMP."
 
 #: ../src/rpcli/rpcli.cpp:235
 msgctxt "rpcli"
 msgid "Extract the animated icon to outfile in APNG format."
-msgstr ""
+msgstr "Извлечь анимированную иконку в outfile в формате APNG."
 
 #: ../src/rpcli/rpcli.cpp:237
 msgctxt "rpcli"
 msgid "Examples:"
-msgstr ""
+msgstr "Примеры:"
 
 #: ../src/rpcli/rpcli.cpp:239
 msgctxt "rpcli"
 msgid "displays info about s3.gen"
-msgstr ""
+msgstr "отображает информацию про s3.gen"
 
 #: ../src/rpcli/rpcli.cpp:241
 msgctxt "rpcli"
 msgid "extracts icon from pokeb2.nds"
-msgstr ""
+msgstr "извлекает иконку из pokeb2.nds"
 
 #: ../src/rpcli/rpcli.cpp:280
 #, c-format
@@ -4793,13 +4814,13 @@ msgstr ""
 #: ../src/rpcli/verifykeys.cpp:126
 msgctxt "rpcli"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: ../src/rpcli/verifykeys.cpp:128
 #, c-format
 msgctxt "rpcli"
 msgid "ERROR: %s"
-msgstr ""
+msgstr "ОШИБКА: %s"
 
 #: ../src/rp-stub/rp-stub.c:72
 msgctxt "rp_stub"
@@ -4942,7 +4963,7 @@ msgstr ""
 #: ../src/win32/config/AboutTab.cpp:863
 msgctxt "AboutTab"
 msgid "About"
-msgstr ""
+msgstr "О программе"
 
 #: ../src/win32/config/CacheTab.cpp:160
 #, c-format
