@@ -1,14 +1,36 @@
 # Russian translations for rom-properties package.
 # Copyright (C) 2018 David Korth
 # This file is distributed under the same license as the rom-properties package.
-# Automatically generated, 2018.
+# Egor <egor@opensrc.club>, 2018.
 #
+# General translation notes:
+# I decided to not translate the short name "ROM Properties". The pacakge is
+# known by this name, so tranlating it could create confusion.
+#
+# Long name is translated this way: "Расширение оболочки ROM Properties Page"
+#
+# When "ROM" means "a file processed by RP", it is translated as "РОМ", since
+# that's the term used on emulation sites for everything (including stuff like
+# CD images, which technically aren't ROMs). When an actual ROM chip is
+# involved, it is translated as "ПЗУ".
+#
+# In the context of images, the following adjectives are used:
+# external - внешний
+# internal - встроенный
+#
+# In constructs like "Property: Value", "Unknown" is translated as
+# "Неизвестно" (neuter gender) regardless of gender of "Property" noun.
+# All other adjectives in "Value" should have corresponding gender.
+#
+# Strings like "Nintendo 3DS" which don't need translation, are explicitly
+# copied. This way it's easier to see just the strings that actually need
+# translations. I've found no disadvantages to this.
 msgid ""
 msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-03-21 20:04-0400\n"
-"PO-Revision-Date: 2018-03-22 07:44+0200\n"
+"PO-Revision-Date: 2018-03-22 18:02+0200\n"
 "Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -23,55 +45,57 @@ msgstr ""
 #: ../build/src/kde/kde5/ui_AboutTab.h:254
 msgctxt "AboutTab"
 msgid "C&redits"
-msgstr ""
+msgstr "&Авторы"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:255
 #: ../build/src/kde/kde5/ui_AboutTab.h:255
 msgctxt "AboutTab"
 msgid "&Libraries"
-msgstr ""
+msgstr "&Библиотеки"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:256
 #: ../build/src/kde/kde5/ui_AboutTab.h:256
 msgctxt "AboutTab"
 msgid "&Support"
-msgstr ""
+msgstr "Тех. &поддержка"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:78
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:78
 msgctxt "ConfigDialog"
 msgid "ROM Properties Page Configuration"
-msgstr ""
+msgstr "Настройка ROM Properties Page"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:79
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:79
 msgctxt "ConfigDialog"
 msgid "&Image Types"
-msgstr ""
+msgstr "&Типы изображений"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:80
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:80
 msgctxt "ConfigDialog"
 msgid "&Downloads"
-msgstr ""
+msgstr "&Загрузки"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:81
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:81
 msgctxt "ConfigDialog"
 msgid "&About"
-msgstr ""
+msgstr "&О программе"
 
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:70
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:70
 msgctxt "DownloadsTab"
 msgid "Enable external image downloads."
-msgstr ""
+msgstr "Загружать внешние изображения."
 
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:71
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:71
 msgctxt "DownloadsTab"
 msgid "Always use the internal icon (if present) for small sizes."
 msgstr ""
+"Всегда использовать встроенную иконку (если присутствует) для небольших "
+"размеров."
 
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:72
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:72
@@ -80,6 +104,8 @@ msgid ""
 "Download high-resolution scans if viewing large thumbnails.\n"
 "This may increase bandwidth usage."
 msgstr ""
+"Загружать сканы с высоким разрешением при просмотре больших миниатюр.\n"
+"Использование этой опции может увеличить трафик."
 
 #: ../build/src/kde/kde4/ui_ImageTypesTab.h:84
 #: ../build/src/kde/kde5/ui_ImageTypesTab.h:84
@@ -92,6 +118,13 @@ msgid ""
 "\n"
 "1 = highest priority; 2 = second highest priority; No = ignore"
 msgstr ""
+"Выберете типы изображений которые будут использоваться для каждой системы в "
+"качестве миниатюры.\n"
+"Встроенные изображения находятся внутри РОМ файла.\n"
+"Внешние изображения загружаются из внешнего источника.\n"
+"\n"
+"1 = наивысший приоритет; 2 = второй после наивысшего; No = не использовать "
+"этот тип"
 
 #: ../build/src/kde/kde4/ui_ImageTypesTab.h:89
 #: ../build/src/kde/kde5/ui_ImageTypesTab.h:89
@@ -102,37 +135,41 @@ msgid ""
 "amiibo images are provided by <a href=\"http://amiibo.life/\">amiibo.life</"
 "a>, the Unofficial amiibo Database."
 msgstr ""
+"Внешние изображения для GameCube, Wii, Wii U, Nintendo DS и Nintendo 3DS<br/"
+">предоставлены сайтом<a href=\"http://www.gametdb.com/\">GameTDB</a>.<br/>\n"
+"Внешние изображения amiibo предоставлены сайтом <a href=\"http://amiibo.life/"
+"\">amiibo.life</a>."
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:93
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:93
 msgctxt "KeyManagerTab"
 msgid "Wii keys.bin"
-msgstr ""
+msgstr "keys.bin (Wii)"
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:94
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:94
 msgctxt "KeyManagerTab"
 msgid "Wii U otp.bin"
-msgstr ""
+msgstr "otp.bin (Wii U)"
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:95
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:95
 msgctxt "KeyManagerTab"
 msgid "3DS boot9.bin"
-msgstr ""
+msgstr "boot9.bin (3DS)"
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:96
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:96
 msgctxt "KeyManagerTab"
 msgid "3DS aeskeydb.bin"
-msgstr ""
+msgstr "aeskeydb.bin (3DS)"
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:97
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:97
 #: ../src/kde/config/KeyManagerTab.cpp:258
 msgctxt "KeyManagerTab"
 msgid "I&mport"
-msgstr ""
+msgstr "&Импорт"
 
 #. tr: Tab title.
 #: ../src/gtk/gnome/rom-properties-provider.cpp:134
@@ -141,7 +178,7 @@ msgstr ""
 #: ../src/win32/RP_ShellPropSheetExt.cpp:2014
 msgctxt "RomDataView"
 msgid "ROM Properties"
-msgstr ""
+msgstr "ROM Properties"
 
 #. tr: Invalid date/time.
 #: ../src/gtk/RomDataView.cpp:1079 ../src/kde/RomDataView.cpp:640
@@ -163,23 +200,23 @@ msgstr "ОШИБКА"
 #, c-format
 msgctxt "RomDataView"
 msgid "%s:"
-msgstr ""
+msgstr "%s:"
 
 #: ../src/kde/config/AboutTab.cpp:152
 msgctxt "AboutTab"
 msgid "ROM Properties Page"
-msgstr ""
+msgstr "</b>Расширение оболочки<b>"
 
 #: ../src/kde/config/AboutTab.cpp:155
 msgctxt "AboutTab"
 msgid "Shell Extension"
-msgstr ""
+msgstr "<b>ROM Properties Page</b>"
 
 #: ../src/kde/config/AboutTab.cpp:158 ../src/win32/config/AboutTab.cpp:481
 #, c-format
 msgctxt "AboutTab"
 msgid "Version %s"
-msgstr ""
+msgstr "Версия %s"
 
 #: ../src/kde/config/AboutTab.cpp:180 ../src/win32/config/AboutTab.cpp:559
 msgctxt "AboutTab|Credits"
@@ -192,16 +229,20 @@ msgid ""
 "This program is licensed under the <a href='https://www.gnu.org/licenses/old-"
 "licenses/gpl-2.0.en.html'>GNU GPL v2</a> or later."
 msgstr ""
+"Эта программа распространяется под лицензией <a href='https://www.gnu.org/"
+"licenses/old-licenses/gpl-2.0.ru.html'>GNU GPL v2</a> или любой более "
+"поздней версией."
 
 #: ../src/kde/config/AboutTab.cpp:199 ../src/win32/config/AboutTab.cpp:578
 msgctxt "AboutTab|Credits"
 msgid "Developers:"
 msgstr "Разработчики:"
 
+# Anglicism, but there's no substitute. I spent a couple of years looking for one. :V
 #: ../src/kde/config/AboutTab.cpp:202 ../src/win32/config/AboutTab.cpp:581
 msgctxt "AboutTab|Credits"
 msgid "Contributors:"
-msgstr ""
+msgstr "Контрибьюторы:"
 
 #: ../src/kde/config/AboutTab.cpp:205 ../src/win32/config/AboutTab.cpp:584
 msgctxt "AboutTab|Credits"
@@ -213,57 +254,57 @@ msgstr "Переводчики:"
 #, c-format
 msgctxt "AboutTab|Credits"
 msgid " (%s)"
-msgstr ""
+msgstr " (%s)"
 
 #. tr: Using an internal copy of a library.
 #: ../src/kde/config/AboutTab.cpp:258
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Internal copy of %s."
-msgstr ""
+msgstr "Встроенная копия библиотеки %s."
 
 #. tr: Compiled with a specific version of an external library.
 #: ../src/kde/config/AboutTab.cpp:260
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Compiled with %s."
-msgstr ""
+msgstr "Скомпилировано с %s."
 
 #. tr: Using an external library, e.g. libpcre.so
 #: ../src/kde/config/AboutTab.cpp:262
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Using %s."
-msgstr ""
+msgstr "Используется %s."
 
 #. tr: License: (libraries with only a single license)
 #: ../src/kde/config/AboutTab.cpp:264
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "License: %s"
-msgstr ""
+msgstr "Лицензия: %s"
 
 #. tr: Licenses: (libraries with multiple licenses)
 #: ../src/kde/config/AboutTab.cpp:266
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Licenses: %s"
-msgstr ""
+msgstr "Лицензии: %s"
 
 #: ../src/kde/config/AboutTab.cpp:503 ../src/win32/config/AboutTab.cpp:698
 msgctxt "AboutTab|Support"
 msgid "For technical support, you can visit the following websites:"
-msgstr ""
+msgstr "Для получения технической поддержки, посетите следующие веб-сайты:"
 
 #: ../src/kde/config/AboutTab.cpp:523 ../src/win32/config/AboutTab.cpp:715
 msgctxt "AboutTab|Support"
 msgid "You can also email the developer directly:"
-msgstr ""
+msgstr "Вы также можете связаться с разработчиком напрямую:"
 
 #: ../src/kde/config/ConfigDialog.cpp:107
 msgctxt "ConfigDialog"
 msgid "&Key Manager"
-msgstr ""
+msgstr "&Менеджер ключей"
 
 #: ../src/kde/config/KeyManagerTab.cpp:132
 msgctxt "KeyManagerTab"
@@ -271,57 +312,59 @@ msgid ""
 "An invalid parameter was passed to the key importer.\n"
 "THIS IS A BUG; please report this to the developers!"
 msgstr ""
+"Неправильный параметр был передан в импортер ключей.\n"
+"ЭТО БАГ; пожалуйста сообщите об этом разработчикам!"
 
 #: ../src/kde/config/KeyManagerTab.cpp:140
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "An error occurred while opening '%s'."
-msgstr ""
+msgstr "Не удалось открыть файл '%s'."
 
 #: ../src/kde/config/KeyManagerTab.cpp:148
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "An error occurred while reading '%s'."
-msgstr ""
+msgstr "Произошла ошибка при чтении файла '%s'."
 
 #: ../src/kde/config/KeyManagerTab.cpp:155
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "The file '%1$s' is not a valid %2$s file."
-msgstr ""
+msgstr "'%1$s' не является %2$s файлом."
 
 #: ../src/kde/config/KeyManagerTab.cpp:163
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "No keys were imported from '%s'."
-msgstr ""
+msgstr "Ни одного ключа не было импортировано из '%s'."
 
 #: ../src/kde/config/KeyManagerTab.cpp:173
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "%u key was imported from '%s'."
 msgid_plural "%u keys were imported from '%s'."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u ключ был импортирован из '%s'."
+msgstr[1] "%u ключа был импортированы из '%s'."
+msgstr[2] "%u ключей был импортированы из '%s'."
 
 #: ../src/kde/config/KeyManagerTab.cpp:189
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "%u key already exists in the Key Manager."
 msgid_plural "%u keys already exist in the Key Manager."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u ключ уже существует в менеджере ключей."
+msgstr[1] "%u ключа уже существуют в менеджере ключей."
+msgstr[2] "%u ключей уже существуют в менеджере ключей."
 
 #: ../src/kde/config/KeyManagerTab.cpp:196
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "%u key was not imported because it is incorrect."
 msgid_plural "%u keys were not imported because they are incorrect."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u ключ не был импортирован, т.к. он не является правильным."
+msgstr[1] "%u ключа не были импортированы, т.к. они не являются правильными."
+msgstr[2] "%u ключей не были импортированы, т.к. они не являются правильными."
 
 #: ../src/kde/config/KeyManagerTab.cpp:203
 #, c-format
@@ -330,8 +373,11 @@ msgid "%u key was not imported because it isn't used by rom-properties."
 msgid_plural ""
 "%u keys were not imported because they aren't used by rom-properties."
 msgstr[0] ""
+"%u ключ не был импортирован, т.к. он не используется rom-properties."
 msgstr[1] ""
+"%u ключа не были импортированы, т.к. они не используются rom-properties."
 msgstr[2] ""
+"%u ключей не были импортированы, т.к. они не используются rom-properties."
 
 #: ../src/kde/config/KeyManagerTab.cpp:210
 #, c-format
@@ -342,75 +388,81 @@ msgid_plural ""
 "%u keys were not imported because they are encrypted and the key isn't "
 "available."
 msgstr[0] ""
+"%u зашифрованный ключ не был импортирован из-за отсутствия ключа для "
+"расшифрования."
 msgstr[1] ""
+"%u зашифрованных ключа не были импортированы из-за отсутствия ключа для "
+"расшифрования."
 msgstr[2] ""
+"%u зашифрованных ключей не были импортированы из-за отсутствия ключа для "
+"расшифрования."
 
 #: ../src/kde/config/KeyManagerTab.cpp:217
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "%u key has been imported and verified as correct."
 msgid_plural "%u keys have been imported and verified as correct."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u ключ был импортирован и проверен на корректность."
+msgstr[1] "%u ключа был импортированы и проверены на корректность."
+msgstr[2] "%u ключей был импортированы и проверены на корректность."
 
 #: ../src/kde/config/KeyManagerTab.cpp:224
 #, c-format
 msgctxt "KeyManagerTab"
 msgid "%u key has been imported without verification."
 msgid_plural "%u keys have been imported without verification."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u ключ был импортирован без проверки."
+msgstr[1] "%u ключа был импортированы без проверки."
+msgstr[2] "%u ключей был импортированы без проверки."
 
 #. tr: Dialog title.
 #: ../src/kde/config/KeyManagerTab.cpp:355
 #: ../src/win32/config/KeyManagerTab.cpp:1431
 msgctxt "KeyManagerTab"
 msgid "Select Wii keys.bin File"
-msgstr ""
+msgstr "Выберете файл keys.bin (Wii)"
 
 #. tr: Dialog title.
 #: ../src/kde/config/KeyManagerTab.cpp:373
 #: ../src/win32/config/KeyManagerTab.cpp:1467
 msgctxt "KeyManagerTab"
 msgid "Select Wii U otp.bin File"
-msgstr ""
+msgstr "Выберете файл otp.bin (Wii U)"
 
 #. tr: Dialog title.
 #: ../src/kde/config/KeyManagerTab.cpp:391
 #: ../src/win32/config/KeyManagerTab.cpp:1503
 msgctxt "KeyManagerTab"
 msgid "Select 3DS boot9.bin File"
-msgstr ""
+msgstr "Выберете файл boot9.bin (3DS)"
 
 #. tr: Dialog title.
 #: ../src/kde/config/KeyManagerTab.cpp:409
 #: ../src/win32/config/KeyManagerTab.cpp:1539
 msgctxt "KeyManagerTab"
 msgid "Select 3DS aeskeydb.bin File"
-msgstr ""
+msgstr "Выберете файл aeskeydb.bin (3DS)"
 
 #. tr: Column 0: Key Name.
 #: ../src/kde/config/KeyStoreModel.cpp:426
 #: ../src/win32/config/KeyManagerTab.cpp:371
 msgctxt "KeyManagerTab"
 msgid "Key Name"
-msgstr ""
+msgstr "Название ключа"
 
 #. tr: Column 1: Value.
 #: ../src/kde/config/KeyStoreModel.cpp:429
 #: ../src/win32/config/KeyManagerTab.cpp:380
 msgctxt "KeyManagerTab"
 msgid "Value"
-msgstr ""
+msgstr "Значение"
 
 #. tr: Column 2: Verification status.
 #: ../src/kde/config/KeyStoreModel.cpp:432
 #: ../src/win32/config/KeyManagerTab.cpp:385
 msgctxt "KeyManagerTab"
 msgid "Valid?"
-msgstr ""
+msgstr "Статус"
 
 #. tr: IMG_INT_ICON
 #: ../src/libromdata/config/TImageTypesConfig.cpp:379
@@ -419,6 +471,8 @@ msgid ""
 "Internal\n"
 "Icon"
 msgstr ""
+"Встроенная\n"
+"иконка"
 
 #. tr: IMG_INT_BANNER
 #: ../src/libromdata/config/TImageTypesConfig.cpp:381
@@ -427,6 +481,8 @@ msgid ""
 "Internal\n"
 "Banner"
 msgstr ""
+"Встроенный\n"
+"баннер"
 
 #. tr: IMG_INT_MEDIA
 #: ../src/libromdata/config/TImageTypesConfig.cpp:383
@@ -435,6 +491,8 @@ msgid ""
 "Internal\n"
 "Media"
 msgstr ""
+"Встроенный\n"
+"носитель"
 
 #. tr: IMG_INT_IMAGE
 #: ../src/libromdata/config/TImageTypesConfig.cpp:385
@@ -443,6 +501,8 @@ msgid ""
 "Internal\n"
 "Image"
 msgstr ""
+"Встроенное\n"
+"изображение"
 
 #. tr: IMG_EXT_MEDIA
 #: ../src/libromdata/config/TImageTypesConfig.cpp:390
@@ -451,6 +511,8 @@ msgid ""
 "External\n"
 "Media"
 msgstr ""
+"Внешний\n"
+"носитель"
 
 #. tr: IMG_EXT_COVER
 #: ../src/libromdata/config/TImageTypesConfig.cpp:392
@@ -459,6 +521,8 @@ msgid ""
 "External\n"
 "Cover"
 msgstr ""
+"Внешняя\n"
+"обложка"
 
 #. tr: IMG_EXT_COVER_3D
 #: ../src/libromdata/config/TImageTypesConfig.cpp:394
@@ -467,6 +531,8 @@ msgid ""
 "External\n"
 "3D Cover"
 msgstr ""
+"Внешняя\n"
+"3D обложка"
 
 #. tr: IMG_EXT_COVER_FULL
 #: ../src/libromdata/config/TImageTypesConfig.cpp:396
@@ -475,6 +541,8 @@ msgid ""
 "External\n"
 "Full Cover"
 msgstr ""
+"Внешний\n"
+"разворот"
 
 #. tr: IMG_EXT_BOX
 #: ../src/libromdata/config/TImageTypesConfig.cpp:398
@@ -483,6 +551,8 @@ msgid ""
 "External\n"
 "Box"
 msgstr ""
+"Внешняя\n"
+"упаковка"
 
 #. tr: amiibo
 #: ../src/libromdata/config/TImageTypesConfig.cpp:417
@@ -496,7 +566,6 @@ msgctxt "TImageTypesConfig|SysName"
 msgid "Badge Arcade"
 msgstr ""
 
-# intentionally untranslated
 #. tr: Dreamcast
 #: ../src/libromdata/config/TImageTypesConfig.cpp:421
 msgctxt "TImageTypesConfig|SysName"
@@ -509,7 +578,6 @@ msgctxt "TImageTypesConfig|SysName"
 msgid "Dreamcast Saves"
 msgstr "Сохранения Dreamcast"
 
-# intentionally untranslated
 #. tr: GameCube
 #: ../src/libromdata/config/TImageTypesConfig.cpp:425
 msgctxt "TImageTypesConfig|SysName"
@@ -522,14 +590,12 @@ msgctxt "TImageTypesConfig|SysName"
 msgid "GameCube Saves"
 msgstr "Сохранения GameCube"
 
-# intentionally untranslated
 #. tr: NintendoDS
 #: ../src/libromdata/config/TImageTypesConfig.cpp:429
 msgctxt "TImageTypesConfig|SysName"
 msgid "Nintendo DS(i)"
 msgstr "Nintendo DS(i)"
 
-# intentionally untranslated
 #. tr: Nintendo3DS
 #: ../src/libromdata/config/TImageTypesConfig.cpp:431
 msgctxt "TImageTypesConfig|SysName"
@@ -542,7 +608,6 @@ msgctxt "TImageTypesConfig|SysName"
 msgid "PlayStation Saves"
 msgstr "Сохранения PlayStation"
 
-# intentionally untranslated
 #. tr: WiiU
 #: ../src/libromdata/config/TImageTypesConfig.cpp:435
 msgctxt "TImageTypesConfig|SysName"
@@ -552,7 +617,7 @@ msgstr "Wii U"
 #: ../src/libromdata/Console/Dreamcast.cpp:559
 msgctxt "Dreamcast"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:582
 #: ../src/libromdata/Console/Dreamcast.cpp:586
@@ -576,8 +641,8 @@ msgid "Release Date"
 msgstr ""
 
 # There's two ways "Disc #: %d" can be parsed.
-# (1) "number of the disk is %d" (NP is N)
-# (2) "disk number %d" (NP)
+# (1) "number of the disс is %d" (NP is N)
+# (2) "disс number %d" (NP)
 # The meaning is the same in this context, but I decided to go with (2), because it sounds more concise.
 # (1) can be translated as "Номер диска" or "№ диска".
 #: ../src/libromdata/Console/Dreamcast.cpp:627
@@ -590,7 +655,7 @@ msgstr "Диск №"
 #, c-format
 msgctxt "Dreamcast|Disc"
 msgid "%1$u of %2$u"
-msgstr ""
+msgstr "%1$u из %2$u"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:632
 msgctxt "Dreamcast"
@@ -987,7 +1052,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:1472
 msgctxt "GameCube"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Console/GameCube.cpp:1492
 msgctxt "GameCube"
@@ -1086,7 +1151,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:1782
 msgctxt "GameCube|Partition"
 msgid "#"
-msgstr ""
+msgstr "№"
 
 #: ../src/libromdata/Console/GameCube.cpp:1783
 msgctxt "GameCube|Partition"
@@ -1319,7 +1384,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:494
 msgctxt "MegaDrive|VectorTable"
 msgid "#"
-msgstr ""
+msgstr "№"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:495
 msgctxt "MegaDrive|VectorTable"
@@ -1350,7 +1415,7 @@ msgstr ""
 #: ../src/libromdata/Console/N64.cpp:310
 msgctxt "N64"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Console/N64.cpp:322
 msgctxt "N64"
@@ -1365,7 +1430,7 @@ msgstr "Ревизия"
 #: ../src/libromdata/Console/N64.cpp:330
 msgctxt "N64"
 msgid "Entry Point"
-msgstr ""
+msgstr "Точка входа"
 
 #: ../src/libromdata/Console/N64.cpp:334
 msgctxt "N64"
@@ -1704,7 +1769,7 @@ msgstr ""
 #: ../src/libromdata/Console/SegaSaturn.cpp:469
 msgctxt "SegaSaturn"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:492
 #: ../src/libromdata/Console/SegaSaturn.cpp:496
@@ -1749,7 +1814,7 @@ msgstr "Диск №"
 #, c-format
 msgctxt "SegaSaturn|Disc"
 msgid "%1$u of %2$u"
-msgstr ""
+msgstr "%1$u из %2$u"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:559
 msgctxt "SegaSaturn"
@@ -1847,7 +1912,7 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:790
 msgctxt "SNES"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Console/SNES.cpp:794
 #: ../src/libromdata/Console/SNES.cpp:797
@@ -2014,17 +2079,18 @@ msgstr "Регион"
 #: ../src/libromdata/crypto/KeyStoreUI.cpp:843
 msgctxt "KeyStoreUI|Section"
 msgid "Nintendo Wii AES Keys"
-msgstr ""
+msgstr "Ключи AES для Nintendo Wii"
 
+# Anglicism, but wikipedia has a page on it.
 #: ../src/libromdata/crypto/KeyStoreUI.cpp:844
 msgctxt "KeyStoreUI|Section"
 msgid "Nintendo 3DS Key Scrambler Constants"
-msgstr ""
+msgstr "Константы скремблера ключей для Nintendo 3DS"
 
 #: ../src/libromdata/crypto/KeyStoreUI.cpp:845
 msgctxt "KeyStoreUI|Section"
 msgid "Nintendo 3DS AES Keys"
-msgstr ""
+msgstr "Ключи AES для Nintendo 3DS"
 
 #: ../src/libromdata/data/Nintendo3DSSysTitles.cpp:76
 msgctxt "Nintendo3DSSysTitles"
@@ -2200,7 +2266,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:543
 msgctxt "DMG"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/DMG.cpp:497
 #: ../src/libromdata/Handheld/DMG.cpp:539
@@ -2216,18 +2282,18 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:631
 msgctxt "DMG"
 msgid "Unknown"
-msgstr ""
+msgstr "Неизвестно"
 
 #: ../src/libromdata/Handheld/DMG.cpp:573
 msgctxt "DMG"
 msgid "System"
-msgstr ""
+msgstr "Система"
 
 #: ../src/libromdata/Handheld/DMG.cpp:580
 #: ../src/libromdata/Handheld/DMG.cpp:583
 msgctxt "DMG"
 msgid "Entry Point"
-msgstr ""
+msgstr "Точка входа"
 
 #: ../src/libromdata/Handheld/DMG.cpp:594
 msgctxt "DMG"
@@ -2237,22 +2303,24 @@ msgstr "Издатель"
 #: ../src/libromdata/Handheld/DMG.cpp:603
 msgctxt "DMG|Features"
 msgid "RAM"
-msgstr ""
+msgstr "ОЗУ"
 
 #: ../src/libromdata/Handheld/DMG.cpp:604
 msgctxt "DMG|Features"
 msgid "Battery"
-msgstr ""
+msgstr "Батарея"
 
 #: ../src/libromdata/Handheld/DMG.cpp:605
 msgctxt "DMG|Features"
 msgid "Timer"
-msgstr ""
+msgstr "Таймер"
 
+# not sure if correct term
 #: ../src/libromdata/Handheld/DMG.cpp:606
+#, fuzzy
 msgctxt "DMG|Features"
 msgid "Rumble"
-msgstr ""
+msgstr "Виброотдача"
 
 #: ../src/libromdata/Handheld/DMG.cpp:610
 msgctxt "DMG"
@@ -2262,7 +2330,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:616
 msgctxt "DMG"
 msgid "ROM Size"
-msgstr ""
+msgstr "Размер ПЗУ"
 
 #: ../src/libromdata/Handheld/DMG.cpp:621
 #: ../src/libromdata/Handheld/DMG.cpp:646
@@ -2270,9 +2338,9 @@ msgstr ""
 msgctxt "DMG"
 msgid "%1$u KiB (%2$u bank)"
 msgid_plural "%1$u KiB (%2$u banks)"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%1$u КиБ (%2$u банк)"
+msgstr[1] "%1$u КиБ (%2$u банка)"
+msgstr[2] "%1$u КиБ (%2$u банков)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:625
 #: ../src/libromdata/Handheld/DMG.cpp:650
@@ -2286,7 +2354,7 @@ msgstr "%u КиБ"
 #: ../src/libromdata/Handheld/DMG.cpp:641
 msgctxt "DMG"
 msgid "RAM Size"
-msgstr ""
+msgstr "Размер ОЗУ"
 
 #. tr: MBC2 internal memory - Not really RAM, but whatever.
 #: ../src/libromdata/Handheld/DMG.cpp:639
@@ -2297,7 +2365,7 @@ msgstr "512 x 4 бита"
 #: ../src/libromdata/Handheld/DMG.cpp:641
 msgctxt "DMG"
 msgid "No RAM"
-msgstr ""
+msgstr "Отсутствует"
 
 #: ../src/libromdata/Handheld/DMG.cpp:658
 #: ../src/libromdata/Handheld/DMG.cpp:661
@@ -2320,7 +2388,7 @@ msgstr ""
 #, c-format
 msgctxt "DMG"
 msgid "0x%02X (INVALID)"
-msgstr ""
+msgstr "0x%02X (НЕПРАВИЛЬНЫЙ)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:671
 msgctxt "DMG"
@@ -2337,18 +2405,18 @@ msgstr "Контрольная сумма"
 #, c-format
 msgctxt "DMG"
 msgid "0x%1$02X (INVALID; should be 0x%2$02X)"
-msgstr ""
+msgstr "0x%1$02X (НЕПРАВИЛЬНАЯ; должна быть 0x%2$02X)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:690
 #, c-format
 msgctxt "DMG"
 msgid "0x%02X (valid)"
-msgstr ""
+msgstr "0x%02X (правильная)"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:292
 msgctxt "GameBoyAdvance"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:305
 msgctxt "GameBoyAdvance"
@@ -2377,7 +2445,7 @@ msgstr "Ревизия"
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:348
 msgctxt "GameBoyAdvance"
 msgid "Entry Point"
-msgstr ""
+msgstr "Точка входа"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:343
 msgctxt "GameBoyAdvance"
@@ -2387,7 +2455,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Lynx.cpp:262
 msgctxt "Lynx"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/Lynx.cpp:265
 msgctxt "Lynx"
@@ -2474,7 +2542,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1831
 msgctxt "Nintendo3DS"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1833
 msgctxt "Nintendo3DS"
@@ -2504,7 +2572,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1985
 msgctxt "Nintendo3DS|CCI"
 msgid "#"
-msgstr ""
+msgstr "№"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1986
 msgctxt "Nintendo3DS|CCI"
@@ -2535,7 +2603,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:2009
 msgctxt "Nintendo3DS|eMMC"
 msgid "#"
-msgstr ""
+msgstr "№"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:2011
 msgctxt "Nintendo3DS|eMMC"
@@ -2634,7 +2702,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:2359
 msgctxt "Nintendo3DS|CtNames"
 msgid "#"
-msgstr ""
+msgstr "№"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:2360
 msgctxt "Nintendo3DS|CtNames"
@@ -2764,7 +2832,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DSFirm.cpp:348
 msgctxt "Nintendo3DSFirm"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/Nintendo3DSFirm.cpp:362
 msgctxt "Nintendo3DSFirm"
@@ -2809,7 +2877,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1072
 msgctxt "NintendoDS"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1079
 msgctxt "NintendoDS"
@@ -2923,7 +2991,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:371
 msgctxt "VirtualBoy"
 msgid "Title"
-msgstr ""
+msgstr "Название"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:377
 msgctxt "VirtualBoy"
@@ -3247,7 +3315,7 @@ msgstr ""
 #: ../src/libromdata/Other/ELF.cpp:1194
 msgctxt "ELF"
 msgid "Entry Point"
-msgstr ""
+msgstr "Точка входа"
 
 #: ../src/libromdata/Other/EXE.cpp:98
 msgctxt "EXE"
@@ -4558,70 +4626,70 @@ msgstr ""
 #: ../src/librpbase/crypto/KeyManager.cpp:237
 msgctxt "KeyManager|VerifyResult"
 msgid "Something happened."
-msgstr ""
+msgstr "Что-то произошло."
 
 #. tr: VERIFY_INVALID_PARAMS
 #: ../src/librpbase/crypto/KeyManager.cpp:239
 msgctxt "KeyManager|VerifyResult"
 msgid "Invalid parameters. (THIS IS A BUG!)"
-msgstr ""
+msgstr "Неверные параметры. (ЭТО БАГ!)"
 
 #. tr: VERIFY_NO_SUPPORT
 #: ../src/librpbase/crypto/KeyManager.cpp:241
 msgctxt "KeyManager|VerifyResult"
 msgid "Decryption is not supported in this build."
-msgstr ""
+msgstr "Расшифрование не поддерживается в этой сборке."
 
 #. tr: VERIFY_KEY_DB_NOT_LOADED
 #: ../src/librpbase/crypto/KeyManager.cpp:243
 msgctxt "KeyManager|VerifyResult"
 msgid "keys.conf was not found."
-msgstr ""
+msgstr "Файл keys.conf не найден."
 
 #. tr: VERIFY_KEY_DB_ERROR
 #: ../src/librpbase/crypto/KeyManager.cpp:245
 msgctxt "KeyManager|VerifyResult"
 msgid "keys.conf has an error and could not be loaded."
-msgstr ""
+msgstr "Файл keys.conf не был загружен, т.к. содержит ошибку."
 
 #. tr: VERIFY_KEY_NOT_FOUND
 #: ../src/librpbase/crypto/KeyManager.cpp:247
 msgctxt "KeyManager|VerifyResult"
 msgid "Required key was not found in keys.conf."
-msgstr ""
+msgstr "Необходимый ключ не был найден в keys.conf."
 
 #. tr: VERIFY_KEY_INVALID
 #: ../src/librpbase/crypto/KeyManager.cpp:249
 msgctxt "KeyManager|VerifyResult"
 msgid "The key in keys.conf is not a valid key."
-msgstr ""
+msgstr "Ключ из keys.conf не является правильным."
 
 #. tr: VERFIY_IAESCIPHER_INIT_ERR
 #: ../src/librpbase/crypto/KeyManager.cpp:251
 msgctxt "KeyManager|VerifyResult"
 msgid "AES decryption could not be initialized."
-msgstr ""
+msgstr "Ошибка инициализации расшифрования AES."
 
 #. tr: VERIFY_IAESCIPHER_DECRYPT_ERR
 #: ../src/librpbase/crypto/KeyManager.cpp:253
 msgctxt "KeyManager|VerifyResult"
 msgid "AES decryption failed."
-msgstr ""
+msgstr "Ошибка расшифрования AES."
 
 #. tr: VERIFY_WRONG_KEY
 #: ../src/librpbase/crypto/KeyManager.cpp:255
 msgctxt "KeyManager|VerifyResult"
 msgid "The key in keys.conf is incorrect."
-msgstr ""
+msgstr "Ключ из keys.conf не подходит."
 
 #. tr: Bytes (< 1,024)
 #: ../src/librpbase/RomData.cpp:118
 msgctxt "RomData|FileSize"
 msgid "byte"
 msgid_plural "bytes"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "байт"
+msgstr[1] "байта"
+msgstr[2] "байтов"
 
 #. tr: Kilobytes
 #: ../src/librpbase/RomData.cpp:123
@@ -4665,10 +4733,8 @@ msgctxt "RomData|FileType"
 msgid "ROM Image"
 msgstr "Образ ПЗУ"
 
-# Needs to be changed, if I don't come up with anything for Disk Image
 #. tr: FTYPE_DISC_IMAGE
 #: ../src/librpbase/RomData.cpp:509
-#, fuzzy
 msgctxt "RomData|FileType"
 msgid "Disc Image"
 msgstr "Образ диска"
@@ -4697,11 +4763,12 @@ msgctxt "RomData|FileType"
 msgid "NFC Dump"
 msgstr ""
 
+# Translated as "diskette" for now. Gerbil says it's supposed to be both Floppy and HDD, but right now only FDS uses it.
 #. tr: FTYPE_DISK_IMAGE
 #: ../src/librpbase/RomData.cpp:519
 msgctxt "RomData|FileType"
 msgid "Disk Image"
-msgstr ""
+msgstr "Образ дискеты"
 
 #. tr: FTYPE_EXECUTABLE
 #: ../src/librpbase/RomData.cpp:521
@@ -4791,55 +4858,55 @@ msgstr ""
 #: ../src/librpbase/RomData.cpp:741
 msgctxt "RomData|ImageType"
 msgid "Internal icon"
-msgstr ""
+msgstr "Встроенная иконка"
 
 #. tr: IMG_INT_BANNER
 #: ../src/librpbase/RomData.cpp:743
 msgctxt "RomData|ImageType"
 msgid "Internal banner"
-msgstr ""
+msgstr "Встроенный баннер"
 
 #. tr: IMG_INT_MEDIA
 #: ../src/librpbase/RomData.cpp:745
 msgctxt "RomData|ImageType"
 msgid "Internal media scan"
-msgstr ""
+msgstr "Встроенный скан носителя"
 
 #. tr: IMG_INT_IMAGE
 #: ../src/librpbase/RomData.cpp:747
 msgctxt "RomData|ImageType"
 msgid "Internal image"
-msgstr ""
+msgstr "Встроенное изображение"
 
 #. tr: IMG_EXT_MEDIA
 #: ../src/librpbase/RomData.cpp:752
 msgctxt "RomData|ImageType"
 msgid "External media scan"
-msgstr ""
+msgstr "Внешний скан носителя"
 
 #. tr: IMG_EXT_COVER
 #: ../src/librpbase/RomData.cpp:754
 msgctxt "RomData|ImageType"
 msgid "External cover scan"
-msgstr ""
+msgstr "Внешний скан обложки"
 
 #. tr: IMG_EXT_COVER_3D
 #: ../src/librpbase/RomData.cpp:756
 msgctxt "RomData|ImageType"
 msgid "External cover scan (3D version)"
-msgstr ""
+msgstr "Внешний скан обложки (3D версия)"
 
 #. tr: IMG_EXT_COVER_FULL
 #: ../src/librpbase/RomData.cpp:758
 msgctxt "RomData|ImageType"
 msgid "External cover scan (front and back)"
-msgstr ""
+msgstr "Внешний скан обложки (разворот)"
 
 #. tr: IMG_EXT_BOX
 #: ../src/librpbase/RomData.cpp:760
 msgctxt "RomData|ImageType"
 msgid "External box scan"
-msgstr ""
+msgstr "Внешний скан упаковки"
 
 # bad style?
 #: ../src/rpcli/rpcli.cpp:89
@@ -5152,21 +5219,23 @@ msgstr ""
 msgctxt "AboutTab|Credits"
 msgid "This program is licensed under the GNU GPL v2 or later."
 msgstr ""
+"Эта программа распространяется под лицензией GNU GPL v2 или любой более "
+"поздней версией."
 
 #: ../src/win32/config/AboutTab.cpp:616
 msgctxt "AboutTab"
 msgid "Credits"
-msgstr ""
+msgstr "Авторы"
 
 #: ../src/win32/config/AboutTab.cpp:679
 msgctxt "AboutTab"
 msgid "Libraries"
-msgstr ""
+msgstr "Библиотеки"
 
 #: ../src/win32/config/AboutTab.cpp:720
 msgctxt "AboutTab"
 msgid "Support"
-msgstr ""
+msgstr "Тех. поддержка"
 
 #. tr: Tab title.
 #: ../src/win32/config/AboutTab.cpp:862
@@ -5235,21 +5304,21 @@ msgstr ""
 #: ../src/win32/config/DownloadsTab.cpp:400
 msgctxt "DownloadsTab"
 msgid "Downloads"
-msgstr ""
+msgstr "Загрузки"
 
 #. tr: Tab title.
 #: ../src/win32/config/ImageTypesTab.cpp:709
 msgctxt "ImageTypesTab"
 msgid "Image Types"
-msgstr ""
+msgstr "Типы изображений"
 
 #: ../src/win32/config/KeyManagerTab.cpp:348
 msgctxt "KeyManagerTab"
 msgid "Import..."
-msgstr ""
+msgstr "Импорт..."
 
 #. tr: Tab title.
 #: ../src/win32/config/KeyManagerTab.cpp:1590
 msgctxt "KeyManagerTab"
 msgid "Key Manager"
-msgstr ""
+msgstr "Менеджер ключей"
