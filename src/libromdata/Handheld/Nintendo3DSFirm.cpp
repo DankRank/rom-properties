@@ -21,7 +21,7 @@
 
 #include "librpbase/config.librpbase.h"
 
-#include "Nintendo3DSFirm.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "n3ds_firm_structs.h"
@@ -51,6 +51,10 @@ using std::vector;
 #include <zlib.h>
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(Nintendo3DSFirm)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(Nintendo3DSFirm)
 
 class Nintendo3DSFirmPrivate : public RomDataPrivate
 {

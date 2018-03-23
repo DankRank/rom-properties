@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#include "DirectDrawSurface.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "dds_structs.h"
@@ -47,6 +47,14 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(DirectDrawSurface)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(DirectDrawSurface)
+ROMDATA_IMPL_IMG(DirectDrawSurface)
 
 class DirectDrawSurfacePrivate : public RomDataPrivate
 {

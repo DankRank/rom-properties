@@ -22,7 +22,8 @@
 
 #include "librpbase/config.librpbase.h"
 
-#include "Nintendo3DS.hpp"
+#include "RomDataDecl.hpp"
+#include "Handheld/NintendoDS.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "n3ds_structs.h"
@@ -44,7 +45,6 @@ using namespace LibRpBase;
 // For DSiWare SRLs embedded in CIAs.
 #include "librpbase/disc/DiscReader.hpp"
 #include "librpbase/disc/PartitionFile.hpp"
-#include "NintendoDS.hpp"
 
 // NCCH and CIA readers.
 #include "disc/NCCHReader.hpp"
@@ -69,6 +69,17 @@ using std::vector;
 #include <zlib.h>
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(Nintendo3DS)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_IMGEXT()
+ROMDATA_DECL_ICONANIM()
+ROMDATA_DECL_CLOSE()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(Nintendo3DS)
+ROMDATA_IMPL_IMG(Nintendo3DS)
 
 class Nintendo3DSPrivate : public RomDataPrivate
 {

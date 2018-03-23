@@ -23,7 +23,7 @@
  * - https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
  */
 
-#include "KhronosKTX.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "ktx_structs.h"
@@ -55,6 +55,14 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(KhronosKTX)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(KhronosKTX)
+ROMDATA_IMPL_IMG(KhronosKTX)
 
 class KhronosKTXPrivate : public RomDataPrivate
 {

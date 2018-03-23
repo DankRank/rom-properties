@@ -20,7 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "NES.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/NintendoPublishers.hpp"
@@ -49,6 +49,10 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(NES)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(NES)
 
 class NESPrivate : public RomDataPrivate
 {

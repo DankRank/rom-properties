@@ -19,6 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
+#include "RomDataDecl.hpp"
 #include "EXE.hpp"
 
 // librpbase
@@ -48,6 +49,8 @@ using std::vector;
 #include "EXE_p.hpp"
 
 namespace LibRomData {
+
+ROMDATA_IMPL(EXE)
 
 /** EXEPrivate **/
 

@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "MegaDrive.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "md_structs.h"
@@ -54,6 +54,10 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(MegaDrive)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(MegaDrive)
 
 class MegaDrivePrivate : public RomDataPrivate
 {

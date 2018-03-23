@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "ELF.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/ELFData.hpp"
@@ -50,6 +50,10 @@ using std::vector;
 #include "uvector.h"
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(ELF)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(ELF)
 
 class ELFPrivate : public LibRpBase::RomDataPrivate
 {

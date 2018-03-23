@@ -73,19 +73,10 @@ SET(libromdata_H
 	cdrom_structs.h
 	iso_structs.h
 
-	Console/Dreamcast.hpp
 	Console/DreamcastSave.hpp
-	Console/GameCube.hpp
-	Console/GameCubeSave.hpp
-	Console/MegaDrive.hpp
-	Console/MegaDriveRegions.hpp
-	Console/N64.hpp
-	Console/NES.hpp
-	Console/PlayStationSave.hpp
-	Console/Sega8Bit.hpp
-	Console/SegaSaturn.hpp
-	Console/SNES.hpp
-	Console/WiiU.hpp
+	Handheld/NintendoDS.hpp
+	Texture/SegaPVR.hpp
+	Other/EXE.hpp
 
 	Console/dc_structs.h
 	Console/gcn_structs.h
@@ -99,14 +90,6 @@ SET(libromdata_H
 	Console/snes_structs.h
 	Console/wiiu_structs.h
 
-	Handheld/DMG.hpp
-	Handheld/Lynx.hpp
-	Handheld/GameBoyAdvance.hpp
-	Handheld/Nintendo3DS.hpp
-	Handheld/Nintendo3DSFirm.hpp
-	Handheld/NintendoDS.hpp
-	Handheld/VirtualBoy.hpp
-
 	Handheld/dmg_structs.h
 	Handheld/gba_structs.h
 	Handheld/n3ds_structs.h
@@ -114,23 +97,11 @@ SET(libromdata_H
 	Handheld/lnx_structs.h
 	Handheld/vb_structs.h
 
-	Texture/DirectDrawSurface.hpp
-	Texture/KhronosKTX.hpp
-	Texture/SegaPVR.hpp
-	Texture/ValveVTF.hpp
-	Texture/ValveVTF3.hpp
-
 	Texture/dds_structs.h
 	Texture/ktx_structs.h
 	Texture/pvr_structs.h
 	Texture/vtf_structs.h
 	Texture/vtf3_structs.h
-
-	Other/Amiibo.hpp
-	Other/ELF.hpp
-	Other/EXE.hpp
-	Other/EXE_p.hpp
-	Other/NintendoBadge.hpp
 
 	Other/badge_structs.h
 	Other/elf_structs.h

@@ -21,7 +21,8 @@
 
 #include "librpbase/config.librpbase.h"
 
-#include "NintendoDS.hpp"
+#include "RomDataDecl.hpp"
+#include "Handheld/NintendoDS.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "nds_structs.h"
@@ -54,6 +55,9 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(NintendoDS)
+ROMDATA_IMPL_IMG(NintendoDS)
 
 class NintendoDSPrivate : public RomDataPrivate
 {

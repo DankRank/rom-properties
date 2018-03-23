@@ -18,7 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#include "SegaPVR.hpp"
+#include "RomDataDecl.hpp"
+#include "Texture/SegaPVR.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "pvr_structs.h"
@@ -48,6 +49,9 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(SegaPVR)
+ROMDATA_IMPL_IMG(SegaPVR)
 
 class SegaPVRPrivate : public RomDataPrivate
 {

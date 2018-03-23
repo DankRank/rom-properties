@@ -20,7 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "VirtualBoy.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/NintendoPublishers.hpp"
@@ -47,6 +47,10 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(VirtualBoy)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(VirtualBoy)
 
 class VirtualBoyPrivate : public RomDataPrivate
 {

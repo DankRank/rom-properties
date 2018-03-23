@@ -24,7 +24,7 @@
 // - http://www.psdevwiki.com/ps3/Game_Saves#Game_Saves_PS1
 // - http://problemkaputt.de/psx-spx.htm
 
-#include "PlayStationSave.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "ps1_structs.h"
@@ -52,6 +52,15 @@ using namespace LibRpBase;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(PlayStationSave)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_ICONANIM()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(PlayStationSave)
+ROMDATA_IMPL_IMG(PlayStationSave)
 
 class PlayStationSavePrivate : public RomDataPrivate
 {

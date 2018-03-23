@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "Amiibo.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "nfp_structs.h"
@@ -45,6 +45,14 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(Amiibo)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGEXT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(Amiibo)
+ROMDATA_IMPL_IMG(Amiibo)
 
 class AmiiboPrivate : public RomDataPrivate
 {

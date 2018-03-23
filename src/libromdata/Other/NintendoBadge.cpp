@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#include "NintendoBadge.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "badge_structs.h"
@@ -50,6 +50,14 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(NintendoBadge)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(NintendoBadge)
+ROMDATA_IMPL_IMG(NintendoBadge)
 
 class NintendoBadgePrivate : public RomDataPrivate
 {

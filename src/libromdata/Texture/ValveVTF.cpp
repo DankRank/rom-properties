@@ -23,7 +23,7 @@
  * - https://developer.valvesoftware.com/wiki/Valve_Texture_Format
  */
 
-#include "ValveVTF.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "vtf_structs.h"
@@ -54,6 +54,14 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(ValveVTF)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(ValveVTF)
+ROMDATA_IMPL_IMG(ValveVTF)
 
 class ValveVTFPrivate : public RomDataPrivate
 {

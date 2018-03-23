@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "N64.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "n64_structs.h"
@@ -45,6 +45,10 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(N64)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(N64)
 
 class N64Private : public RomDataPrivate
 {

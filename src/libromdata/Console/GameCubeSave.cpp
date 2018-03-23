@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "GameCubeSave.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/NintendoPublishers.hpp"
@@ -52,6 +52,15 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(GameCubeSave)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_ICONANIM()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(GameCubeSave)
+ROMDATA_IMPL_IMG(GameCubeSave)
 
 class GameCubeSavePrivate : public RomDataPrivate
 {

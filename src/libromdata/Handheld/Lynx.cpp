@@ -20,7 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "Lynx.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "lnx_structs.h"
@@ -38,6 +38,10 @@ using namespace LibRpBase;
 #include <cstring>
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(Lynx)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(Lynx)
 
 class LynxPrivate : public RomDataPrivate
 {

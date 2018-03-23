@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#include "ValveVTF3.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "vtf3_structs.h"
@@ -49,6 +49,14 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(ValveVTF3)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(ValveVTF3)
+ROMDATA_IMPL_IMG(ValveVTF3)
 
 class ValveVTF3Private : public RomDataPrivate
 {

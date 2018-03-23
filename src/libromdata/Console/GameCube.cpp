@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "GameCube.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "gcn_structs.h"
@@ -66,6 +66,15 @@ using std::vector;
 #include "librpbase/SystemRegion.hpp"
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(GameCube)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGPF()
+ROMDATA_DECL_IMGINT()
+ROMDATA_DECL_IMGEXT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(GameCube)
+ROMDATA_IMPL_IMG(GameCube)
 
 class GameCubePrivate : public RomDataPrivate
 {

@@ -21,7 +21,7 @@
 
 #include "librpbase/config.librpbase.h"
 
-#include "WiiU.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "wiiu_structs.h"
@@ -53,6 +53,13 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(WiiU)
+ROMDATA_DECL_IMGSUPPORT()
+ROMDATA_DECL_IMGEXT()
+ROMDATA_DECL_END()
+ROMDATA_IMPL(WiiU)
+ROMDATA_IMPL_IMG(WiiU)
 
 class WiiUPrivate : public RomDataPrivate
 {

@@ -22,6 +22,7 @@
 #include "librpbase/config.librpbase.h"
 
 #include "RomDataFactory.hpp"
+#include "RomDataDecl.hpp"
 
 // librpbase
 #include "librpbase/common.h"
@@ -44,52 +45,46 @@ using std::string;
 using std::unordered_map;
 using std::vector;
 
-#ifndef HAVE_LAMBDA_AS_FUNCTION_POINTER
-// Using std::function<> if lambdas cannot be
-// cast to function pointers.
-#include <functional>
-#endif
-
-// RomData subclasses: Consoles
-#include "Console/Dreamcast.hpp"
-#include "Console/DreamcastSave.hpp"
-#include "Console/GameCube.hpp"
-#include "Console/GameCubeSave.hpp"
-#include "Console/MegaDrive.hpp"
-#include "Console/N64.hpp"
-#include "Console/NES.hpp"
-#include "Console/PlayStationSave.hpp"
-#include "Console/Sega8Bit.hpp"
-#include "Console/SegaSaturn.hpp"
-#include "Console/SNES.hpp"
-#include "Console/WiiU.hpp"
-
-// RomData subclasses: Handhelds
-#include "Handheld/DMG.hpp"
-#include "Handheld/GameBoyAdvance.hpp"
-#include "Handheld/Lynx.hpp"
-#include "Handheld/Nintendo3DS.hpp"
-#include "Handheld/Nintendo3DSFirm.hpp"
-#include "Handheld/NintendoDS.hpp"
-#include "Handheld/VirtualBoy.hpp"
-
-// RomData subclasses: Textures
-#include "Texture/DirectDrawSurface.hpp"
-#include "Texture/KhronosKTX.hpp"
-#include "Texture/SegaPVR.hpp"
-#include "Texture/ValveVTF.hpp"
-#include "Texture/ValveVTF3.hpp"
-
-// RomData subclasses: Other
-#include "Other/Amiibo.hpp"
-#include "Other/ELF.hpp"
-#include "Other/EXE.hpp"
-#include "Other/NintendoBadge.hpp"
-
 // Special case for Dreamcast save files.
+#include "Console/DreamcastSave.hpp"
 #include "Console/dc_structs.h"
 
 namespace LibRomData {
+// RomData subclasses: Consoles
+class Dreamcast;
+//class DreamcastSave;
+class GameCube;
+class GameCubeSave;
+class MegaDrive;
+class N64;
+class NES;
+class PlayStationSave;
+class Sega8Bit;
+class SegaSaturn;
+class SNES;
+class WiiU;
+
+// RomData subclasses: Handhelds
+class DMG;
+class GameBoyAdvance;
+class Lynx;
+class Nintendo3DS;
+class Nintendo3DSFirm;
+class NintendoDS;
+class VirtualBoy;
+
+// RomData subclasses: Textures
+class DirectDrawSurface;
+class KhronosKTX;
+class SegaPVR;
+class ValveVTF;
+class ValveVTF3;
+
+// RomData subclasses: Other
+class Amiibo;
+class ELF;
+class EXE;
+class NintendoBadge;
 
 class RomDataFactoryPrivate
 {
@@ -103,12 +98,7 @@ class RomDataFactoryPrivate
 	public:
 		typedef int (*pFnIsRomSupported)(const RomData::DetectInfo *info);
 		typedef const char *const * (*pFnSupportedFileExtensions)(void);
-
-#ifdef HAVE_LAMBDA_AS_FUNCTION_POINTER
 		typedef RomData* (*pFnNewRomData)(IRpFile *file);
-#else
-		typedef std::function<RomData*(IRpFile*)> pFnNewRomData;
-#endif
 
 		struct RomDataFns {
 			pFnIsRomSupported isRomSupported;
@@ -124,16 +114,12 @@ class RomDataFactoryPrivate
 
 // MSVC 2010 complains if we don't specify the full namespace
 // for the RomData subclass in the lambda expression.
-#define GetRomDataFns(sys, hasThumbnail) \
-	{sys::isRomSupported_static, \
-	 [](IRpFile *file) -> RomData* { return new ::LibRomData::sys(file); }, \
-	 sys::supportedFileExtensions_static, \
-	 hasThumbnail, 0, 0}
 #define GetRomDataFns_addr(sys, hasThumbnail, address, size) \
-	{sys::isRomSupported_static, \
-	 [](IRpFile *file) -> RomData* { return new ::LibRomData::sys(file); }, \
-	 sys::supportedFileExtensions_static, \
-	 hasThumbnail, address, size}
+    {RomData_isRomSupported<sys>, \
+     RomData_ctor<sys>, \
+     RomData_supportedFileExtensions<sys>, \
+     hasThumbnail, address, size}
+#define GetRomDataFns(sys, hasThumbnail) GetRomDataFns_addr(sys, hasThumbnail, 0, 0)
 
 		// RomData subclasses that use a header.
 		// Headers with addresses other than 0 should be

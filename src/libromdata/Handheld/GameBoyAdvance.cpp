@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "GameBoyAdvance.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/NintendoPublishers.hpp"
@@ -44,6 +44,10 @@ using namespace LibRpBase;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(GameBoyAdvance)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(GameBoyAdvance)
 
 class GameBoyAdvancePrivate : public RomDataPrivate
 {

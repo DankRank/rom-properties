@@ -19,7 +19,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
  ***************************************************************************/
 
-#include "DreamcastSave.hpp"
+#include "RomDataDecl.hpp"
+#include "Console/DreamcastSave.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "dc_structs.h"
@@ -51,6 +52,9 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(DreamcastSave)
+ROMDATA_IMPL_IMG(DreamcastSave)
 
 class DreamcastSavePrivate : public RomDataPrivate
 {

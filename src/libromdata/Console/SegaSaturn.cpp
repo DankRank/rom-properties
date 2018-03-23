@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#include "SegaSaturn.hpp"
+#include "RomDataDecl.hpp"
 #include "librpbase/RomData_p.hpp"
 
 #include "data/SegaPublishers.hpp"
@@ -51,6 +51,10 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_DECL_BEGIN(SegaSaturn)
+ROMDATA_DECL_END()
+ROMDATA_IMPL(SegaSaturn)
 
 class SegaSaturnPrivate : public RomDataPrivate
 {

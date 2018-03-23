@@ -44,7 +44,7 @@ struct SysData_t {
 	pFnSupportedImageTypes getTypes;	// Get supported image types.
 };
 #define SysDataEntry(klass) \
-	{#klass, LibRomData::klass::supportedImageTypes_static}
+	{#klass, LibRomData::RomData_supportedImageTypes<klass>}
 
 template<typename ComboBox>
 class TImageTypesConfig
