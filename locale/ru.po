@@ -30,7 +30,7 @@ msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-03-31 12:10-0400\n"
-"PO-Revision-Date: 2018-03-22 18:02+0200\n"
+"PO-Revision-Date: 2018-04-02 03:54+0300\n"
 "Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -1140,10 +1140,10 @@ msgid "Title"
 msgstr "Название"
 
 #: ../src/libromdata/Console/GameCube.cpp:1489
-#, fuzzy, c-format
+#, c-format
 msgctxt "GameCube"
 msgid "Unknown (%.2s)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%.2s)"
 
 #: ../src/libromdata/Console/GameCube.cpp:1492
 #, c-format
@@ -1254,7 +1254,6 @@ msgstr ""
 
 #. tr: Unknown used size.
 #: ../src/libromdata/Console/GameCube.cpp:1810
-#, fuzzy
 msgctxt "GameCube|Partition"
 msgid "Unknown"
 msgstr "Неизвестно"
@@ -1718,10 +1717,10 @@ msgid "Publisher"
 msgstr "Издатель"
 
 #: ../src/libromdata/Console/NES.cpp:851
-#, fuzzy, c-format
+#, c-format
 msgctxt "NES"
 msgid "Unknown (0x%02X)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (0x%02X)"
 
 #: ../src/libromdata/Console/NES.cpp:854
 msgctxt "NES"
@@ -2192,10 +2191,10 @@ msgid "Game ID"
 msgstr ""
 
 #: ../src/libromdata/Console/WiiU.cpp:382
-#, fuzzy, c-format
+#, c-format
 msgctxt "WiiU"
 msgid "Unknown (%.4s)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%.4s)"
 
 #: ../src/libromdata/Console/WiiU.cpp:384
 #, c-format
@@ -2204,7 +2203,6 @@ msgid "Unknown (%02X %02X %02X %02X)"
 msgstr ""
 
 #: ../src/libromdata/Console/WiiU.cpp:389
-#, fuzzy
 msgctxt "WiiU"
 msgid "Publisher"
 msgstr "Издатель"
@@ -2445,10 +2443,10 @@ msgid "Entry Point"
 msgstr "Точка входа"
 
 #: ../src/libromdata/Handheld/DMG.cpp:591
-#, fuzzy, c-format
+#, c-format
 msgctxt "DMG"
 msgid "Unknown (%.2s)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%.2s)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:594
 #, c-format
@@ -2457,10 +2455,10 @@ msgid "Unknown (%02X %02X)"
 msgstr ""
 
 #: ../src/libromdata/Handheld/DMG.cpp:604
-#, fuzzy, c-format
+#, c-format
 msgctxt "DMG"
 msgid "Unknown (%02X)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%02X)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:608
 msgctxt "DMG"
@@ -2591,10 +2589,10 @@ msgid "Game ID"
 msgstr ""
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:291
-#, fuzzy, c-format
+#, c-format
 msgctxt "GameBoyAdvance"
 msgid "Unknown (%.2s)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%.2s)"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:294
 #, c-format
@@ -3177,10 +3175,10 @@ msgid "Game ID"
 msgstr ""
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:362
-#, fuzzy, c-format
+#, c-format
 msgctxt "VirtualBoy"
 msgid "Unknown (%.2s)"
-msgstr "Неизвестно"
+msgstr "Неизвестно (%.2s)"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:365
 #, c-format
@@ -4505,10 +4503,9 @@ msgid "Data Size"
 msgstr ""
 
 #: ../src/libromdata/Texture/DirectDrawSurface.cpp:1349
-#, fuzzy
 msgctxt "DirectDrawSurface"
 msgid "XDK Version"
-msgstr "Версия %s"
+msgstr ""
 
 #: ../src/libromdata/Texture/KhronosKTX.cpp:820
 #: ../src/libromdata/Texture/KhronosKTX.cpp:825
@@ -5451,13 +5448,9 @@ msgstr ""
 "поздней версией."
 
 #: ../src/win32/config/AboutTab.cpp:563
-#, fuzzy
 msgctxt "AboutTab|Credits"
 msgid "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
-msgstr ""
-"Эта программа распространяется под лицензией <a href='https://www.gnu.org/"
-"licenses/old-licenses/gpl-2.0.ru.html'>GNU GPL v2</a> или любой более "
-"поздней версией."
+msgstr "https://www.gnu.org/licenses/old-licenses/gpl-2.0.ru.html"
 
 #: ../src/win32/config/AboutTab.cpp:616
 msgctxt "AboutTab"
@@ -5554,33 +5547,37 @@ msgctxt "KeyManagerTab"
 msgid "Import..."
 msgstr "Импорт..."
 
+# issue #129
 #. tr: Wii keys.bin file filter. (Win32)
 #: ../src/win32/config/KeyManagerTab.cpp:1433
 #, fuzzy
 msgctxt "KeyManagerTab"
 msgid "keys.bin"
-msgstr "keys.bin (Wii)"
+msgstr "keys.bin"
 
+# issue #129
 #. tr: Wii U otp.bin file filter. (Win32)
 #: ../src/win32/config/KeyManagerTab.cpp:1471
 #, fuzzy
 msgctxt "KeyManagerTab"
 msgid "otp.bin"
-msgstr "otp.bin (Wii U)"
+msgstr "otp.bin"
 
+# issue #129
 #. tr: 3DS boot9.bin file filter. (Win32)
 #: ../src/win32/config/KeyManagerTab.cpp:1509
 #, fuzzy
 msgctxt "KeyManagerTab"
 msgid "boot9.bin"
-msgstr "boot9.bin (3DS)"
+msgstr "boot9.bin"
 
+# issue #129
 #. tr: aeskeydb.bin file filter. (Win32)
 #: ../src/win32/config/KeyManagerTab.cpp:1547
 #, fuzzy
 msgctxt "KeyManagerTab"
 msgid "aeskeydb.bin"
-msgstr "aeskeydb.bin (3DS)"
+msgstr "aeskeydb.bin"
 
 #. tr: Tab title.
 #: ../src/win32/config/KeyManagerTab.cpp:1598
