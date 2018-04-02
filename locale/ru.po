@@ -30,7 +30,7 @@ msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-03-31 12:10-0400\n"
-"PO-Revision-Date: 2018-04-02 04:03+0300\n"
+"PO-Revision-Date: 2018-04-02 05:20+0300\n"
 "Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -1577,12 +1577,12 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:693
 msgctxt "NES|Format"
 msgid "FDS disk image"
-msgstr ""
+msgstr "Образ дискеты FDS"
 
 #: ../src/libromdata/Console/NES.cpp:696
 msgctxt "NES|Format"
 msgid "FDS disk image (with fwNES header)"
-msgstr ""
+msgstr "Образ дискеты FDS (с заголовком fwNES)"
 
 #: ../src/libromdata/Console/NES.cpp:699
 msgctxt "NES|Format"
@@ -1592,7 +1592,7 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:703 ../src/libromdata/Console/NES.cpp:928
 msgctxt "NES"
 msgid "Unknown"
-msgstr ""
+msgstr "Неизвестно"
 
 #: ../src/libromdata/Console/NES.cpp:718
 msgctxt "NES|Format"
@@ -1603,7 +1603,7 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:724
 msgctxt "NES"
 msgid "Format"
-msgstr ""
+msgstr "Формат"
 
 #. tr: Print the mapper ID followed by the mapper name.
 #. tr: Print the submapper ID followed by the submapper name.
@@ -1639,7 +1639,7 @@ msgstr "Подмаппер"
 #: ../src/libromdata/Console/NES.cpp:780
 msgctxt "NES"
 msgid "TNES Mapper"
-msgstr ""
+msgstr "Маппер TNES"
 
 #: ../src/libromdata/Console/NES.cpp:787
 msgctxt "NES|TVMode"
@@ -3931,25 +3931,25 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:831
 msgctxt "EXE|Subsystem"
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
 #. tr: IMAGE_SUBSYSTEM_WINDOWS_CUI
 #: ../src/libromdata/Other/EXE.cpp:833
 msgctxt "EXE|Subsystem"
 msgid "Console"
-msgstr ""
+msgstr "Консоль"
 
 #. tr: IMAGE_SUBSYSTEM_OS2_CUI
 #: ../src/libromdata/Other/EXE.cpp:836
 msgctxt "EXE|Subsystem"
 msgid "OS/2 Console"
-msgstr ""
+msgstr "Консоль OS/2"
 
 #. tr: IMAGE_SUBSYSTEM_POSIX_CUI
 #: ../src/libromdata/Other/EXE.cpp:839
 msgctxt "EXE|Subsystem"
 msgid "POSIX Console"
-msgstr ""
+msgstr "Консоль POSIX"
 
 #. tr: IMAGE_SUBSYSTEM_NATIVE_WINDOWS
 #: ../src/libromdata/Other/EXE.cpp:841
@@ -3961,7 +3961,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:843
 msgctxt "EXE|Subsystem"
 msgid "Windows CE"
-msgstr ""
+msgstr "Windows CE"
 
 #. tr: IMAGE_SUBSYSTEM_EFI_APPLICATION
 #: ../src/libromdata/Other/EXE.cpp:845
@@ -3991,7 +3991,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:853
 msgctxt "EXE|Subsystem"
 msgid "Xbox"
-msgstr ""
+msgstr "Xbox"
 
 #: ../src/libromdata/Other/EXE.cpp:861 ../src/libromdata/Other/EXE.cpp:1370
 msgctxt "EXE"
@@ -4101,7 +4101,7 @@ msgstr "Заголовок MZ"
 #: ../src/libromdata/Other/EXE_manifest.cpp:160
 msgctxt "EXE"
 msgid "Manifest"
-msgstr ""
+msgstr "Манифест"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:163
 msgctxt "EXE|Manifest"
@@ -4111,37 +4111,37 @@ msgstr ""
 #: ../src/libromdata/Other/EXE_manifest.cpp:195
 msgctxt "EXE|Manifest"
 msgid "Type"
-msgstr ""
+msgstr "Тип"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:196
 msgctxt "EXE|Manifest"
 msgid "Name"
-msgstr ""
+msgstr "Назавние"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:197
 msgctxt "EXE|Manifest"
 msgid "Language"
-msgstr ""
+msgstr "Язык"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:198
 msgctxt "EXE|Manifest"
 msgid "Version"
-msgstr ""
+msgstr "Версия"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:200
 msgctxt "EXE|Manifest"
 msgid "CPU Arch"
-msgstr ""
+msgstr "Архитектура ЦП"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:201
 msgctxt "EXE|Manifest"
 msgid "publicKeyToken"
-msgstr ""
+msgstr "publicKeyToken"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:205
 msgctxt "EXE|Manifest"
 msgid "Description"
-msgstr ""
+msgstr "Описание"
 
 #: ../src/libromdata/Other/EXE_manifest.cpp:218
 msgctxt "EXE|Manifest"
@@ -4206,7 +4206,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE_manifest.cpp:359
 msgctxt "EXE|Manifest"
 msgid "Compatibility"
-msgstr ""
+msgstr "Совместимость"
 
 #: ../src/libromdata/Other/NintendoBadge.cpp:590
 #: ../src/libromdata/Other/NintendoBadge.cpp:685
