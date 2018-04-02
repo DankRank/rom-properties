@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * WiiUData.hpp: Nintendo Wii U publisher data.                            *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "WiiUData.hpp"
@@ -145,6 +144,7 @@ const WiiUDataPrivate::WiiUDiscPublisher WiiUDataPrivate::disc_publishers_noregi
 	{'ALRx', '00WR'},	// LEGO Marvel's Avengers
 	{'ALVx', '00YF'},	// Luv Me Buddies Wonderland
 	{'ALZx', '0001'},	// The Legend of Zelda: Breath of the Wild
+	{'AM7x', '0008'},	// Monster Hunter Frontier G7 Premium Package
 	{'AM8x', '0008'},	// Monster Hunter Frontier G8 Premium Package
 	{'AM9x', '0052'},	// The Amazing Spider-Man 2
 	{'AMAx', '0001'},	// Super Mario Maker
@@ -233,6 +233,7 @@ const WiiUDataPrivate::WiiUDiscPublisher WiiUDataPrivate::disc_publishers_noregi
 	{'BEDx', '0078'},	// Darksiders - Warmastered Edition
 	{'BENx', '008X'},	// Runbow Deluxe
 	{'BFNx', '00VZ'},	// Adventure Time: Finn & Jake Investigations
+	{'BH9x', '0008'},	// Monster Hunter Frontier G9 Premium Package
 	{'BJ7x', '0041'},	// Just Dance 2017
 	{'BJDx', '0041'},	// Just Dance 2015
 	{'BK7x', '0052'},	// Skylanders: Trap Team

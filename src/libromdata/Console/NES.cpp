@@ -2,8 +2,8 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * NES.cpp: Nintendo Entertainment System/Famicom ROM reader.              *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
- * Copyright (c) 2016-2017 by Egor.                                        *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by Egor.                                        *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -15,9 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "NES.hpp"
@@ -49,6 +48,8 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(NES)
 
 class NESPrivate : public RomDataPrivate
 {
@@ -451,16 +452,6 @@ int NES::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int NES::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @param type System name type. (See the SystemName enum.)
  * @return System name, or nullptr if type is invalid.
@@ -576,24 +567,6 @@ const char *const *NES::supportedFileExtensions_static(void)
 		nullptr
 	};
 	return exts;
-}
-
-/**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions include the leading dot,
- * e.g. ".bin" instead of "bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *NES::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
 }
 
 /**
@@ -763,11 +736,11 @@ int NES::loadFieldData(void)
 		s_mapper.reserve(64);
 		const char *const mapper_name = NESMappers::lookup_ines(mapper);
 		if (mapper_name) {
-			// Print the mapper ID followed by the mapper name.
+			// tr: Print the mapper ID followed by the mapper name.
 			s_mapper = rp_sprintf_p(C_("NES|Mapper", "%1$u - %2$s"),
 				(unsigned int)mapper, mapper_name);
 		} else {
-			// Print only the mapper ID.
+			// tr: Print only the mapper ID.
 			s_mapper = rp_sprintf(C_("NES|Mapper", "%u"), (unsigned int)mapper);
 		}
 		d->fields->addField_string(C_("NES", "Mapper"), s_mapper);
@@ -777,7 +750,8 @@ int NES::loadFieldData(void)
 		if (tnes_mapper >= 0) {
 			// This has a TNES mapper.
 			// It *should* map to an iNES mapper...
-			d->fields->addField_string(C_("NES", "Mapper"), "MISSING TNES MAPPING");
+			d->fields->addField_string(C_("NES", "Mapper"),
+				C_("NES", "[Missing TNES mapping!]"));
 		}
 	}
 
@@ -790,11 +764,11 @@ int NES::loadFieldData(void)
 		// TODO: Needs testing.
 		const char *const submapper_name = NESMappers::lookup_nes2_submapper(mapper, submapper);
 		if (submapper_name) {
-			// Print the submapper ID followed by the submapper name.
+			// tr: Print the submapper ID followed by the submapper name.
 			s_submapper = rp_sprintf_p(C_("NES|Mapper", "%1$u - %2$s"),
 				(unsigned int)submapper, submapper_name);
 		} else {
-			// Print only the submapper ID.
+			// tr: Print only the submapper ID.
 			s_submapper = rp_sprintf(C_("NES|Mapper", "%u"), (unsigned int)submapper);
 		}
 		d->fields->addField_string(C_("NES", "Submapper"), s_submapper);
@@ -870,12 +844,11 @@ int NES::loadFieldData(void)
 				d->header.fds.game_id));
 
 		// Publisher.
-		// NOTE: Verify that the FDS list matches NintendoPublishers.
-		// https://wiki.nesdev.com/w/index.php/Family_Computer_Disk_System#Manufacturer_codes
-		const char* publisher =
-			NintendoPublishers::lookup_old(d->header.fds.publisher_code);
+		const char *const publisher =
+			NintendoPublishers::lookup_fds(d->header.fds.publisher_code);
 		d->fields->addField_string(C_("NES", "Publisher"),
-			publisher ? publisher : C_("NES", "Unknown"));
+			publisher ? publisher :
+				rp_sprintf(C_("NES", "Unknown (0x%02X)"), d->header.fds.publisher_code));
 
 		// Revision.
 		d->fields->addField_string_numeric(C_("NES", "Revision"),

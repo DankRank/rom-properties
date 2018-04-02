@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (librpbase)                        *
  * RomData.hpp: ROM data base class.                                       *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -21,12 +21,13 @@
 #ifndef __ROMPROPERTIES_LIBRPBASE_ROMDATA_HPP__
 #define __ROMPROPERTIES_LIBRPBASE_ROMDATA_HPP__
 
-#include "librpbase/config.librpbase.h"
 #include "librpbase/common.h"
-#include "RomFields.hpp"
+
+#include "RomData_decl.hpp"
 
 // C includes.
 #include <stdint.h>
+#include <stddef.h>	/* size_t */
 
 // C++ includes.
 #include <string>
@@ -35,6 +36,7 @@
 namespace LibRpBase {
 
 class IRpFile;
+class RomFields;
 class rp_image;
 struct IconAnimData;
 

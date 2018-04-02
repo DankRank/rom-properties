@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * WiiU.cpp: Nintendo Wii U disc image reader.                             *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "librpbase/config.librpbase.h"
@@ -24,6 +23,7 @@
 #include "WiiU.hpp"
 #include "librpbase/RomData_p.hpp"
 
+#include "data/NintendoPublishers.hpp"
 #include "wiiu_structs.h"
 #include "gcn_structs.h"
 #include "data/WiiUData.hpp"
@@ -53,6 +53,9 @@ using std::unique_ptr;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(WiiU)
+ROMDATA_IMPL_IMG(WiiU)
 
 class WiiUPrivate : public RomDataPrivate
 {
@@ -205,16 +208,6 @@ int WiiU::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int WiiU::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @param type System name type. (See the SystemName enum.)
  * @return System name, or nullptr if type is invalid.
@@ -261,24 +254,6 @@ const char *const *WiiU::supportedFileExtensions_static(void)
 }
 
 /**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions do not include the leading dot,
- * e.g. "bin" instead of ".bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *WiiU::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
-}
-
-/**
  * Get a bitfield of image types this class can retrieve.
  * @return Bitfield of supported image types. (ImageTypesBF)
  */
@@ -291,15 +266,6 @@ uint32_t WiiU::supportedImageTypes_static(void)
 #else /* !HAVE_JPEG */
 	return IMGBF_EXT_MEDIA | IMGBF_EXT_COVER_3D;
 #endif /* HAVE_JPEG */
-}
-
-/**
- * Get a bitfield of image types this class can retrieve.
- * @return Bitfield of supported image types. (ImageTypesBF)
- */
-uint32_t WiiU::supportedImageTypes(void) const
-{
-	return supportedImageTypes_static();
 }
 
 /**
@@ -366,20 +332,6 @@ std::vector<RomData::ImageSizeDef> WiiU::supportedImageSizes_static(ImageType im
 }
 
 /**
- * Get a list of all available image sizes for the specified image type.
- *
- * The first item in the returned vector is the "default" size.
- * If the width/height is 0, then an image exists, but the size is unknown.
- *
- * @param imageType Image type.
- * @return Vector of available image sizes, or empty vector if no images are available.
- */
-std::vector<RomData::ImageSizeDef> WiiU::supportedImageSizes(ImageType imageType) const
-{
-	return supportedImageSizes_static(imageType);
-}
-
-/**
  * Load field data.
  * Called by RomData::fields() if the field data hasn't been loaded yet.
  * @return Number of fields read on success; negative POSIX error code on error.
@@ -404,6 +356,37 @@ int WiiU::loadFieldData(void)
 	// Game ID.
 	d->fields->addField_string(C_("WiiU", "Game ID"),
 		latin1_to_utf8(d->discHeader.id, sizeof(d->discHeader.id)));
+
+	// Publisher.
+	// Look up the publisher ID.
+	char publisher_code[5];
+	const char *publisher = nullptr;
+	string s_publisher;
+
+	const uint32_t publisher_id = WiiUData::lookup_disc_publisher(d->discHeader.id4);
+	publisher_code[0] = (publisher_id >> 24) & 0xFF;
+	publisher_code[1] = (publisher_id >> 16) & 0xFF;
+	publisher_code[2] = (publisher_id >>  8) & 0xFF;
+	publisher_code[3] =  publisher_id & 0xFF;
+	publisher_code[4] = 0;
+	if (publisher_id != 0 && (publisher_id & 0xFFFF0000) == 0x30300000) {
+		// Publisher ID is a valid two-character ID.
+		publisher = NintendoPublishers::lookup(&publisher_code[2]);
+	}
+	if (publisher) {
+		s_publisher = publisher;
+	} else {
+		if (isalnum(publisher_code[0]) && isalnum(publisher_code[1]) &&
+		    isalnum(publisher_code[2]) && isalnum(publisher_code[3]))
+		{
+			s_publisher = rp_sprintf(C_("WiiU", "Unknown (%.4s)"), publisher_code);
+		} else {
+			s_publisher = rp_sprintf(C_("WiiU", "Unknown (%02X %02X %02X %02X)"),
+				(uint8_t)publisher_code[0], (uint8_t)publisher_code[1],
+				(uint8_t)publisher_code[2], (uint8_t)publisher_code[3]);
+		}
+	}
+	d->fields->addField_string(C_("WiiU", "Publisher"), s_publisher);
 
 	// Game version.
 	// TODO: Validate the version characters.

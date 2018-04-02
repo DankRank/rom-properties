@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * SNES.cpp: Super Nintendo ROM image reader.                              *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "SNES.hpp"
@@ -51,6 +50,8 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(SNES)
 
 class SNESPrivate : public RomDataPrivate
 {
@@ -301,8 +302,8 @@ SNES::SNES(IRpFile *file)
 	// ".b", it's a BS-X ROM image.
 	const string filename = file->filename();
 	if (!filename.empty()) {
-		const char *ext = FileSystem::file_ext(filename);
-		if (ext[0] == '.' && tolower(ext[1]) == 'b') {
+		const char *const ext = FileSystem::file_ext(filename);
+		if (ext && ext[0] == '.' && tolower(ext[1]) == 'b') {
 			// BS-X ROM image.
 			d->romType = SNESPrivate::ROM_BSX;
 		}
@@ -513,16 +514,6 @@ int SNES::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int SNES::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @param type System name type. (See the SystemName enum.)
  * @return System name, or nullptr if type is invalid.
@@ -637,24 +628,6 @@ const char *const *SNES::supportedFileExtensions_static(void)
 		nullptr
 	};
 	return exts;
-}
-
-/**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions do not include the leading dot,
- * e.g. "bin" instead of ".bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *SNES::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
 }
 
 /**
@@ -798,6 +771,7 @@ int SNES::loadFieldData(void)
 	}
 
 	// Publisher.
+	// TODO: Print the publisher code if the lookup returns nullptr.
 	d->fields->addField_string(C_("SNES", "Publisher"),
 		publisher ? publisher : C_("SNES", "Unknown"));
 
@@ -873,15 +847,19 @@ int SNES::loadFieldData(void)
 		NOP_C_("Region", "Other"),
 		NOP_C_("Region", "Other"),
 	};
+	const char *region_lkup = (romHeader->snes.destination_code < ARRAY_SIZE(region_tbl)
+					? region_tbl[romHeader->snes.destination_code]
+					: nullptr);
 
 	switch (d->romType) {
 		case SNESPrivate::ROM_SNES: {
 			// Region
-			const char *const region = (romHeader->snes.destination_code < ARRAY_SIZE(region_tbl)
-				? dpgettext_expr(RP_I18N_DOMAIN, "Region", region_tbl[romHeader->snes.destination_code])
+			const char *const region = (region_lkup
+				? dpgettext_expr(RP_I18N_DOMAIN, "Region", region_lkup)
 				: nullptr);
 			d->fields->addField_string(C_("SNES", "Region"),
-				region ? region : C_("SNES", "Unknown"));
+				region ? region : rp_sprintf(C_("SNES", "Unknown (0x%02X)"),
+					romHeader->snes.destination_code));
 
 			// Revision
 			d->fields->addField_string_numeric(C_("SNES", "Revision"),
@@ -969,6 +947,9 @@ int SNES::loadFieldData(void)
 				// Unlimited.
 				d->fields->addField_string(C_("SNES", "Limited Starts"), C_("SNES", "Unlimited"));
 			}
+
+			// TODO: Show region == Japan?
+			// (Implied by BS-X, which was only released in Japan.)
 			break;
 		}
 

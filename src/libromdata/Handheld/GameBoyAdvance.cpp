@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * GameBoyAdvance.hpp: Nintendo Game Boy Advance ROM reader.               *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "GameBoyAdvance.hpp"
@@ -40,10 +39,14 @@ using namespace LibRpBase;
 #include <cstring>
 
 // C++ includes.
+#include <string>
 #include <vector>
+using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(GameBoyAdvance)
 
 class GameBoyAdvancePrivate : public RomDataPrivate
 {
@@ -186,16 +189,6 @@ int GameBoyAdvance::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int GameBoyAdvance::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @param type System name type. (See the SystemName enum.)
  * @return System name, or nullptr if type is invalid.
@@ -248,24 +241,6 @@ const char *const *GameBoyAdvance::supportedFileExtensions_static(void)
 }
 
 /**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions include the leading dot,
- * e.g. ".bin" instead of "bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *GameBoyAdvance::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
-}
-
-/**
  * Load field data.
  * Called by RomData::fields() if the field data hasn't been loaded yet.
  * @return Number of fields read on success; negative POSIX error code on error.
@@ -305,9 +280,23 @@ int GameBoyAdvance::loadFieldData(void)
 	d->fields->addField_string(C_("GameBoyAdvance", "Game ID"), latin1_to_utf8(id6, 6));
 
 	// Look up the publisher.
-	const char *publisher = NintendoPublishers::lookup(romHeader->company);
-	d->fields->addField_string(C_("GameBoyAdvance", "Publisher"),
-		publisher ? publisher : C_("GameBoyAdvance", "Unknown"));
+	const char *const publisher = NintendoPublishers::lookup(romHeader->company);
+	string s_publisher;
+	if (publisher) {
+		s_publisher = publisher;
+	} else {
+		if (isalnum(romHeader->company[0]) &&
+		    isalnum(romHeader->company[1]))
+		{
+			s_publisher = rp_sprintf(C_("GameBoyAdvance", "Unknown (%.2s)"),
+				romHeader->company);
+		} else {
+			s_publisher = rp_sprintf(C_("GameBoyAdvance", "Unknown (%02X %02X)"),
+				(uint8_t)romHeader->company[0],
+				(uint8_t)romHeader->company[1]);
+		}
+	}
+	d->fields->addField_string(C_("GameBoyAdvance", "Publisher"), s_publisher);
 
 	// ROM version.
 	d->fields->addField_string_numeric(C_("GameBoyAdvance", "Revision"),
@@ -344,7 +333,7 @@ int GameBoyAdvance::loadFieldData(void)
 			break;
 
 		default:
-			// Unknown ROM type type.
+			// Unknown ROM type.
 			d->fields->addField_string(C_("GameBoyAdvance", "Entry Point"),
 				C_("GameBoyAdvance", "Unknown"));
 			break;

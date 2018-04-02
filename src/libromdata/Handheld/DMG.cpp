@@ -2,8 +2,8 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * DMG.hpp: Game Boy (DMG/CGB/SGB) ROM reader.                             *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
- * Copyright (c) 2016-2017 by Egor.                                        *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by Egor.                                        *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -15,9 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "DMG.hpp"
@@ -40,13 +39,14 @@ using namespace LibRpBase;
 #include <cstring>
 
 // C++ includes.
-#include <algorithm>
 #include <string>
 #include <vector>
 using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(DMG)
 
 class DMGPrivate : public RomDataPrivate
 {
@@ -372,16 +372,6 @@ int DMG::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int DMG::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @param type System name type. (See the SystemName enum.)
  * @return System name, or nullptr if type is invalid.
@@ -436,24 +426,6 @@ const char *const *DMG::supportedFileExtensions_static(void)
 		nullptr
 	};
 	return exts;
-}
-
-/**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions include the leading dot,
- * e.g. ".bin" instead of "bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *DMG::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
 }
 
 /**
@@ -574,9 +546,30 @@ int DMG::loadFieldData(void)
 		v_system_bitfield_names, 0, dmg_system);
 
 	// Entry Point
-	if(romHeader->entry[0] == 0 && romHeader->entry[1] == 0xC3){
-		// this is the "standard" way of doing the entry point
+	if ((romHeader->entry[0] == 0x00 ||	// NOP
+	     romHeader->entry[0] == 0xF3 ||	// DI
+	     romHeader->entry[0] == 0x7F ||	// LD A,A
+	     romHeader->entry[0] == 0x3F) &&	// CCF
+	    romHeader->entry[1] == 0xC3)	// JP nnnn
+	{
+		// NOP; JP nnnn
+		// This is the "standard" way of doing the entry point.
+		// NOTE: Some titles use a different opcode instead of NOP.
 		const uint16_t entry_address = (romHeader->entry[2] | (romHeader->entry[3] << 8));
+		d->fields->addField_string_numeric(C_("DMG", "Entry Point"),
+			entry_address, RomFields::FB_HEX, 4, RomFields::STRF_MONOSPACE);
+	} else if (romHeader->entry[0] == 0xC3) {
+		// JP nnnn without a NOP.
+		const uint16_t entry_address = (romHeader->entry[1] | (romHeader->entry[2] << 8));
+		d->fields->addField_string_numeric(C_("DMG", "Entry Point"),
+			entry_address, RomFields::FB_HEX, 4, RomFields::STRF_MONOSPACE);
+	} else if (romHeader->entry[0] == 0x18) {
+		// JR nnnn
+		// Found in many homebrew ROMs.
+		const int8_t disp = (int8_t)romHeader->entry[1];
+		// Current PC: 0x100
+		// Add displacement, plus 2.
+		const uint16_t entry_address = 0x100 + disp + 2;
 		d->fields->addField_string_numeric(C_("DMG", "Entry Point"),
 			entry_address, RomFields::FB_HEX, 4, RomFields::STRF_MONOSPACE);
 	} else {
@@ -586,13 +579,33 @@ int DMG::loadFieldData(void)
 
 	// Publisher
 	const char* publisher;
+	string s_publisher;
 	if (romHeader->old_publisher_code == 0x33) {
 		publisher = NintendoPublishers::lookup(romHeader->new_publisher_code);
+		if (publisher) {
+			s_publisher = publisher;
+		} else {
+			if (isalnum(romHeader->new_publisher_code[0]) &&
+			    isalnum(romHeader->new_publisher_code[1]))
+			{
+				s_publisher = rp_sprintf(C_("DMG", "Unknown (%.2s)"),
+					romHeader->new_publisher_code);
+			} else {
+				s_publisher = rp_sprintf(C_("DMG", "Unknown (%02X %02X)"),
+					(uint8_t)romHeader->new_publisher_code[0],
+					(uint8_t)romHeader->new_publisher_code[1]);
+			}
+		}
 	} else {
 		publisher = NintendoPublishers::lookup_old(romHeader->old_publisher_code);
+		if (publisher) {
+			s_publisher = publisher;
+		} else {
+			s_publisher = rp_sprintf(C_("DMG", "Unknown (%02X)"),
+				romHeader->old_publisher_code);
+		}
 	}
-	d->fields->addField_string(C_("DMG", "Publisher"),
-		publisher ? publisher : C_("DMG", "Unknown"));
+	d->fields->addField_string(C_("DMG", "Publisher"), s_publisher);
 
 	// Hardware
 	d->fields->addField_string("Hardware",

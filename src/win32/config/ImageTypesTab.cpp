@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * ImageTypesTab.cpp: Image type priorities tab. (Part of ConfigDialog.)   *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "stdafx.h"
@@ -67,25 +66,25 @@ class ImageTypesTabPrivate : public TImageTypesConfig<HWND>
 		/**
 		 * Create the labels in the grid.
 		 */
-		virtual void createGridLabels(void) override final;
+		void createGridLabels(void) final;
 
 		/**
 		 * Create a ComboBox in the grid.
 		 * @param cbid ComboBox ID.
 		 */
-		virtual void createComboBox(unsigned int cbid) override final;
+		void createComboBox(unsigned int cbid) final;
 
 		/**
 		 * Add strings to a ComboBox in the grid.
 		 * @param cbid ComboBox ID.
 		 * @param max_prio Maximum priority value. (minimum is 1)
 		 */
-		virtual void addComboBoxStrings(unsigned int cbid, int max_prio) override final;
+		void addComboBoxStrings(unsigned int cbid, int max_prio) final;
 
 		/**
 		 * Finish adding the ComboBoxes.
 		 */
-		virtual void finishComboBoxes(void) override final;
+		void finishComboBoxes(void) final;
 
 		/**
 		 * Initialize the Save subsystem.
@@ -93,7 +92,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<HWND>
 		 * must be opened with an appropriate writer class.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveStart(void) override final;
+		int saveStart(void) final;
 
 		/**
 		 * Write an ImageType configuration entry.
@@ -101,7 +100,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<HWND>
 		 * @param imageTypeList Image type list, comma-separated.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveWriteEntry(const char *sysName, const char *imageTypeList) override final;
+		int saveWriteEntry(const char *sysName, const char *imageTypeList) final;
 
 		/**
 		 * Close the Save subsystem.
@@ -109,7 +108,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<HWND>
 		 * must be opened with an appropriate writer class.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveFinish(void) override final;
+		int saveFinish(void) final;
 
 	protected:
 		/** TImageTypesConfig functions. (public) **/
@@ -120,7 +119,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<HWND>
 		 * @param cbid ComboBox ID.
 		 * @param prio New priority value. (0xFF == no)
 		 */
-		virtual void cboImageType_setPriorityValue(unsigned int cbid, unsigned int prio) override final;
+		void cboImageType_setPriorityValue(unsigned int cbid, unsigned int prio) final;
 
 	public:
 		/**
@@ -382,15 +381,25 @@ void ImageTypesTabPrivate::addComboBoxStrings(unsigned int cbid, int max_prio)
 	// Dropdown strings.
 	// NOTE: One more string than the total number of image types,
 	// since we have a string for "No".
-	static const wchar_t s_values[IMG_TYPE_COUNT+1][4] = {
-		L"No", L"1", L"2", L"3", L"4", L"5", L"6", L"7", L"8"
+	static const char s_values[][4] = {
+		NOP_C_("ImageTypesTab|Values", "No"),
+		NOP_C_("ImageTypesTab|Values", "1"),
+		NOP_C_("ImageTypesTab|Values", "2"),
+		NOP_C_("ImageTypesTab|Values", "3"),
+		NOP_C_("ImageTypesTab|Values", "4"),
+		NOP_C_("ImageTypesTab|Values", "5"),
+		NOP_C_("ImageTypesTab|Values", "6"),
+		NOP_C_("ImageTypesTab|Values", "7"),
+		NOP_C_("ImageTypesTab|Values", "8"),
+		NOP_C_("ImageTypesTab|Values", "9"),
 	};
 	static_assert(ARRAY_SIZE(s_values) == IMG_TYPE_COUNT+1, "s_values[] is the wrong size.");
 
 	// NOTE: Need to add one more than the total number,
 	// since "No" counts as an entry.
 	for (int i = 0; i <= max_prio; i++) {
-		ComboBox_AddString(cboImageType, s_values[i]);
+		ComboBox_AddString(cboImageType, U82W_c(
+			dpgettext_expr(RP_I18N_DOMAIN, "ImageTypesTab|Values", s_values[i])));
 	}
 	ComboBox_SetCurSel(cboImageType, 0);
 }

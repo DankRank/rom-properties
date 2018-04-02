@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libunixcommon)                    *
  * dll-search.c: Function to search for a usable rom-properties library.   *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "config.libunixcommon.h"
@@ -29,8 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <sys/types.h>
 #include <unistd.h>
 
 // Supported rom-properties frontends.
@@ -167,6 +164,10 @@ static RP_Frontend walk_proc_tree(void)
  */
 static inline RP_Frontend check_xdg_desktop_name(const char *name)
 {
+	// References:
+	// - https://askubuntu.com/questions/72549/how-to-determine-which-window-manager-is-running
+	// - https://askubuntu.com/a/227669
+
 	// TODO: Check other values for $XDG_CURRENT_DESKTOP.
 	if (!strcasecmp(name, "KDE")) {
 		// KDE.
@@ -178,11 +179,16 @@ static inline RP_Frontend check_xdg_desktop_name(const char *name)
 			ret = RP_FE_KDE5;
 		}
 		return ret;
-	} else if (!strcasecmp(name, "GNOME") || !strcasecmp(name, "Unity")) {
-		// GNOME and/or Unity.
+	} else if (!strcasecmp(name, "GNOME") ||
+		   !strcasecmp(name, "Unity") ||
+		   !strcasecmp(name, "X-Cinnamon"))
+	{
+		// GTK3-based desktop environment.
 		return RP_FE_GNOME;
-	} else if (!strcasecmp(name, "XFCE")) {
-		// XFCE.
+	} else if (!strcasecmp(name, "XFCE") ||
+		   !strcasecmp(name, "LXDE"))
+	{
+		// GTK2-based desktop environment.
 		return RP_FE_XFCE;
 	}
 

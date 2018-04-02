@@ -2,8 +2,8 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * DMG.hpp: Virtual Boy ROM reader.                                        *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
- * Copyright (c) 2016 by Egor.                                             *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by Egor.                                        *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -15,9 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "VirtualBoy.hpp"
@@ -47,6 +46,8 @@ using std::string;
 using std::vector;
 
 namespace LibRomData {
+
+ROMDATA_IMPL(VirtualBoy)
 
 class VirtualBoyPrivate : public RomDataPrivate
 {
@@ -272,16 +273,6 @@ int VirtualBoy::isRomSupported_static(const DetectInfo *info)
 }
 
 /**
- * Is a ROM image supported by this object?
- * @param info DetectInfo containing ROM detection information.
- * @return Class-specific system ID (>= 0) if supported; -1 if not.
- */
-int VirtualBoy::isRomSupported(const DetectInfo *info) const
-{
-	return isRomSupported_static(info);
-}
-
-/**
  * Get the name of the system the loaded ROM is designed for.
  * @return System name, or nullptr if not supported.
  */
@@ -327,24 +318,6 @@ const char *const *VirtualBoy::supportedFileExtensions_static(void)
 }
 
 /**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions include the leading dot,
- * e.g. ".bin" instead of "bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *VirtualBoy::supportedFileExtensions(void) const
-{
-	return supportedFileExtensions_static();
-}
-
-/**
  * Load field data.
  * Called by RomData::fields() if the field data hasn't been loaded yet.
  * @return Number of fields read on success; negative POSIX error code on error.
@@ -378,9 +351,23 @@ int VirtualBoy::loadFieldData(void)
 		latin1_to_utf8(id6.data(), (int)id6.size()));
 
 	// Look up the publisher.
-	const char *publisher = NintendoPublishers::lookup(romHeader->publisher);
-	d->fields->addField_string(C_("VirtualBoy", "Publisher"),
-		publisher ? publisher : C_("VirtualBoy", "Unknown"));
+	const char *const publisher = NintendoPublishers::lookup(romHeader->publisher);
+	string s_publisher;
+	if (publisher) {
+		s_publisher = publisher;
+	} else {
+		if (isalnum(romHeader->publisher[0]) &&
+		    isalnum(romHeader->publisher[1]))
+		{
+			s_publisher = rp_sprintf(C_("VirtualBoy", "Unknown (%.2s)"),
+				romHeader->publisher);
+		} else {
+			s_publisher = rp_sprintf(C_("VirtualBoy", "Unknown (%02X %02X)"),
+				(uint8_t)romHeader->publisher[0],
+				(uint8_t)romHeader->publisher[1]);
+		}
+	}
+	d->fields->addField_string(C_("VirtualBoy", "Publisher"), s_publisher);
 
 	// Revision
 	d->fields->addField_string_numeric(C_("VirtualBoy", "Revision"),

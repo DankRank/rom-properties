@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (Win32)                            *
  * RP_ShellPropSheetExt.cpp: IShellPropSheetExt implementation.            *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 // References:
@@ -758,7 +757,7 @@ int RP_ShellPropSheetExt_Private::initString(HWND hDlg, HWND hWndTab,
 		}
 	} else {
 		// Use the specified string.
-		wstr = LibWin32Common::unix2dos(wstring(wcs), &lf_count);
+		wstr = LibWin32Common::unix2dos(wcs, &lf_count);
 	}
 
 	// Field height.
@@ -1968,6 +1967,17 @@ IFACEMETHODIMP RP_ShellPropSheetExt::Initialize(
 			// Not a CD-ROM drive.
 			goto cleanup;
 		}
+	} else {
+		// Make sure this isn't a directory.
+		// TODO: Other checks?
+		// TODO BEFORE COMMIT: check if it's actually called for dirs
+		DWORD dwAttr = GetFileAttributes(filename);
+		if (dwAttr == INVALID_FILE_ATTRIBUTES ||
+		    (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			// File cannot be opened or is a directory.
+			goto cleanup;
+		}
 	}
 
 	// Open the file.
@@ -2292,20 +2302,18 @@ INT_PTR CALLBACK RP_ShellPropSheetExt_Private::DlgProc(HWND hDlg, UINT uMsg, WPA
 
 			// Draw the banner.
 			if (d->hbmpBanner) {
-				HBITMAP hbmOld = SelectBitmap(hdcMem, d->hbmpBanner);
+				SelectBitmap(hdcMem, d->hbmpBanner);
 				BitBlt(hdc, d->ptBanner.x, d->ptBanner.y,
 					d->szBanner.cx, d->szBanner.cy,
 					hdcMem, 0, 0, SRCCOPY);
-				SelectBitmap(hdcMem, hbmOld);
 			}
 
 			// Draw the icon.
 			if (d->hbmpIconFrames[d->last_frame_number]) {
-				HBITMAP hbmOld = SelectBitmap(hdcMem, d->hbmpIconFrames[d->last_frame_number]);
+				SelectBitmap(hdcMem, d->hbmpIconFrames[d->last_frame_number]);
 				BitBlt(hdc, d->rectIcon.left, d->rectIcon.top,
 					d->szIcon.cx, d->szIcon.cy,
 					hdcMem, 0, 0, SRCCOPY);
-				SelectBitmap(hdcMem, hbmOld);
 			}
 
 			DeleteDC(hdcMem);
@@ -2521,6 +2529,7 @@ INT_PTR CALLBACK RP_ShellPropSheetExt_Private::SubtabDlgProc(HWND hDlg, UINT uMs
 			return TRUE;
 		}
 	}
+
 	// Dummy callback procedure that does nothing.
 	return FALSE; // Let system deal with other messages
 }

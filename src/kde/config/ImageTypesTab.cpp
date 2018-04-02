@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (KDE)                              *
  * ImageTypesTab.cpp: Image Types tab for rp-config.                       *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "ImageTypesTab.hpp"
@@ -57,25 +56,25 @@ class ImageTypesTabPrivate : public TImageTypesConfig<QComboBox*>
 		/**
 		 * Create the labels in the grid.
 		 */
-		virtual void createGridLabels(void) override final;
+		void createGridLabels(void) final;
 
 		/**
 		 * Create a ComboBox in the grid.
 		 * @param cbid ComboBox ID.
 		 */
-		virtual void createComboBox(unsigned int cbid) override final;
+		void createComboBox(unsigned int cbid) final;
 
 		/**
 		 * Add strings to a ComboBox in the grid.
 		 * @param cbid ComboBox ID.
 		 * @param max_prio Maximum priority value. (minimum is 1)
 		 */
-		virtual void addComboBoxStrings(unsigned int cbid, int max_prio) override final;
+		void addComboBoxStrings(unsigned int cbid, int max_prio) final;
 
 		/**
 		 * Finish adding the ComboBoxes.
 		 */
-		virtual void finishComboBoxes(void) override final;
+		void finishComboBoxes(void) final;
 
 		/**
 		 * Initialize the Save subsystem.
@@ -83,7 +82,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<QComboBox*>
 		 * must be opened with an appropriate writer class.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveStart(void) override final;
+		int saveStart(void) final;
 
 		/**
 		 * Write an ImageType configuration entry.
@@ -91,7 +90,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<QComboBox*>
 		 * @param imageTypeList Image type list, comma-separated.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveWriteEntry(const char *sysName, const char *imageTypeList) override final;
+		int saveWriteEntry(const char *sysName, const char *imageTypeList) final;
 
 		/**
 		 * Close the Save subsystem.
@@ -99,7 +98,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<QComboBox*>
 		 * must be opened with an appropriate writer class.
 		 * @return 0 on success; negative POSIX error code on error.
 		 */
-		virtual int saveFinish(void) override final;
+		int saveFinish(void) final;
 
 	protected:
 		/** TImageTypesConfig functions. (public) **/
@@ -110,7 +109,7 @@ class ImageTypesTabPrivate : public TImageTypesConfig<QComboBox*>
 		 * @param cbid ComboBox ID.
 		 * @param prio New priority value. (0xFF == no)
 		 */
-		virtual void cboImageType_setPriorityValue(unsigned int cbid, unsigned int prio) override final;
+		void cboImageType_setPriorityValue(unsigned int cbid, unsigned int prio) final;
 
 	public:
 		// Last ComboBox added.
@@ -231,15 +230,25 @@ void ImageTypesTabPrivate::addComboBoxStrings(unsigned int cbid, int max_prio)
 	// Dropdown strings.
 	// NOTE: One more string than the total number of image types,
 	// since we have a string for "No".
-	static const char s_values[IMG_TYPE_COUNT+1][4] = {
-		"No", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+	static const char s_values[][4] = {
+		NOP_C_("ImageTypesTab|Values", "No"),
+		NOP_C_("ImageTypesTab|Values", "1"),
+		NOP_C_("ImageTypesTab|Values", "2"),
+		NOP_C_("ImageTypesTab|Values", "3"),
+		NOP_C_("ImageTypesTab|Values", "4"),
+		NOP_C_("ImageTypesTab|Values", "5"),
+		NOP_C_("ImageTypesTab|Values", "6"),
+		NOP_C_("ImageTypesTab|Values", "7"),
+		NOP_C_("ImageTypesTab|Values", "8"),
+		NOP_C_("ImageTypesTab|Values", "9"),
 	};
 	static_assert(ARRAY_SIZE(s_values) == IMG_TYPE_COUNT+1, "s_values[] is the wrong size.");
 
 	// NOTE: Need to add one more than the total number,
 	// since "No" counts as an entry.
 	for (int i = 0; i <= max_prio; i++) {
-		cbo->addItem(QLatin1String(s_values[i]));
+		cbo->addItem(U82Q(
+			dpgettext_expr(RP_I18N_DOMAIN, "ImageTypesTab|Values", s_values[i])));
 	}
 	cbo->setCurrentIndex(0);
 }

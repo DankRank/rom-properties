@@ -13,8 +13,7 @@
     slightly on Windows due to required UTF-8 to UTF-16 conversion, but it
     reduces the DLL size. (The Qt build doesn't have much overhead difference,
     since it has to copy char16_t data into QString before using it anyway.)
-    * The `rp_char` and `rp_string` typedefs are now deprecated. Most uses
-      of these typedefs have been removed.
+    * The `rp_char` and `rp_string` typedefs have been removed.
   * The 16-bit and 32-bit array byteswapping functions have been optimized
     using MMX, SSE2, and SSSE3.
 
@@ -30,6 +29,11 @@
 
 * New system features:
   * Super NES: Satellaview BS-X ROM headers are now decoded properly.
+  * Wii: Unencrypted images from RVT-H Reader systems are now supported.
+  * NES: Improved publisher lookup for FDS titles.
+  * Wii U: Display game publishers.
+  * DMG: Added more entry point formats.
+  * DirectDrawSurface: Untested support for Xbox One textures.
 
 * New compressed texture formats:
   * Ericsson ETC1 and ETC2
@@ -43,6 +47,13 @@
   * EXE: "Product Version" was showing the same value as "File Version".
     It's usually the same, but there are cases where these version numbers
     are different, e.g. wrapper EXEs for interpreted programs.
+  * rp-config: If a key is present in keys.conf but has no value, it was
+    previously listed as invalid. It's now listed as empty.
+  * KhronosKTX: Copy sBIT if the image needs to be vertically flipped.
+  * Win32: The Properties tab sometimes didn't show up if another program
+    claimed ownership of the file extension, e.g. VS2017 handling .dds files.
+    The tab is now registered to handle all files, though it will only show
+    up if the file is actually supported by rom-properties.
 
 * Other changes:
   * libromdata/ has been reorganized to use subdirectories for type of system.

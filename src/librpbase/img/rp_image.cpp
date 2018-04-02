@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (librpbase)                        *
  * rp_image.hpp: Image class.                                              *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "rp_image.hpp"
@@ -31,6 +30,7 @@
 
 // C includes. (C++ namespace)
 #include <cassert>
+#include <cerrno>
 #include <cstring>
 
 // Workaround for RP_D() expecting the no-underscore, UpperCamelCase naming convention.
@@ -51,32 +51,32 @@ class rp_image_backend_default : public rp_image_backend
 		RP_DISABLE_COPY(rp_image_backend_default)
 
 	public:
-		virtual void *data(void) override final
+		void *data(void) final
 		{
 			return m_data;
 		}
 
-		virtual const void *data(void) const override final
+		const void *data(void) const final
 		{
 			return m_data;
 		}
 
-		virtual size_t data_len(void) const override final
+		size_t data_len(void) const final
 		{
 			return m_data_len;
 		}
 
-		virtual uint32_t *palette(void) override final
+		uint32_t *palette(void) final
 		{
 			return m_palette;
 		}
 
-		virtual const uint32_t *palette(void) const override final
+		const uint32_t *palette(void) const final
 		{
 			return m_palette;
 		}
 
-		virtual int palette_len(void) const override final
+		int palette_len(void) const final
 		{
 			return m_palette_len;
 		}

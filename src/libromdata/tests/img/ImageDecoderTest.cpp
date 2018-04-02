@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata/tests)                 *
  * ImageDecoderTest.cpp: ImageDecoder class test.                          *
  *                                                                         *
- * Copyright (c) 2016-2017 by David Korth.                                 *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "config.librpbase.h"
@@ -136,8 +135,8 @@ class ImageDecoderTest : public ::testing::TestWithParam<ImageDecoderTest_mode>
 			, m_romData(nullptr)
 		{ }
 
-		virtual void SetUp(void) override final;
-		virtual void TearDown(void) override final;
+		void SetUp(void) final;
+		void TearDown(void) final;
 
 	public:
 		/**
@@ -737,6 +736,25 @@ INSTANTIATE_TEST_CASE_P(KTX, ImageDecoderTest,
 		ImageDecoderTest_mode(
 			"KTX/etc1.ktx.gz",
 			"KTX/etc1.png"),
+
+		// ETC2
+		ImageDecoderTest_mode(
+			"KTX/etc2-rgb.ktx.gz",
+			"KTX/etc2-rgb.png"),
+		ImageDecoderTest_mode(
+			"KTX/etc2-rgba1.ktx.gz",
+			"KTX/etc2-rgba1.png"),
+		ImageDecoderTest_mode(
+			"KTX/etc2-rgba8.ktx.gz",
+			"KTX/etc2-rgba8.png"),
+
+		// BGR888 (Hi Corp)
+		ImageDecoderTest_mode(
+			"KTX/hi_mark.ktx.gz",
+			"KTX/hi_mark.png"),
+		ImageDecoderTest_mode(
+			"KTX/hi_mark_sq.ktx.gz",
+			"KTX/hi_mark_sq.png"),
 
 		// RGBA reference image.
 		ImageDecoderTest_mode(

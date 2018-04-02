@@ -2,7 +2,7 @@
  * ROM Properties Page shell extension. (libromdata)                       *
  * GcnPartitionPrivate.cpp: GameCube partition private class.              *
  *                                                                         *
- * Copyright (c) 2016 by David Korth.                                      *
+ * Copyright (c) 2016-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  * GNU General Public License for more details.                            *
  *                                                                         *
- * You should have received a copy of the GNU General Public License along *
- * with this program; if not, write to the Free Software Foundation, Inc., *
- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.           *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
 #include "GcnPartitionPrivate.hpp"
@@ -26,9 +25,8 @@
 #include "GcnPartition.hpp"
 
 // librpbase
-#include "librpbase/crypto/KeyManager.hpp"
+#include "librpbase/disc/IDiscReader.hpp"
 using LibRpBase::IDiscReader;
-using LibRpBase::KeyManager;
 
 // C includes.
 #include <stdlib.h>
@@ -160,11 +158,11 @@ int GcnPartitionPrivate::loadFst(void)
 		// Sanity check: FST larger than 1 MB is invalid.
 		// TODO: What is the actual largest FST?
 		q->m_lastError = EIO;
-		return -q->m_lastError;
+		return -EIO;
 	} else if (bootBlock.fst_size > bootBlock.fst_max_size) {
 		// FST is invalid.
 		q->m_lastError = EIO;
-		return -q->m_lastError;
+		return -EIO;
 	}
 
 	// Seek to the beginning of the FST.
@@ -181,19 +179,26 @@ int GcnPartitionPrivate::loadFst(void)
 	if (!fstData) {
 		// malloc() failed.
 		q->m_lastError = ENOMEM;
-		return -q->m_lastError;
+		return -ENOMEM;
 	}
 	size_t size = q->read(fstData, fstData_len);
 	if (size != fstData_len) {
 		// Short read.
 		free(fstData);
 		q->m_lastError = EIO;
-		return -q->m_lastError;
+		return -EIO;
 	}
 
 	// Create the GcnFst.
-	fst = new GcnFst(fstData, fstData_len, offsetShift);
+	GcnFst *const gcnFst = new GcnFst(fstData, fstData_len, offsetShift);
 	free(fstData);	// TODO: Eliminate the extra copy?
+	if (gcnFst->hasErrors()) {
+		// FST has errors.
+		delete fst;
+		q->m_lastError = EIO;
+		return -EIO;
+	}
+	this->fst = gcnFst;
 	return 0;
 }
 
