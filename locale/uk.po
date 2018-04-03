@@ -1,14 +1,32 @@
 # Ukrainian translations for rom-properties package.
 # Copyright (C) 2018 David Korth
 # This file is distributed under the same license as the rom-properties package.
-# Automatically generated, 2018.
+# Egor <egor@opensrc.club>, 2018.
 #
+# General translation notes:
+# For more in-depth notes see ru.po
+#
+# Long name: "Розширення оболонки ROM Properties Page"
+#
+# "ROM" (in context of hardware) is translated as "ПЗП".
+# Someone on uk Wikipedia thought this term was too similar to Russian one, so
+# they added a different term "ЗСД", but don't be misled, googling around
+# reveals that this term is seldom used, and even worse, it's sometimes used
+# to refer to encrypted data store, as opposed to ROM chips.
+# In context of emulation ROMs, it's "РОМ", and can be pluralized.
+#
+# Image adjectives
+# external - зовнішній
+# internal - вбудований
+#
+# "Unknown" is translated as "Невідомо" (neuter gender).
+# See ru.po for details.
 msgid ""
 msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-03-31 12:10-0400\n"
-"PO-Revision-Date: 2018-03-18 16:17-0400\n"
+"PO-Revision-Date: 2018-04-03 06:06+0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: uk\n"
@@ -17,68 +35,77 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 2.0.6\n"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:254
 #: ../build/src/kde/kde5/ui_AboutTab.h:254
 msgctxt "AboutTab"
 msgid "C&redits"
-msgstr ""
+msgstr "&Автори"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:255
 #: ../build/src/kde/kde5/ui_AboutTab.h:255
 msgctxt "AboutTab"
 msgid "&Libraries"
-msgstr ""
+msgstr "&Бібліотеки"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:256
 #: ../build/src/kde/kde5/ui_AboutTab.h:256
 msgctxt "AboutTab"
 msgid "&Support"
-msgstr ""
+msgstr "Тех&підтримка"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:78
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:78
 msgctxt "ConfigDialog"
 msgid "ROM Properties Page Configuration"
-msgstr ""
+msgstr "Налаштування ROM Properties Page"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:79
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:79
 msgctxt "ConfigDialog"
 msgid "&Image Types"
-msgstr ""
+msgstr "&Типи зображень"
 
+# Is this word plural or singular or both?
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:80
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:80
+#, fuzzy
 msgctxt "ConfigDialog"
 msgid "&Downloads"
-msgstr ""
+msgstr "&Завантаження"
 
 #: ../build/src/kde/kde4/ui_ConfigDialog.h:81
 #: ../build/src/kde/kde5/ui_ConfigDialog.h:81
 msgctxt "ConfigDialog"
 msgid "&About"
-msgstr ""
+msgstr "Пр&о програму"
 
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:70
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:70
 msgctxt "DownloadsTab"
 msgid "Enable external image downloads."
-msgstr ""
+msgstr "Завантажувати зовнішні зображення."
 
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:71
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:71
 msgctxt "DownloadsTab"
 msgid "Always use the internal icon (if present) for small sizes."
 msgstr ""
+"Завжди використовувати вбудовану іконку (якщо присутня) для невеликих "
+"розмірів."
 
+# spelling of скани?
 #: ../build/src/kde/kde4/ui_DownloadsTab.h:72
 #: ../build/src/kde/kde5/ui_DownloadsTab.h:72
+#, fuzzy
 msgctxt "DownloadsTab"
 msgid ""
 "Download high-resolution scans if viewing large thumbnails.\n"
 "This may increase bandwidth usage."
 msgstr ""
+"Завантажувати скани з високою роздільністю при перегляді великих мініатюр.\n"
+"Використовування цій опції може збільшити трафік."
 
 #: ../build/src/kde/kde4/ui_ImageTypesTab.h:84
 #: ../build/src/kde/kde5/ui_ImageTypesTab.h:84
@@ -91,6 +118,13 @@ msgid ""
 "\n"
 "1 = highest priority; 2 = second highest priority; No = ignore"
 msgstr ""
+"Оберіть типи зображень які будуть використовуватися для кожної системи у "
+"ролі мініатюри.\n"
+"Вбудовані зображення знаходяться всередині РОМ файлу.\n"
+"Зовнішні зображення завантажуються із зовнішнього джерела\n"
+"\n"
+"1 = найвищий пріоритет; 2 = другий після найвищого; Вимк. = не "
+"використовувати цей тип"
 
 #: ../build/src/kde/kde4/ui_ImageTypesTab.h:89
 #: ../build/src/kde/kde5/ui_ImageTypesTab.h:89
@@ -101,6 +135,10 @@ msgid ""
 "amiibo images are provided by <a href=\"http://amiibo.life/\">amiibo.life</"
 "a>, the Unofficial amiibo Database."
 msgstr ""
+"Зовнішні зображення для GameCube, Wii, Wii U, Nintendo DS, та Nintendo "
+"3DS<br/>надані сайтом <a href=\"http://www.gametdb.com/\">GameTDB</a>.<br/>\n"
+"Зовнішні зображення amiibo надані сайтом <a href=\"http://amiibo.life/"
+"\">amiibo.life</a>."
 
 #: ../build/src/kde/kde4/ui_KeyManagerTab.h:93
 #: ../build/src/kde/kde5/ui_KeyManagerTab.h:93
@@ -167,18 +205,18 @@ msgstr ""
 #: ../src/kde/config/AboutTab.cpp:152
 msgctxt "AboutTab"
 msgid "ROM Properties Page"
-msgstr ""
+msgstr "</b>Розширення оболонки<b>"
 
 #: ../src/kde/config/AboutTab.cpp:155
 msgctxt "AboutTab"
 msgid "Shell Extension"
-msgstr ""
+msgstr "<b>ROM Properties Page</b>"
 
 #: ../src/kde/config/AboutTab.cpp:158 ../src/win32/config/AboutTab.cpp:481
 #, c-format
 msgctxt "AboutTab"
 msgid "Version %s"
-msgstr ""
+msgstr "Версія %s"
 
 #: ../src/kde/config/AboutTab.cpp:180 ../src/win32/config/AboutTab.cpp:559
 msgctxt "AboutTab|Credits"
@@ -191,138 +229,143 @@ msgid ""
 "This program is licensed under the <a href='https://www.gnu.org/licenses/old-"
 "licenses/gpl-2.0.en.html'>GNU GPL v2</a> or later."
 msgstr ""
+"Ця програма розповсюджується під ліцензією <a href='https://www.gnu.org/"
+"licenses/old-licenses/gpl-2.0.uk.html'>GNU GPL v2</a> чи будь-якої пізнішої "
+"версією."
 
 #: ../src/kde/config/AboutTab.cpp:199 ../src/win32/config/AboutTab.cpp:578
 msgctxt "AboutTab|Credits"
 msgid "Developers:"
-msgstr ""
+msgstr "Розробники:"
 
+# Anglicism
 #: ../src/kde/config/AboutTab.cpp:202 ../src/win32/config/AboutTab.cpp:581
 msgctxt "AboutTab|Credits"
 msgid "Contributors:"
-msgstr ""
+msgstr "Контріб'ютор:"
 
 #: ../src/kde/config/AboutTab.cpp:205 ../src/win32/config/AboutTab.cpp:584
 msgctxt "AboutTab|Credits"
 msgid "Translators:"
-msgstr ""
+msgstr "Перекладачі:"
 
 #. tr: Sub-credit.
 #: ../src/kde/config/AboutTab.cpp:237 ../src/win32/config/AboutTab.cpp:608
 #, c-format
 msgctxt "AboutTab|Credits"
 msgid " (%s)"
-msgstr ""
+msgstr " (%s)"
 
 #. tr: Using an internal copy of a library.
 #: ../src/kde/config/AboutTab.cpp:258
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Internal copy of %s."
-msgstr ""
+msgstr "Вбудована копія бібліотеки %s."
 
+# "бібліотекою" is inserted there to avoid problems with spelling of з depending on the library name. (з Qt vs зі zlib)
 #. tr: Compiled with a specific version of an external library.
 #: ../src/kde/config/AboutTab.cpp:260
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Compiled with %s."
-msgstr ""
+msgstr "Скомпільовано з бібліотекою %s."
 
 #. tr: Using an external library, e.g. libpcre.so
 #: ../src/kde/config/AboutTab.cpp:262
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Using %s."
-msgstr ""
+msgstr "Використовується: %s."
 
 #. tr: License: (libraries with only a single license)
 #: ../src/kde/config/AboutTab.cpp:264
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "License: %s"
-msgstr ""
+msgstr "Ліцензія: %s"
 
 #. tr: Licenses: (libraries with multiple licenses)
 #: ../src/kde/config/AboutTab.cpp:266
 #, c-format
 msgctxt "AboutTab|Libraries"
 msgid "Licenses: %s"
-msgstr ""
+msgstr "Ліцензії: %s"
 
 #: ../src/kde/config/AboutTab.cpp:503 ../src/win32/config/AboutTab.cpp:698
 msgctxt "AboutTab|Support"
 msgid "For technical support, you can visit the following websites:"
-msgstr ""
+msgstr "Для отримання технічної підтримки, відвідуйте наступні веб-сайти:"
 
 #: ../src/kde/config/AboutTab.cpp:523 ../src/win32/config/AboutTab.cpp:715
 msgctxt "AboutTab|Support"
 msgid "You can also email the developer directly:"
-msgstr ""
+msgstr "Ви також можете зв'язатися з розробником безпосередньо:"
 
 #: ../src/kde/config/ConfigDialog.cpp:107
 msgctxt "ConfigDialog"
 msgid "&Key Manager"
-msgstr ""
+msgstr "&Менеджер ключів"
 
 #: ../src/kde/config/ImageTypesTab.cpp:235
 #: ../src/win32/config/ImageTypesTab.cpp:386
 msgctxt "ImageTypesTab|Values"
 msgid "No"
-msgstr ""
+msgstr "Вимк."
 
 #: ../src/kde/config/ImageTypesTab.cpp:236
 #: ../src/win32/config/ImageTypesTab.cpp:387
 msgctxt "ImageTypesTab|Values"
 msgid "1"
-msgstr ""
+msgstr "1"
 
 #: ../src/kde/config/ImageTypesTab.cpp:237
 #: ../src/win32/config/ImageTypesTab.cpp:388
 msgctxt "ImageTypesTab|Values"
 msgid "2"
-msgstr ""
+msgstr "2"
 
 #: ../src/kde/config/ImageTypesTab.cpp:238
 #: ../src/win32/config/ImageTypesTab.cpp:389
 msgctxt "ImageTypesTab|Values"
 msgid "3"
-msgstr ""
+msgstr "3"
 
 #: ../src/kde/config/ImageTypesTab.cpp:239
 #: ../src/win32/config/ImageTypesTab.cpp:390
 msgctxt "ImageTypesTab|Values"
 msgid "4"
-msgstr ""
+msgstr "4"
 
 #: ../src/kde/config/ImageTypesTab.cpp:240
 #: ../src/win32/config/ImageTypesTab.cpp:391
 msgctxt "ImageTypesTab|Values"
 msgid "5"
-msgstr ""
+msgstr "5"
 
 #: ../src/kde/config/ImageTypesTab.cpp:241
 #: ../src/win32/config/ImageTypesTab.cpp:392
 msgctxt "ImageTypesTab|Values"
 msgid "6"
-msgstr ""
+msgstr "6"
 
 #: ../src/kde/config/ImageTypesTab.cpp:242
 #: ../src/win32/config/ImageTypesTab.cpp:393
 msgctxt "ImageTypesTab|Values"
 msgid "7"
-msgstr ""
+msgstr "7"
 
 #: ../src/kde/config/ImageTypesTab.cpp:243
 #: ../src/win32/config/ImageTypesTab.cpp:394
 msgctxt "ImageTypesTab|Values"
 msgid "8"
-msgstr ""
+msgstr "8"
 
 #: ../src/kde/config/ImageTypesTab.cpp:244
 #: ../src/win32/config/ImageTypesTab.cpp:395
 msgctxt "ImageTypesTab|Values"
 msgid "9"
-msgstr ""
+msgstr "9"
 
 #: ../src/kde/config/KeyManagerTab.cpp:132
 msgctxt "KeyManagerTab"
@@ -5356,32 +5399,34 @@ msgstr ""
 msgctxt "AboutTab|Credits"
 msgid "This program is licensed under the GNU GPL v2 or later."
 msgstr ""
+"Ця програма розповсюджується під ліцензією GNU GPL v2 чи будь-якої пізнішої "
+"версією."
 
 #: ../src/win32/config/AboutTab.cpp:563
 msgctxt "AboutTab|Credits"
 msgid "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
-msgstr ""
+msgstr "https://www.gnu.org/licenses/old-licenses/gpl-2.0.uk.html"
 
 #: ../src/win32/config/AboutTab.cpp:616
 msgctxt "AboutTab"
 msgid "Credits"
-msgstr ""
+msgstr "Автори"
 
 #: ../src/win32/config/AboutTab.cpp:679
 msgctxt "AboutTab"
 msgid "Libraries"
-msgstr ""
+msgstr "Бібліотеки"
 
 #: ../src/win32/config/AboutTab.cpp:720
 msgctxt "AboutTab"
 msgid "Support"
-msgstr ""
+msgstr "Техпідтримка"
 
 #. tr: Tab title.
 #: ../src/win32/config/AboutTab.cpp:862
 msgctxt "AboutTab"
 msgid "About"
-msgstr ""
+msgstr "Про програму"
 
 #: ../src/win32/config/CacheTab.cpp:160
 #, c-format
@@ -5444,13 +5489,13 @@ msgstr ""
 #: ../src/win32/config/DownloadsTab.cpp:400
 msgctxt "DownloadsTab"
 msgid "Downloads"
-msgstr ""
+msgstr "Завантаження"
 
 #. tr: Tab title.
 #: ../src/win32/config/ImageTypesTab.cpp:719
 msgctxt "ImageTypesTab"
 msgid "Image Types"
-msgstr ""
+msgstr "Типи зображень"
 
 #: ../src/win32/config/KeyManagerTab.cpp:348
 msgctxt "KeyManagerTab"
@@ -5485,4 +5530,4 @@ msgstr ""
 #: ../src/win32/config/KeyManagerTab.cpp:1598
 msgctxt "KeyManagerTab"
 msgid "Key Manager"
-msgstr ""
+msgstr "Менеджер ключів"
