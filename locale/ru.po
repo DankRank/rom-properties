@@ -37,7 +37,7 @@ msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-04-07 17:31-0400\n"
-"PO-Revision-Date: 2018-04-03 03:57+0300\n"
+"PO-Revision-Date: 2018-04-10 23:56+0300\n"
 "Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -221,10 +221,9 @@ msgstr "%s:"
 
 #. tr: Uses Qt's HTML subset for formatting.
 #: ../src/kde/config/AboutTab.cpp:152
-#, fuzzy
 msgctxt "AboutTab"
 msgid "<b>ROM Properties Page</b><br>Shell Extension"
-msgstr "Настройка ROM Properties Page"
+msgstr "Расширение оболочки<br><b>ROM Properties Page</b>"
 
 #: ../src/kde/config/AboutTab.cpp:155 ../src/win32/config/AboutTab.cpp:481
 #, c-format
@@ -414,51 +413,51 @@ msgstr "Ни одного ключа не было импортировано и
 
 #. tr: %1$s == number of keys (formatted), %2$u == filename
 #: ../src/kde/config/KeyManagerTab.cpp:184
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%1$s key was imported from '%2$s'."
 msgid_plural "%1$s keys were imported from '%2$s'."
-msgstr[0] "%u ключ был импортирован из '%s'."
-msgstr[1] "%u ключа был импортированы из '%s'."
-msgstr[2] "%u ключей был импортированы из '%s'."
+msgstr[0] "%1$s ключ был импортирован из '%2$s'."
+msgstr[1] "%1$s ключа был импортированы из '%2$s'."
+msgstr[2] "%1$s ключей был импортированы из '%2$s'."
 
 #. tr: %s == number of keys (formatted)
 #: ../src/kde/config/KeyManagerTab.cpp:208
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%s key already exists in the Key Manager."
 msgid_plural "%s keys already exist in the Key Manager."
-msgstr[0] "%u ключ уже существует в менеджере ключей."
-msgstr[1] "%u ключа уже существуют в менеджере ключей."
-msgstr[2] "%u ключей уже существуют в менеджере ключей."
+msgstr[0] "%s ключ уже существует в менеджере ключей."
+msgstr[1] "%s ключа уже существуют в менеджере ключей."
+msgstr[2] "%s ключей уже существуют в менеджере ключей."
 
 #. tr: %s == number of keys (formatted)
 #: ../src/kde/config/KeyManagerTab.cpp:218
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%s key was not imported because it is incorrect."
 msgid_plural "%s keys were not imported because they are incorrect."
-msgstr[0] "%u ключ не был импортирован, т.к. он не является правильным."
-msgstr[1] "%u ключа не были импортированы, т.к. они не являются правильными."
-msgstr[2] "%u ключей не были импортированы, т.к. они не являются правильными."
+msgstr[0] "%s ключ не был импортирован, т.к. он не является правильным."
+msgstr[1] "%s ключа не были импортированы, т.к. они не являются правильными."
+msgstr[2] "%s ключей не были импортированы, т.к. они не являются правильными."
 
 #. tr: %s == number of keys (formatted)
 #: ../src/kde/config/KeyManagerTab.cpp:228
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%s key was not imported because it isn't used by rom-properties."
 msgid_plural ""
 "%s keys were not imported because they aren't used by rom-properties."
 msgstr[0] ""
-"%u ключ не был импортирован, т.к. он не используется rom-properties."
+"%s ключ не был импортирован, т.к. он не используется rom-properties."
 msgstr[1] ""
-"%u ключа не были импортированы, т.к. они не используются rom-properties."
+"%s ключа не были импортированы, т.к. они не используются rom-properties."
 msgstr[2] ""
-"%u ключей не были импортированы, т.к. они не используются rom-properties."
+"%s ключей не были импортированы, т.к. они не используются rom-properties."
 
 #. tr: %s == number of keys (formatted)
 #: ../src/kde/config/KeyManagerTab.cpp:238
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid ""
 "%s key was not imported because it is encrypted and the master key isn't "
@@ -467,33 +466,33 @@ msgid_plural ""
 "%s keys were not imported because they are encrypted and the master key "
 "isn't available."
 msgstr[0] ""
-"%u зашифрованный ключ не был импортирован из-за отсутствия ключа для "
+"%s зашифрованный ключ не был импортирован из-за отсутствия ключа для "
 "расшифрования."
 msgstr[1] ""
-"%u зашифрованных ключа не были импортированы из-за отсутствия ключа для "
+"%s зашифрованных ключа не были импортированы из-за отсутствия ключа для "
 "расшифрования."
 msgstr[2] ""
-"%u зашифрованных ключей не были импортированы из-за отсутствия ключа для "
+"%s зашифрованных ключей не были импортированы из-за отсутствия ключа для "
 "расшифрования."
 
 #. tr: %s == number of keys (formatted)
 #: ../src/kde/config/KeyManagerTab.cpp:248
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%s key has been imported and verified as correct."
 msgid_plural "%s keys have been imported and verified as correct."
-msgstr[0] "%u ключ был импортирован и проверен на корректность."
-msgstr[1] "%u ключа был импортированы и проверены на корректность."
-msgstr[2] "%u ключей был импортированы и проверены на корректность."
+msgstr[0] "%s ключ был импортирован и проверен на корректность."
+msgstr[1] "%s ключа был импортированы и проверены на корректность."
+msgstr[2] "%s ключей был импортированы и проверены на корректность."
 
 #: ../src/kde/config/KeyManagerTab.cpp:257
-#, fuzzy, c-format
+#, c-format
 msgctxt "KeyManagerTab"
 msgid "%s key has been imported without verification."
 msgid_plural "%s keys have been imported without verification."
-msgstr[0] "%u ключ был импортирован без проверки."
-msgstr[1] "%u ключа был импортированы без проверки."
-msgstr[2] "%u ключей был импортированы без проверки."
+msgstr[0] "%s ключ был импортирован без проверки."
+msgstr[1] "%s ключа был импортированы без проверки."
+msgstr[2] "%s ключей был импортированы без проверки."
 
 #. tr: Wii keys.bin dialog title.
 #: ../src/kde/config/KeyManagerTab.cpp:388
@@ -1163,10 +1162,9 @@ msgid "Title"
 msgstr "Название"
 
 #: ../src/libromdata/Console/GameCube.cpp:1477
-#, fuzzy
 msgctxt "GameCube"
 msgid "Game ID"
-msgstr "Game Gear"
+msgstr ""
 
 #: ../src/libromdata/Console/GameCube.cpp:1489
 #, c-format
@@ -1380,7 +1378,6 @@ msgid "Publisher"
 msgstr "Издатель"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:301
-#, fuzzy
 msgctxt "MegaDrive"
 msgid "Unknown"
 msgstr "Неизвестно"
@@ -2218,10 +2215,10 @@ msgid "Program Type"
 msgstr ""
 
 #: ../src/libromdata/Console/SNES.cpp:929
-#, fuzzy, c-format
+#, c-format
 msgctxt "SNES"
 msgid "Unknown (0x%08X)"
-msgstr "Неизвестно (0x%02X)"
+msgstr "Неизвестно (0x%08X)"
 
 #: ../src/libromdata/Console/SNES.cpp:946
 #: ../src/libromdata/Console/SNES.cpp:949
@@ -4068,10 +4065,9 @@ msgid "Xbox"
 msgstr "Xbox"
 
 #: ../src/libromdata/Other/EXE.cpp:857
-#, fuzzy
 msgctxt "EXE"
 msgid "Subsystem"
-msgstr "Система"
+msgstr "Подсистема"
 
 #: ../src/libromdata/Other/EXE.cpp:861 ../src/libromdata/Other/EXE.cpp:1370
 msgctxt "EXE"
@@ -5261,7 +5257,6 @@ msgstr ""
 
 #. tr: Bytes (< 1,024)
 #: ../src/librpbase/TextFuncs.cpp:298
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "byte"
 msgid_plural "bytes"
@@ -5271,52 +5266,46 @@ msgstr[2] "байтов"
 
 #. tr: Kilobytes
 #: ../src/librpbase/TextFuncs.cpp:303
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "KiB"
 msgstr "КиБ"
 
 #. tr: Megabytes
 #: ../src/librpbase/TextFuncs.cpp:308
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "MiB"
 msgstr "МиБ"
 
 #. tr: Gigabytes
 #: ../src/librpbase/TextFuncs.cpp:313
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "GiB"
 msgstr "ГиБ"
 
 #. tr: Terabytes
 #: ../src/librpbase/TextFuncs.cpp:318
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "TiB"
 msgstr "ТиБ"
 
 #. tr: Petabytes
 #: ../src/librpbase/TextFuncs.cpp:323
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "PiB"
 msgstr "ПиБ"
 
 #. tr: Exabytes
 #: ../src/librpbase/TextFuncs.cpp:328
-#, fuzzy
 msgctxt "TextFuncs|FileSize"
 msgid "EiB"
 msgstr "ЭиБ"
 
 #. tr: %1$s == localized value, %2$s == suffix (e.g. MiB)
 #: ../src/librpbase/TextFuncs.cpp:366
-#, fuzzy, c-format
+#, c-format
 msgctxt "TextFuncs|FileSize"
 msgid "%1$s %2$s"
-msgstr "%1$u из %2$u"
+msgstr "%1$s %2$s"
 
 # bad style?
 #. tr: %1$s == image type name, %2$s == output filename
@@ -5774,35 +5763,3 @@ msgstr ""
 msgctxt "KeyManagerTab"
 msgid "Key Manager"
 msgstr "Менеджер ключей"
-
-#~ msgctxt "AboutTab"
-#~ msgid "ROM Properties Page"
-#~ msgstr "</b>Расширение оболочки<b>"
-
-#~ msgctxt "AboutTab"
-#~ msgid "Shell Extension"
-#~ msgstr "<b>ROM Properties Page</b>"
-
-# issue #129
-#, fuzzy
-#~ msgctxt "KeyManagerTab"
-#~ msgid "keys.bin"
-#~ msgstr "keys.bin"
-
-# issue #129
-#, fuzzy
-#~ msgctxt "KeyManagerTab"
-#~ msgid "otp.bin"
-#~ msgstr "otp.bin"
-
-# issue #129
-#, fuzzy
-#~ msgctxt "KeyManagerTab"
-#~ msgid "boot9.bin"
-#~ msgstr "boot9.bin"
-
-# issue #129
-#, fuzzy
-#~ msgctxt "KeyManagerTab"
-#~ msgid "aeskeydb.bin"
-#~ msgstr "aeskeydb.bin"

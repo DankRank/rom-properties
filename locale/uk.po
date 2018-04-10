@@ -26,7 +26,7 @@ msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-04-07 17:31-0400\n"
-"PO-Revision-Date: 2018-04-03 06:06+0300\n"
+"PO-Revision-Date: 2018-04-10 23:59+0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: uk\n"
@@ -214,10 +214,9 @@ msgstr ""
 
 #. tr: Uses Qt's HTML subset for formatting.
 #: ../src/kde/config/AboutTab.cpp:152
-#, fuzzy
 msgctxt "AboutTab"
 msgid "<b>ROM Properties Page</b><br>Shell Extension"
-msgstr "Налаштування ROM Properties Page"
+msgstr "Розширення оболонки<br><b>ROM Properties Page</b>"
 
 #: ../src/kde/config/AboutTab.cpp:155 ../src/win32/config/AboutTab.cpp:481
 #, c-format
@@ -5711,11 +5710,3 @@ msgstr ""
 msgctxt "KeyManagerTab"
 msgid "Key Manager"
 msgstr "Менеджер ключів"
-
-#~ msgctxt "AboutTab"
-#~ msgid "ROM Properties Page"
-#~ msgstr "</b>Розширення оболонки<b>"
-
-#~ msgctxt "AboutTab"
-#~ msgid "Shell Extension"
-#~ msgstr "<b>ROM Properties Page</b>"
