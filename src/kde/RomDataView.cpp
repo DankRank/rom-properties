@@ -241,31 +241,19 @@ void RomDataViewPrivate::initHeaderRow(void)
 		return;
 	}
 
-	// System name.
+	// System name and file type.
 	// TODO: System logo and/or game title?
-	const char *systemName = romData->systemName(
+	const char *const systemName = romData->systemName(
 		RomData::SYSNAME_TYPE_LONG | RomData::SYSNAME_REGION_ROM_LOCAL);
-
-	// File type.
 	const char *const fileType = romData->fileType_string();
+	assert(systemName != nullptr);
+	assert(fileType != nullptr);
 
-	QString sysInfo;
-	if (systemName) {
-		sysInfo = U82Q(systemName);
-	}
-	if (fileType) {
-		if (!sysInfo.isEmpty()) {
-			sysInfo += QChar(L'\n');
-		}
-		sysInfo += U82Q(fileType);
-	}
-
-	if (!sysInfo.isEmpty()) {
-		ui.lblSysInfo->setText(sysInfo);
-		ui.lblSysInfo->show();
-	} else {
-		ui.lblSysInfo->hide();
-	}
+	QString sysInfo = U82Q(rp_sprintf_p(
+		// tr: %1$s == system name, %2$s == file type
+		C_("RomDataView", "%1$s\n%2$s"), systemName, fileType));
+	ui.lblSysInfo->setText(sysInfo);
+	ui.lblSysInfo->show();
 
 	// Supported image types.
 	const uint32_t imgbf = romData->supportedImageTypes();
@@ -397,23 +385,24 @@ void RomDataViewPrivate::initString(QLabel *lblDesc, const RomFields::Field *fie
 		lblString->setOpenExternalLinks(true);
 		lblString->setTextInteractionFlags(
 			Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard);
-		lblString->setFocusPolicy(Qt::StrongFocus);
 		if (field->data.str) {
 			// Replace newlines with "<br/>".
 			QString text = U82Q(*(field->data.str)).replace(QChar(L'\n'), QLatin1String("<br/>"));
 			lblString->setText(text);
 		}
 	} else {
-		// Standard text with no formatting.
+		// tr: Standard text with no formatting.
 		lblString->setTextInteractionFlags(
 			Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-		lblString->setFocusPolicy(Qt::StrongFocus);
 		lblString->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 		lblString->setTextFormat(Qt::PlainText);
 		if (field->data.str) {
 			lblString->setText(U82Q(*(field->data.str)));
 		}
 	}
+
+	// Enable strong focus so we can tab into the label.
+	lblString->setFocusPolicy(Qt::StrongFocus);
 
 	// Check for any formatting options.
 
@@ -633,7 +622,9 @@ void RomDataViewPrivate::initDateTime(QLabel *lblDesc, const RomFields::Field *f
 	QLabel *lblDateTime = new QLabel(q);
 	lblDateTime->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 	lblDateTime->setTextFormat(Qt::PlainText);
-	lblDateTime->setTextInteractionFlags(Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse);
+	lblDateTime->setTextInteractionFlags(
+		Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+	lblDateTime->setFocusPolicy(Qt::StrongFocus);
 
 	if (field->data.date_time == -1) {
 		// tr: Invalid date/time.
@@ -712,7 +703,9 @@ void RomDataViewPrivate::initAgeRatings(QLabel *lblDesc, const RomFields::Field 
 	QLabel *lblAgeRatings = new QLabel(q);
 	lblAgeRatings->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 	lblAgeRatings->setTextFormat(Qt::PlainText);
-	lblAgeRatings->setTextInteractionFlags(Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse);
+	lblAgeRatings->setTextInteractionFlags(
+		Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+	lblAgeRatings->setFocusPolicy(Qt::StrongFocus);
 
 	const RomFields::age_ratings_t *age_ratings = field->data.age_ratings;
 	assert(age_ratings != nullptr);

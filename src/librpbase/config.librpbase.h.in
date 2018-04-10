@@ -73,6 +73,12 @@
 /* Define to 1 if you have the `memmem' function. */
 #cmakedefine HAVE_MEMMEM 1
 
+/* Define to 1 if you have the `nl_langinfo` function. */
+#cmakedefine HAVE_NL_LANGINFO 1
+
+/* Define to 1 if `struct lconv` has wchar_t fields. */
+#cmakedefine HAVE_STRUCT_LCONV_WCHAR_T 1
+
 /* Define to 1 if you have the <features.h> header file. */
 #cmakedefine HAVE_FEATURES_H 1
 
@@ -139,5 +145,19 @@
 #ifdef _WIN32
 #define RP_WIS16 1
 #endif
+
+/** putenv() and related **/
+
+/* Define to 1 if you have the `putenv` function. */
+#cmakedefine HAVE_PUTENV 1
+
+/* Define to 1 if you have the `setenv` function. */
+#cmakedefine HAVE_SETENV 1
+
+/* Define to 1 if you have the `_wputenv` function. */
+#cmakedefine HAVE__WPUTENV 1
+
+/* Define to 1 if you have the `_wputenv_s` function. */
+#cmakedefine HAVE__WPUTENV_S 1
 
 #endif /* __ROMPROPERTIES_LIBRPBASE_CONFIG_H__ */

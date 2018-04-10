@@ -1,8 +1,9 @@
 /***************************************************************************
  * ROM Properties Page shell extension. (librpbase)                        *
- * GettextTranslator.hpp: QTranslator class using GNU Gettext.             *
+ * TextFuncs_libc.c: Reimplementations of libc functions that aren't       *
+ * present on this system.                                                 *
  *                                                                         *
- * Copyright (c) 2017-2018 by David Korth.                                 *
+ * Copyright (c) 2009-2018 by David Korth.                                 *
  *                                                                         *
  * This program is free software; you can redistribute it and/or modify it *
  * under the terms of the GNU General Public License as published by the   *
@@ -18,31 +19,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  ***************************************************************************/
 
-#ifndef __ROMPROPERTIES_KDE_GETTEXTTRANSLATOR_HPP__
-#define __ROMPROPERTIES_KDE_GETTEXTTRANSLATOR_HPP__
+#ifndef __ROMPROPERTIES_LIBRPBASE_TEXTFUNCS_LIBC_H__
+#define __ROMPROPERTIES_LIBRPBASE_TEXTFUNCS_LIBC_H__
 
-#include <QTranslator>
+#include "config.librpbase.h"
 
-class GettextTranslator : public QTranslator
-{
-	Q_OBJECT
-
-	public:
-		explicit GettextTranslator(QObject *parent = nullptr);
-
-	private:
-		typedef QTranslator super;
-		Q_DISABLE_COPY(GettextTranslator);
-
-	public:
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-		// Qt5: Single virtual function that takes a plural parameter.
-		QString translate(const char *context, const char *sourceText, const char *disambiguation = nullptr, int n = -1) const final;
-#else
-		// Qt4: Virtual function with no plurals; non-virtual function with plurals.
-		QString translate(const char *context, const char *sourceText, const char *disambiguation, int n) const;
-		QString translate(const char *context, const char *sourceText, const char *disambiguation = nullptr) const final;
+#ifdef __cplusplus
+extern "C" {
 #endif
-};
 
-#endif /* __ROMPROPERTIES_KDE_GETTEXTTRANSLATOR_HPP__ */
+#ifndef HAVE_STRNLEN
+/**
+ * String length with limit. (8-bit strings)
+ * @param str The string itself
+ * @param maxlen Maximum length of the string
+ * @returns equivivalent to min(strlen(str), maxlen) without buffer overruns
+ */
+size_t strnlen(const char *str, size_t maxlen);
+#endif /* HAVE_STRNLEN */
+
+#ifndef HAVE_MEMMEM
+/**
+ * Find a string within a block of memory.
+ * @param haystack Block of memory.
+ * @param haystacklen Length of haystack.
+ * @param needle String to search for.
+ * @param needlelen Length of needle.
+ * @return Location of needle in haystack, or NULL if not found.
+ */
+void *memmem(const void *haystack, size_t haystacklen,
+	     const void *needle, size_t needlelen);
+#endif /* HAVE_MEMMEM */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __ROMPROPERTIES_LIBRPBASE_TEXTFUNCS_LIBC_H__ */

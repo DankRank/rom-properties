@@ -63,8 +63,31 @@ ENDIF(NOT WIN32)
 
 # Check for C library functions.
 INCLUDE(CheckSymbolExists)
+INCLUDE(CheckStructHasMember)
 CHECK_SYMBOL_EXISTS(strnlen "string.h" HAVE_STRNLEN)
 CHECK_SYMBOL_EXISTS(memmem "string.h" HAVE_MEMMEM)
+# MSVCRT doesn't have nl_langinfo() and probably never will.
+IF(NOT WIN32)
+	CHECK_SYMBOL_EXISTS(nl_langinfo "langinfo.h" HAVE_NL_LANGINFO)
+ELSE(NOT WIN32)
+	# Win32: MinGW's `struct lconv` doesn't have wchar_t fields.
+	CHECK_STRUCT_HAS_MEMBER("struct lconv" _W_decimal_point "locale.h"
+		HAVE_STRUCT_LCONV_WCHAR_T
+		LANGUAGE C)
+ENDIF(NOT WIN32)
+
+# Check for reentrant C library functions.
+INCLUDE(CheckSymbolExistsOrInline)
+# putenv(), setenv(), and related.
+# setenv() is preferred, so if it's found, skip everything else.
+# FIXME: putenv() and setenv() aren't likely to be inline functions, but
+# CHECK_SYMBOL_EXISTS() complains due to the embedded double-quotes.
+CHECK_SYMBOL_EXISTS_OR_INLINE(putenv "stdlib.h" "putenv(\"abc123=def456\");" HAVE_PUTENV)
+CHECK_SYMBOL_EXISTS_OR_INLINE(setenv "stdlib.h" "setenv(\"abc123\", \"def456\", 1);" HAVE_SETENV)
+# Windows-specific: Unicode only.
+# NOTE: These may be inline functions on MinGW.
+CHECK_SYMBOL_EXISTS_OR_INLINE(_wputenv "stdlib.h" "_wputenv(L\"abc123=def456\");" HAVE__WPUTENV)
+CHECK_SYMBOL_EXISTS_OR_INLINE(_wputenv_s "stdlib.h" "_wputenv_s(L\"abc123\", \"def456\");" HAVE__WPUTENV_S)
 
 # Check for C headers.
 CHECK_INCLUDE_FILES("features.h" HAVE_FEATURES_H)
@@ -73,6 +96,7 @@ CHECK_INCLUDE_FILES("features.h" HAVE_FEATURES_H)
 SET(librpbase_SRCS
 	byteswap.c
 	TextFuncs.cpp
+	TextFuncs_libc.c
 	RomData.cpp
 	RomFields.cpp
 	SystemRegion.cpp
@@ -114,6 +138,7 @@ SET(librpbase_H
 	aligned_malloc.h
 	TextFuncs.hpp
 	TextFuncs_wchar.hpp
+	TextFuncs_libc.h
 	RomData.hpp
 	RomData_decl.hpp
 	RomData_p.hpp

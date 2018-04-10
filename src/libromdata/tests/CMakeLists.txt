@@ -19,16 +19,20 @@ ENDIF(ENABLE_DECRYPTION)
 
 # GcnFstPrint. (Not a test, but a useful program.)
 ADD_EXECUTABLE(GcnFstPrint
-	../../librpbase/tests/gtest_init.cpp
 	disc/FstPrint.cpp
 	disc/FstPrint.hpp
 	disc/GcnFstPrint.cpp
 	)
 TARGET_LINK_LIBRARIES(GcnFstPrint romdata rpbase)
+IF(ENABLE_NLS)
+	TARGET_LINK_LIBRARIES(GcnFstPrint i18n)
+ENDIF(ENABLE_NLS)
 DO_SPLIT_DEBUG(GcnFstPrint)
 SET_WINDOWS_SUBSYSTEM(GcnFstPrint CONSOLE)
 
 # GcnFstTest.
+# NOTE: We can't disable NLS here due to its usage
+# in FstPrint.cpp. gtest_init.cpp will set LC_ALL=C.
 ADD_EXECUTABLE(GcnFstTest
 	../../librpbase/tests/gtest_init.cpp
 	disc/FstPrint.cpp
@@ -36,6 +40,9 @@ ADD_EXECUTABLE(GcnFstTest
 	disc/GcnFstTest.cpp
 	)
 TARGET_LINK_LIBRARIES(GcnFstTest romdata rpbase)
+IF(ENABLE_NLS)
+	TARGET_LINK_LIBRARIES(GcnFstPrint i18n)
+ENDIF(ENABLE_NLS)
 TARGET_LINK_LIBRARIES(GcnFstTest gtest)
 TARGET_LINK_LIBRARIES(GcnFstTest libminizip ${ZLIB_LIBRARY})
 DO_SPLIT_DEBUG(GcnFstTest)

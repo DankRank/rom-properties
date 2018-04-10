@@ -1736,7 +1736,8 @@ int Nintendo3DS::loadFieldData(void)
 				if (!err) {
 					err = C_("Nintendo3DS", "Unknown error. (THIS IS A BUG!)");
 				}
-				d->fields->addField_string("Warning", err, RomFields::STRF_WARNING);
+				d->fields->addField_string(C_("Nintendo3DS", "Warning"),
+					err, RomFields::STRF_WARNING);
 				shownWarning = true;
 			}
 		}
@@ -1889,7 +1890,8 @@ int Nintendo3DS::loadFieldData(void)
 				if (!err) {
 					err = C_("Nintendo3DS", "Unknown error. (THIS IS A BUG!)");
 				}
-				d->fields->addField_string("Warning", err, RomFields::STRF_WARNING);
+				d->fields->addField_string(C_("Nintendo3DS", "Warning"),
+					err, RomFields::STRF_WARNING);
 				shownWarning = true;
 			}
 		}
@@ -1924,7 +1926,7 @@ int Nintendo3DS::loadFieldData(void)
 
 		const char *const *pt_types;
 		const uint8_t *keyslots = nullptr;
-		vector<string> *v_partitions_names = new vector<string>();
+		vector<string> *v_partitions_names;
 		if (!emmc) {
 			// CCI (3DS cartridge dump)
 
@@ -2118,7 +2120,7 @@ int Nintendo3DS::loadFieldData(void)
 
 			// Partition size.
 			const int64_t length_bytes = (int64_t)length << d->media_unit_shift;
-			data_row.push_back(d->formatFileSize(length_bytes));
+			data_row.push_back(LibRpBase::formatFileSize(length_bytes));
 
 			delete pNcch;
 		}
@@ -2251,7 +2253,7 @@ int Nintendo3DS::loadFieldData(void)
 
 				// Content size.
 				if (i < d->content_count) {
-					data_row.push_back(d->formatFileSize(be64_to_cpu(content_chunk->size)));
+					data_row.push_back(LibRpBase::formatFileSize(be64_to_cpu(content_chunk->size)));
 				} else {
 					data_row.push_back("");
 				}
@@ -2300,7 +2302,7 @@ int Nintendo3DS::loadFieldData(void)
 			data_row.push_back(d->n3dsVersionToString(version));
 
 			// Content size.
-			data_row.push_back(d->formatFileSize(pNcch->partition_size()));
+			data_row.push_back(LibRpBase::formatFileSize(pNcch->partition_size()));
 
 			delete pNcch;
 		}
@@ -2616,6 +2618,7 @@ int Nintendo3DS::extURLs(ImageType imageType, vector<ExtURL> *pExtURLs, int size
 	}
 
 	// Make sure the ID4 has only printable characters.
+	// NOTE: We're checking for NULL termination above.
 	const char *id4 = &ncch_header->product_code[6];
 	for (int i = 3; i >= 0; i--) {
 		if (!isprint(id4[i])) {
