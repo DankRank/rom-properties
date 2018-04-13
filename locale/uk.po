@@ -1,7 +1,6 @@
 # Ukrainian translations for rom-properties package.
 # Copyright (C) 2018 David Korth
 # This file is distributed under the same license as the rom-properties package.
-# Egor <egor@opensrc.club>, 2018.
 #
 # General translation notes:
 # For more in-depth notes see ru.po
@@ -21,21 +20,23 @@
 #
 # "Unknown" is translated as "Невідомо" (neuter gender).
 # See ru.po for details.
+#
+# Egor <egor@opensrc.club>, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: rom-properties 1.2+\n"
 "Report-Msgid-Bugs-To: gerbilsoft@gerbilsoft.com\n"
 "POT-Creation-Date: 2018-04-07 17:31-0400\n"
-"PO-Revision-Date: 2018-04-10 23:59+0300\n"
-"Last-Translator: Automatically generated\n"
+"PO-Revision-Date: 2018-04-13 04:36+0200\n"
+"Last-Translator: Egor <egor@opensrc.club>\n"
 "Language-Team: none\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 2.0.6\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<"
+"=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Lokalize 2.0\n"
 
 #: ../build/src/kde/kde4/ui_AboutTab.h:254
 #: ../build/src/kde/kde5/ui_AboutTab.h:254
@@ -195,7 +196,7 @@ msgstr ""
 #: ../src/win32/RP_ShellPropSheetExt.cpp:1312
 msgctxt "RomDataView"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #. tr: No age ratings data.
 #: ../src/gtk/RomDataView.cpp:1141 ../src/kde/RomDataView.cpp:714
@@ -725,7 +726,7 @@ msgstr ""
 #: ../src/libromdata/Console/Dreamcast.cpp:575
 msgctxt "Dreamcast"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/Dreamcast.cpp:588
 #: ../src/libromdata/Console/GameCube.cpp:429
@@ -997,7 +998,7 @@ msgstr ""
 #, c-format
 msgctxt "DreamcastSave"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Console/DreamcastSave.cpp:1368
 msgctxt "DreamcastSave"
@@ -1130,13 +1131,13 @@ msgstr ""
 #, c-format
 msgctxt "GameCube"
 msgid "Unknown (%.2s)"
-msgstr ""
+msgstr "Невідомо (%.2s)"
 
 #: ../src/libromdata/Console/GameCube.cpp:1492
 #, c-format
 msgctxt "GameCube"
 msgid "Unknown (%02X %02X)"
-msgstr ""
+msgstr "Невідомо (%02X %02X)"
 
 #: ../src/libromdata/Console/GameCube.cpp:1497
 msgctxt "GameCube"
@@ -1163,7 +1164,7 @@ msgstr ""
 #, c-format
 msgctxt "GameCube"
 msgid "Unknown (0x%08X)"
-msgstr ""
+msgstr "Невідомо (0x%08X)"
 
 #: ../src/libromdata/Console/GameCube.cpp:1590
 #: ../src/libromdata/Console/GameCube.cpp:1597
@@ -1206,7 +1207,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:1779
 msgctxt "GameCube|KeyIdx"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #. tr: Retail encryption key.
 #: ../src/libromdata/Console/GameCube.cpp:1783
@@ -1242,7 +1243,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCube.cpp:1810
 msgctxt "GameCube|Partition"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #. tr: Partition number.
 #: ../src/libromdata/Console/GameCube.cpp:1820
@@ -1287,7 +1288,7 @@ msgstr ""
 #: ../src/libromdata/Console/GameCubeSave.cpp:860
 msgctxt "GameCubeSave"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/GameCubeSave.cpp:864
 msgctxt "GameCubeSave"
@@ -1339,7 +1340,7 @@ msgstr ""
 #: ../src/libromdata/Console/MegaDrive.cpp:301
 msgctxt "MegaDrive"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/MegaDrive.cpp:305
 msgctxt "MegaDrive"
@@ -1581,7 +1582,7 @@ msgstr ""
 #: ../src/libromdata/Console/NES.cpp:703 ../src/libromdata/Console/NES.cpp:928
 msgctxt "NES"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/NES.cpp:716 ../src/libromdata/Console/NES.cpp:720
 #: ../src/libromdata/Console/NES.cpp:723
@@ -1716,7 +1717,7 @@ msgstr ""
 #, c-format
 msgctxt "NES"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Console/NES.cpp:854
 msgctxt "NES"
@@ -1822,7 +1823,7 @@ msgstr ""
 #: ../src/libromdata/Console/Sega8Bit.cpp:346
 msgctxt "Sega8Bit"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/Sega8Bit.cpp:345
 msgctxt "Sega8Bit"
@@ -1944,7 +1945,7 @@ msgstr ""
 #: ../src/libromdata/Console/SegaSaturn.cpp:533
 msgctxt "SegaSaturn"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/SegaSaturn.cpp:538
 msgctxt "SegaSaturn|Peripherals"
@@ -2031,7 +2032,7 @@ msgstr ""
 #: ../src/libromdata/Console/SNES.cpp:776
 msgctxt "SNES"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Console/SNES.cpp:763
 msgctxt "SNES"
@@ -2060,7 +2061,7 @@ msgstr ""
 #, c-format
 msgctxt "SNES"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Console/SNES.cpp:823
 msgctxt "SNES"
@@ -2174,7 +2175,7 @@ msgstr ""
 #, c-format
 msgctxt "SNES"
 msgid "Unknown (0x%08X)"
-msgstr ""
+msgstr "Невідомо (0x%08X)"
 
 #: ../src/libromdata/Console/SNES.cpp:946
 #: ../src/libromdata/Console/SNES.cpp:949
@@ -2196,13 +2197,13 @@ msgstr ""
 #, c-format
 msgctxt "WiiU"
 msgid "Unknown (%.4s)"
-msgstr ""
+msgstr "Невідомо (%.4s)"
 
 #: ../src/libromdata/Console/WiiU.cpp:384
 #, c-format
 msgctxt "WiiU"
 msgid "Unknown (%02X %02X %02X %02X)"
-msgstr ""
+msgstr "Невідомо (%02X %02X %02X %02X)"
 
 #: ../src/libromdata/Console/WiiU.cpp:389
 msgctxt "WiiU"
@@ -2428,7 +2429,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/DMG.cpp:644
 msgctxt "DMG"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/DMG.cpp:545
 msgctxt "DMG"
@@ -2447,19 +2448,19 @@ msgstr ""
 #, c-format
 msgctxt "DMG"
 msgid "Unknown (%.2s)"
-msgstr ""
+msgstr "Невідомо (%.2s)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:594
 #, c-format
 msgctxt "DMG"
 msgid "Unknown (%02X %02X)"
-msgstr ""
+msgstr "Невідомо (%02X %02X)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:604
 #, c-format
 msgctxt "DMG"
 msgid "Unknown (%02X)"
-msgstr ""
+msgstr "Невідомо (%02X)"
 
 #: ../src/libromdata/Handheld/DMG.cpp:608
 msgctxt "DMG"
@@ -2600,13 +2601,13 @@ msgstr ""
 #, c-format
 msgctxt "GameBoyAdvance"
 msgid "Unknown (%.2s)"
-msgstr ""
+msgstr "Невідомо (%.2s)"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:294
 #, c-format
 msgctxt "GameBoyAdvance"
 msgid "Unknown (%02X %02X)"
-msgstr ""
+msgstr "Невідомо (%02X %02X)"
 
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:299
 msgctxt "GameBoyAdvance"
@@ -2634,7 +2635,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/GameBoyAdvance.cpp:338
 msgctxt "GameBoyAdvance"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/Lynx.cpp:235
 msgctxt "Lynx"
@@ -2669,7 +2670,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Lynx.cpp:249
 msgctxt "Lynx"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/Lynx.cpp:251
 msgctxt "Lynx"
@@ -2695,7 +2696,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1698
 msgctxt "Nintendo3DS"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:938
 msgctxt "Nintendo3DS|Logo"
@@ -2820,7 +2821,7 @@ msgstr ""
 #, c-format
 msgctxt "Nintendo3DS"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:1995
 msgctxt "Nintendo3DS"
@@ -2852,7 +2853,7 @@ msgstr ""
 #, c-format
 msgctxt "Nintendo3DS|CDev"
 msgid "Unknown (SDK2=0x%1$02X, SDK3=0x%2$02X)"
-msgstr ""
+msgstr "Невідомо (SDK2=0x%1$02X, SDK3=0x%2$02X)"
 
 #: ../src/libromdata/Handheld/Nintendo3DS.cpp:2029
 msgctxt "Nintendo3DS"
@@ -3012,7 +3013,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/Nintendo3DSFirm.cpp:286
 msgctxt "Nintendo3DSFirm"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/Nintendo3DSFirm.cpp:291
 msgctxt "Nintendo3DSFirm"
@@ -3093,7 +3094,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1062
 msgctxt "NintendoDS"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1048
 msgctxt "NintendoDS"
@@ -3176,7 +3177,7 @@ msgstr ""
 #, c-format
 msgctxt "NintendoDS"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Handheld/NintendoDS.cpp:1207
 msgctxt "NintendoDS"
@@ -3197,13 +3198,13 @@ msgstr ""
 #, c-format
 msgctxt "VirtualBoy"
 msgid "Unknown (%.2s)"
-msgstr ""
+msgstr "Невідомо (%.2s)"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:365
 #, c-format
 msgctxt "VirtualBoy"
 msgid "Unknown (%02X %02X)"
-msgstr ""
+msgstr "Невідомо (%02X %02X)"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:370
 msgctxt "VirtualBoy"
@@ -3218,7 +3219,7 @@ msgstr ""
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:386
 msgctxt "VirtualBoy"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Handheld/VirtualBoy.cpp:389
 msgctxt "VirtualBoy"
@@ -3265,7 +3266,7 @@ msgstr ""
 #, c-format
 msgctxt "Amiibo"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Other/Amiibo.cpp:466
 msgctxt "Amiibo"
@@ -3277,7 +3278,7 @@ msgstr ""
 #: ../src/libromdata/Other/Amiibo.cpp:477
 msgctxt "Amiibo"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Other/Amiibo.cpp:471
 msgctxt "Amiibo"
@@ -3326,7 +3327,7 @@ msgstr ""
 #, c-format
 msgctxt "ELF"
 msgid "Unknown (0x%04X)"
-msgstr ""
+msgstr "Невідомо (0x%04X)"
 
 #: ../src/libromdata/Other/ELF.cpp:957
 msgctxt "ELF"
@@ -3403,7 +3404,7 @@ msgstr ""
 #, c-format
 msgctxt "ELF"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Other/ELF.cpp:1040
 msgctxt "ELF|MIPSFlags"
@@ -3469,7 +3470,7 @@ msgstr ""
 #, c-format
 msgctxt "ELF"
 msgid "Unknown (%u)"
-msgstr ""
+msgstr "Невідомо (%u)"
 
 #: ../src/libromdata/Other/ELF.cpp:1125
 msgctxt "ELF"
@@ -3484,7 +3485,7 @@ msgstr ""
 #: ../src/libromdata/Other/ELF.cpp:1145
 msgctxt "ELF"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Other/ELF.cpp:1149
 msgctxt "ELF"
@@ -3577,7 +3578,7 @@ msgstr ""
 #, c-format
 msgctxt "EXE"
 msgid "Unknown (0x%08X)"
-msgstr ""
+msgstr "Невідомо (0x%08X)"
 
 #. tr: VFT_APP
 #: ../src/libromdata/Other/EXE.cpp:190
@@ -3720,7 +3721,7 @@ msgstr ""
 #, c-format
 msgctxt "EXE"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Other/EXE.cpp:299
 msgctxt "EXE"
@@ -3933,7 +3934,7 @@ msgstr ""
 #, c-format
 msgctxt "EXE"
 msgid "Unknown (0x%04X)"
-msgstr ""
+msgstr "Невідомо (0x%04X)"
 
 #: ../src/libromdata/Other/EXE.cpp:775
 msgctxt "EXE"
@@ -4025,7 +4026,7 @@ msgstr ""
 #: ../src/libromdata/Other/EXE.cpp:861 ../src/libromdata/Other/EXE.cpp:1370
 msgctxt "EXE"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Other/EXE.cpp:868
 msgctxt "EXE|PEFlags"
@@ -4336,7 +4337,7 @@ msgstr ""
 #: ../src/libromdata/Other/NintendoBadge.cpp:727
 msgctxt "NintendoBadge"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #. tr: Parameter is a number; it's formatted elsewhere.
 #: ../src/libromdata/tests/disc/FstPrint.cpp:231
@@ -4477,7 +4478,7 @@ msgstr ""
 #: ../src/libromdata/Texture/DirectDrawSurface.cpp:1166
 msgctxt "DirectDrawSurface"
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомо"
 
 #: ../src/libromdata/Texture/DirectDrawSurface.cpp:1259
 msgctxt "DirectDrawSurface"
@@ -4488,7 +4489,7 @@ msgstr ""
 #, c-format
 msgctxt "DirectDrawSurface"
 msgid "Unknown (0x%08X)"
-msgstr ""
+msgstr "Невідомо (0x%08X)"
 
 #: ../src/libromdata/Texture/DirectDrawSurface.cpp:1267
 msgctxt "DirectDrawSurface|dwFlags"
@@ -4685,7 +4686,7 @@ msgstr ""
 #, c-format
 msgctxt "SegaPVR"
 msgid "Unknown (0x%02X)"
-msgstr ""
+msgstr "Невідомо (0x%02X)"
 
 #: ../src/libromdata/Texture/SegaPVR.cpp:1002
 #: ../src/libromdata/Texture/SegaPVR.cpp:1004
@@ -4918,7 +4919,7 @@ msgstr ""
 #, c-format
 msgctxt "ValveVTF"
 msgid "Unknown (%d)"
-msgstr ""
+msgstr "Невідомо (%d)"
 
 #: ../src/libromdata/Texture/ValveVTF.cpp:937
 msgctxt "ValveVTF"
@@ -5710,3 +5711,4 @@ msgstr ""
 msgctxt "KeyManagerTab"
 msgid "Key Manager"
 msgstr "Менеджер ключів"
+
