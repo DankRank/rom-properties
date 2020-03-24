@@ -45,6 +45,8 @@ class NESMappers
 		 * @return Submapper name, or nullptr if not found.
 		 */
 		static const char *lookup_nes2_submapper(int mapper, int submapper);
+
+		static const char *lookup_ines_mirroring(int mapper, int submapper, bool vert, bool four);
 };
 
 }

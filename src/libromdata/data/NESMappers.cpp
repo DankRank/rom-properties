@@ -18,6 +18,50 @@ namespace LibRomData {
  * - https://wiki.nesdev.com/w/index.php/NES_2.0_submappers
  */
 
+// Mirroring behaviors for different mappers
+enum NESMirroringType {
+	MIRRORING_UNKNOWN = 0,		// When submapper has this value, it inherits mapper's value
+	// NOTE: for all of these we assume that if 4-Screen bit is set it means that the mapper's
+	// logic gets ignored, and there's simply 4K of SRAM at $2000. For more complicated mappers
+	// (MMC5) this would actually be a downgrade, and maybe even impossible, but iNES format
+	// applies the same logic to all mappers (except 30 and 218, see below)
+	// Reference: http://wiki.nesdev.com/w/index.php/NES_2.0#Hard-Wired_Mirroring
+	// NOTE: H/V/A/B refers to CIRAM A10 being connected to PPU A11/A10/Vss/Vdd respectively
+	// NOTE: boards that only ever existed in H or V configuration still use the H/V bit.
+	MIRRORING_HEADER,		// fixed H/V (the default)
+	MIRRORING_MAPPER,		// Mapper-controlled (unspecified)
+	MIRRORING_MAPPER_HVAB,		// - switchable H/V/A/B (e.g. MMC1)
+	MIRRORING_MAPPER_HV,		// - switchable H/V     (e.g. MMC3)
+	MIRRORING_MAPPER_AB,		// - switchable A/B     (e.g. AxROM)
+	MIRRORING_MAPPER_MMC5,		// - arbitrary configuration with 3 NTs and fill mode
+	MIRRORING_MAPPER_NAMCO163,	// - arbitrary configuration with 2 RAM and 224 ROM NTs
+	MIRRORING_MAPPER_VRC6,		// - it's complicated (Konami games only use H/V/A/B)
+	MIRRORING_MAPPER_JY,		// - J.Y. Company ASIC mapper (also complicated)
+	MIRRORING_MAPPER_SUNSOFT4,	// - switchable H/V/A/B with 2 RAM and 128 ROM NTs
+	MIRRORING_MAPPER_NAMCOT3425,	// - H but you can select how PPU A11 maps to CIRAM A10
+					//   (effectively it's selectable H/A/B/swapped-H)
+	MIRRORING_MAPPER_GTROM,		// - paged 4 screen RAM
+	MIRRORING_MAPPER_TxSROM,	// - arbitrary configuration with 2 NTs
+	MIRRORING_MAPPER_SACHEN8259,	// - switchable H/V/A/L-shaped (A10 or A11)
+	MIRRORING_MAPPER_SACHEN74LS374N,// - switchable H/V/A/L-shaped (A10 and A11)
+	MIRRORING_MAPPER_DIS23C01,	// - switchable H/V. A on reset.
+	MIRRORING_MAPPER_233,		// - switchable H/V/B/L-shaped (A10 and A11)
+	MIRRORING_MAPPER_235,		// - switchable H/V/A
+	MIRRORING_1SCREEN_A,		// fixed A
+	MIRRORING_1SCREEN_B,		// fixed B
+					// (the distinction is only relevant for Magic Floor)
+	MIRRORING_4SCREEN,		// 4 screen regardless of header (e.g. Vs. System)
+	// The following mappers interpret the header bits differently
+	MIRRORING_UNROM512,		// fixed H/V/4 or switchable A/B (mapper 30)
+	MIRRORING_BANDAI_FAMILYTRAINER,	// fixed H/V or switchable A/B (mapper 70) (see note below)
+	MIRRORING_MAGICFLOOR,		// fixed H/V/A/B (mapper 218)
+
+	// NOTE: fwNES describes mappers 70 and 78 as using 4 Screen bit to specify switchable A/B
+	// - 70 normally has fixed H/V. For switchable A/B, 152 should be used instead.
+	// - 78 has either switchable H/V or switchable A/B. Emulators default to one of those,
+	// and use checksumming to detect the other. Submappers should be used instead.
+};
+
 class NESMappersPrivate
 {
 	private:
@@ -27,10 +71,12 @@ class NESMappersPrivate
 		RP_DISABLE_COPY(NESMappersPrivate)
 
 	public:
+
 		// iNES mapper list.
 		struct MapperEntry {
 			const char *name;		// Name of the board. (If unknown, nullptr.)
 			const char *manufacturer;	// Manufacturer. (If unknown, nullptr.)
+			NESMirroringType mirroring;	// Mirroring behavior.
 		};
 		static const MapperEntry mappers_plane0[];
 		static const MapperEntry mappers_plane1[];
@@ -49,10 +95,11 @@ class NESMappersPrivate
 		 * It is assumed that the replacement mapper always uses submapper 0.
 		 */
 		struct SubmapperInfo {
-			uint8_t submapper;	// Submapper number.
+			uint8_t submapper;		// Submapper number.
 			uint8_t reserved;
 			uint16_t deprecated;
-			const char *desc;	// Description.
+			const char *desc;		// Description.
+			NESMirroringType mirroring;	// Mirroring behavior.
 		};
 
 		// Submappers.
@@ -120,312 +167,312 @@ const NESMappersPrivate::MapperEntry NESMappersPrivate::mappers_plane0[] = {
 	/** NES 2.0 Plane 0 [0-255] (iNES 1.0) **/
 
 	// Mappers 000-009
-	{"NROM",			"Nintendo"},
-	{"SxROM (MMC1)",		"Nintendo"},
-	{"UxROM",			"Nintendo"},
-	{"CNROM",			"Nintendo"},
-	{"TxROM (MMC3), HKROM (MMC6)",	"Nintendo"},
-	{"ExROM (MMC5)",		"Nintendo"},
-	{"Game Doctor Mode 1",		"Bung/FFE"},
-	{"AxROM",			"Nintendo"},
-	{"Game Doctor Mode 4 (GxROM)",	"Bung/FFE"},
-	{"PxROM, PEEOROM (MMC2)",	"Nintendo"},
+	{"NROM",			"Nintendo",		MIRRORING_HEADER},
+	{"SxROM (MMC1)",		"Nintendo",		MIRRORING_MAPPER_HVAB},
+	{"UxROM",			"Nintendo",		MIRRORING_HEADER},
+	{"CNROM",			"Nintendo",		MIRRORING_HEADER},
+	{"TxROM (MMC3), HKROM (MMC6)",	"Nintendo",		MIRRORING_MAPPER_HV},
+	{"ExROM (MMC5)",		"Nintendo",		MIRRORING_MAPPER_MMC5},
+	{"Game Doctor Mode 1",		"Bung/FFE",		MIRRORING_MAPPER_HVAB},
+	{"AxROM",			"Nintendo",		MIRRORING_MAPPER_AB},
+	{"Game Doctor Mode 4 (GxROM)",	"Bung/FFE",		MIRRORING_MAPPER_HVAB},
+	{"PxROM, PEEOROM (MMC2)",	"Nintendo",		MIRRORING_MAPPER_HV},
 
 	// Mappers 010-019
-	{"FxROM (MMC4)",		"Nintendo"},
-	{"Color Dreams",		"Color Dreams"},
-	{"MMC3 variant",		"FFE"},
-	{"NES-CPROM",			"Nintendo"},
-	{"SL-1632 (MMC3/VRC2 clone)",	"Nintendo"},
-	{"K-1029 (multicart)",		nullptr},
-	{"FCG-x",			"Bandai"},
-	{"FFE #17",			"FFE"},
-	{"SS 88006",			"Jaleco"},
-	{"Namco 129/163",		"Namco"},	// TODO: Namcot-106?
+	{"FxROM (MMC4)",		"Nintendo",		MIRRORING_MAPPER_HV},
+	{"Color Dreams",		"Color Dreams",		MIRRORING_HEADER},
+	{"MMC3 variant",		"FFE",			MIRRORING_MAPPER_HV},
+	{"NES-CPROM",			"Nintendo",		MIRRORING_HEADER},
+	{"SL-1632 (MMC3/VRC2 clone)",	"Nintendo",		MIRRORING_MAPPER_HVAB},
+	{"K-1029 (multicart)",		nullptr,		MIRRORING_MAPPER_HV},
+	{"FCG-x",			"Bandai",		MIRRORING_MAPPER_HVAB},
+	{"FFE #17",			"FFE",			MIRRORING_MAPPER_HVAB},
+	{"SS 88006",			"Jaleco",		MIRRORING_MAPPER_HVAB},
+	{"Namco 129/163",		"Namco",		MIRRORING_MAPPER_NAMCO163},	// TODO: Namcot-106?
 
 	// Mappers 020-029
-	{"Famicom Disk System",		"Nintendo"}, // this isn't actually used, as FDS roms are stored in their own format.
-	{"VRC4a, VRC4c",		"Konami"},
-	{"VRC2a",			"Konami"},
-	{"VRC4e, VRC4f, VRC2b",		"Konami"},
-	{"VRC6a",			"Konami"},
-	{"VRC4b, VRC4d, VRC2c",		"Konami"},
-	{"VRC6b",			"Konami"},
-	{"VRC4 variant",		nullptr}, //investigate
-	{"Action 53",			"Homebrew"},
-	{"RET-CUFROM",			"Sealie Computing"},	// Homebrew
+	{"Famicom Disk System",		"Nintendo",		MIRRORING_MAPPER_HV}, // this isn't actually used, as FDS roms are stored in their own format.
+	{"VRC4a, VRC4c",		"Konami",		MIRRORING_MAPPER_HVAB},
+	{"VRC2a",			"Konami",		MIRRORING_MAPPER_HVAB},
+	{"VRC4e, VRC4f, VRC2b",		"Konami",		MIRRORING_MAPPER_HVAB},
+	{"VRC6a",			"Konami",		MIRRORING_MAPPER_VRC6},
+	{"VRC4b, VRC4d, VRC2c",		"Konami",		MIRRORING_MAPPER_HVAB},
+	{"VRC6b",			"Konami",		MIRRORING_MAPPER_VRC6},
+	{"VRC4 variant",		nullptr,		MIRRORING_MAPPER_HVAB}, //investigate
+	{"Action 53",			"Homebrew",		MIRRORING_MAPPER_HVAB},
+	{"RET-CUFROM",			"Sealie Computing",	MIRRORING_HEADER},	// Homebrew
 
 	// Mappers 030-039
-	{"UNROM 512",			"RetroUSB"},	// Homebrew
-	{"NSF Music Compilation",	"Homebrew"},
-	{"Irem G-101",			"Irem"},
-	{"Taito TC0190",		"Taito"},
-	{"BNROM, NINA-001",		nullptr},
-	{"J.Y. Company ASIC (8 KiB WRAM)", "J.Y. Company"},
-	{"TXC PCB 01-22000-400",	"TXC"},
-	{"MMC3 multicart",		"Nintendo"},
-	{"GNROM variant",		"Bit Corp."},
-	{"BNROM variant",		nullptr},
+	{"UNROM 512",			"RetroUSB",		MIRRORING_UNROM512},	// Homebrew
+	{"NSF Music Compilation",	"Homebrew",		MIRRORING_HEADER},
+	{"Irem G-101",			"Irem",			MIRRORING_MAPPER_HV /* see submapper */},
+	{"Taito TC0190",		"Taito",		MIRRORING_MAPPER_HV},
+	{"BNROM, NINA-001",		nullptr,		MIRRORING_HEADER},
+	{"J.Y. Company ASIC (8 KiB WRAM)", "J.Y. Company",	MIRRORING_MAPPER_JY},
+	{"TXC PCB 01-22000-400",	"TXC",			MIRRORING_MAPPER_HV},
+	{"MMC3 multicart",		"Nintendo",		MIRRORING_MAPPER_HV},
+	{"GNROM variant",		"Bit Corp.",		MIRRORING_HEADER},
+	{"BNROM variant",		nullptr,		MIRRORING_HEADER},
 
 	// Mappers 040-049
-	{"NTDEC 2722 (FDS conversion)",	"NTDEC"},
-	{"Caltron 6-in-1",		"Caltron"},
-	{"FDS conversion",		nullptr},
-	{"TONY-I, YS-612 (FDS conversion)", nullptr},
-	{"MMC3 multicart",		nullptr},
-	{"MMC3 multicart (GA23C)",	nullptr},
-	{"Rumble Station 15-in-1",	"Color Dreams"},	// NES-on-a-Chip
-	{"MMC3 multicart",		"Nintendo"},
-	{"Taito TC0690",		"Taito"},	// TODO: Taito-TC190V?
-	{"MMC3 multicart",		nullptr},
+	{"NTDEC 2722 (FDS conversion)",	"NTDEC",		MIRRORING_HEADER},
+	{"Caltron 6-in-1",		"Caltron",		MIRRORING_MAPPER_HV},
+	{"FDS conversion",		nullptr,		MIRRORING_MAPPER_HV},
+	{"TONY-I, YS-612 (FDS conversion)", nullptr,		MIRRORING_HEADER},
+	{"MMC3 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{"MMC3 multicart (GA23C)",	nullptr,		MIRRORING_MAPPER_HV},
+	{"Rumble Station 15-in-1",	"Color Dreams",		MIRRORING_HEADER},	// NES-on-a-Chip
+	{"MMC3 multicart",		"Nintendo",		MIRRORING_MAPPER_HV},
+	{"Taito TC0690",		"Taito",		MIRRORING_MAPPER_HV},	// TODO: Taito-TC190V?
+	{"MMC3 multicart",		nullptr,		MIRRORING_MAPPER_HV},
 
 	// Mappers 050-059
-	{"PCB 761214 (FDS conversion)",	"N-32"},
-	{nullptr,			nullptr},
-	{"MMC3 multicart",		nullptr},
-	{nullptr,			nullptr},
-	{"Novel Diamond 9999999-in-1",	nullptr},	// conflicting information
-	{"BTL-MARIO1-MALEE2",		nullptr},	// From UNIF
-	{"KS202 (unlicensed SMB3 reproduction)", nullptr},	// Some SMB3 unlicensed reproduction
-	{"Multicart",			nullptr},
-	{"(C)NROM-based multicart",	nullptr},
-	{"BMC-T3H53/BMC-D1038 multicart", nullptr},	// From UNIF
+	{"PCB 761214 (FDS conversion)",	"N-32",			MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"MMC3 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Novel Diamond 9999999-in-1",	nullptr,		MIRRORING_UNKNOWN},	// conflicting information
+	{"BTL-MARIO1-MALEE2",		nullptr,		MIRRORING_HEADER},	// From UNIF
+	{"KS202 (unlicensed SMB3 reproduction)", nullptr,	MIRRORING_MAPPER_HV},	// Some SMB3 unlicensed reproduction
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"(C)NROM-based multicart",	nullptr,		MIRRORING_MAPPER_HV},
+	{"BMC-T3H53/BMC-D1038 multicart", nullptr,		MIRRORING_MAPPER_HV},	// From UNIF
 
 	// Mappers 060-069
-	{"Reset-based NROM-128 4-in-1 multicart", nullptr},
-	{"20-in-1 multicart",		nullptr},
-	{"Super 700-in-1 multicart",	nullptr},
-	{"Powerful 250-in-1 multicart",	"NTDEC"},
-	{"Tengen RAMBO-1",		"Tengen"},
-	{"Irem H3001",			"Irem"},
-	{"GxROM, MHROM",		"Nintendo"},
-	{"Sunsoft-3",			"Sunsoft"},
-	{"Sunsoft-4",			"Sunsoft"},
-	{"Sunsoft FME-7",		"Sunsoft"},
+	{"Reset-based NROM-128 4-in-1 multicart", nullptr,	MIRRORING_HEADER},
+	{"20-in-1 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{"Super 700-in-1 multicart",	nullptr,		MIRRORING_MAPPER_HV},
+	{"Powerful 250-in-1 multicart",	"NTDEC",		MIRRORING_MAPPER_HV},
+	{"Tengen RAMBO-1",		"Tengen",		MIRRORING_MAPPER_HV},
+	{"Irem H3001",			"Irem",			MIRRORING_MAPPER_HV},
+	{"GxROM, MHROM",		"Nintendo",		MIRRORING_HEADER},
+	{"Sunsoft-3",			"Sunsoft",		MIRRORING_MAPPER_HVAB},
+	{"Sunsoft-4",			"Sunsoft",		MIRRORING_MAPPER_SUNSOFT4},
+	{"Sunsoft FME-7",		"Sunsoft",		MIRRORING_MAPPER_HVAB},
 
 	// Mappers 070-079
-	{"Family Trainer",		"Bandai"},
-	{"Codemasters (UNROM clone)",	"Codemasters"},
-	{"Jaleco JF-17",		"Jaleco"},	// TODO: Jaleco-2?
-	{"VRC3",			"Konami"},
-	{"43-393/860908C (MMC3 clone)",	"Waixing"},
-	{"VRC1",			"Konami"},
-	{"NAMCOT-3446 (Namcot 108 variant)",	"Namco"},	// TODO: Namco-109?
-	{"Napoleon Senki",		"Lenar"},		// TODO: Irem-1?
-	{"Holy Diver; Uchuusen - Cosmo Carrier", nullptr},	// TODO: Irem-74HC161?
-	{"NINA-03, NINA-06",		"American Video Entertainment"},
+	{"Family Trainer",		"Bandai",		MIRRORING_HEADER /* see wiki for a caveat */},
+	{"Codemasters (UNROM clone)",	"Codemasters",		MIRRORING_HEADER /* see submapper */},
+	{"Jaleco JF-17",		"Jaleco",		MIRRORING_HEADER},	// TODO: Jaleco-2?
+	{"VRC3",			"Konami",		MIRRORING_HEADER},
+	{"43-393/860908C (MMC3 clone)",	"Waixing",		MIRRORING_MAPPER_HV},
+	{"VRC1",			"Konami",		MIRRORING_MAPPER_HV},
+	{"NAMCOT-3446 (Namcot 108 variant)",	"Namco",	MIRRORING_HEADER},	// TODO: Namco-109?
+	{"Napoleon Senki",		"Lenar",		MIRRORING_4SCREEN},	// TODO: Irem-1? 
+	{"Holy Diver; Uchuusen - Cosmo Carrier", nullptr,	MIRRORING_MAPPER /* see submapper */},	// TODO: Irem-74HC161?
+	{"NINA-03, NINA-06",		"American Video Entertainment", MIRRORING_HEADER},
 
 	// Mappers 080-089
-	{"Taito X1-005",		"Taito"},
-	{"Super Gun",			"NTDEC"},
-	{"Taito X1-017 (incorrect PRG ROM bank ordering)", "Taito"},
-	{"Cony/Yoko",			"Cony/Yoko"},
-	{"PC-SMB2J",			nullptr},
-	{"VRC7",			"Konami"},
-	{"Jaleco JF-13",		"Jaleco"},	// TODO: Jaleco-4?
-	{"CNROM variant",		nullptr},	// TODO: Jaleco-1?
-	{"Namcot 118 variant",		nullptr},	// TODO: Namco-118?
-	{"Sunsoft-2 (Sunsoft-3 board)",	"Sunsoft"},
+	{"Taito X1-005",		"Taito",		MIRRORING_MAPPER_HV},
+	{"Super Gun",			"NTDEC",		MIRRORING_HEADER},
+	{"Taito X1-017 (incorrect PRG ROM bank ordering)", "Taito", MIRRORING_MAPPER_HV},
+	{"Cony/Yoko",			"Cony/Yoko",		MIRRORING_MAPPER_HVAB},
+	{"PC-SMB2J",			nullptr,		MIRRORING_UNKNOWN},
+	{"VRC7",			"Konami",		MIRRORING_MAPPER_HVAB},
+	{"Jaleco JF-13",		"Jaleco",		MIRRORING_HEADER},	// TODO: Jaleco-4?
+	{"CNROM variant",		nullptr,		MIRRORING_HEADER},	// TODO: Jaleco-1?
+	{"Namcot 118 variant",		nullptr,		MIRRORING_HEADER},	// TODO: Namco-118?
+	{"Sunsoft-2 (Sunsoft-3 board)",	"Sunsoft",		MIRRORING_MAPPER_AB},
 
 	// Mappers 090-099
-	{"J.Y. Company (simple nametable control)", "J.Y. Company"},
-	{"J.Y. Company (Super Fighter III)", "J.Y. Company"},
-	{"Moero!! Pro",			"Jaleco"},	// TODO: Jaleco-3?
-	{"Sunsoft-2 (Sunsoft-3R board)", "Sunsoft"},	// TODO: 74161A?
-	{"HVC-UN1ROM",			"Nintendo"},	// TODO: 74161B?
-	{"NAMCOT-3425",			"Namco"},	// TODO: Namcot?
-	{"Oeka Kids",			"Bandai"},
-	{"Irem TAM-S1",			"Irem"},	// TODO: Irem-2?
-	{nullptr,			nullptr},
-	{"CNROM (Vs. System)",		"Nintendo"},
+	{"J.Y. Company (simple nametable control)", "J.Y. Company", MIRRORING_MAPPER_HVAB},
+	{"J.Y. Company (Super Fighter III)", "J.Y. Company",	MIRRORING_MAPPER_HV /* see submapper */},
+	{"Moero!! Pro",			"Jaleco",		MIRRORING_HEADER},	// TODO: Jaleco-3?
+	{"Sunsoft-2 (Sunsoft-3R board)", "Sunsoft",		MIRRORING_HEADER},	// TODO: 74161A?
+	{"HVC-UN1ROM",			"Nintendo",		MIRRORING_HEADER},	// TODO: 74161B?
+	{"NAMCOT-3425",			"Namco",		MIRRORING_MAPPER_NAMCOT3425},	// TODO: Namcot?
+	{"Oeka Kids",			"Bandai",		MIRRORING_HEADER},
+	{"Irem TAM-S1",			"Irem",			MIRRORING_MAPPER_HV},	// TODO: Irem-2?
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"CNROM (Vs. System)",		"Nintendo",		MIRRORING_4SCREEN},
 
 	// Mappers 100-109
-	{"MMC3 variant (hacked ROMs)",	nullptr},	// Also used for UNIF
-	{"Jaleco JF-10 (misdump)",	"Jaleceo"},
-	{nullptr,			nullptr},
-	{"Doki Doki Panic (FDS conversion)", nullptr},
-	{"PEGASUS 5 IN 1",		nullptr},
-	{"NES-EVENT (MMC1 variant) (Nintendo World Championships 1990)", "Nintendo"},
-	{"Super Mario Bros. 3 (bootleg)", nullptr},
-	{"Magic Dragon",		"Magicseries"},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
+	{"MMC3 variant (hacked ROMs)",	nullptr,		MIRRORING_MAPPER_HV},	// Also used for UNIF
+	{"Jaleco JF-10 (misdump)",	"Jaleceo",		MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Doki Doki Panic (FDS conversion)", nullptr,		MIRRORING_MAPPER_HV},
+	{"PEGASUS 5 IN 1",		nullptr,		MIRRORING_HEADER},
+	{"NES-EVENT (MMC1 variant) (Nintendo World Championships 1990)", "Nintendo", MIRRORING_MAPPER_HVAB},
+	{"Super Mario Bros. 3 (bootleg)", nullptr,		MIRRORING_MAPPER_HV},
+	{"Magic Dragon",		"Magicseries",		MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
 
 	// Mappers 110-119
-	{nullptr,			nullptr},
-	{"Cheapocabra GTROM 512k flash board", "Membler Industries"},	// Homebrew
-	{"Namcot 118 variant",		nullptr},
-	{"NINA-03/06 multicart",	nullptr},
-	{"MMC3 clone (scrambled registers)", nullptr},
-	{"Kǎshèng SFC-02B/-03/-004 (MMC3 clone)", "Kǎshèng"},
-	{"SOMARI-P (Huang-1/Huang-2)",	"Gouder"},
-	{nullptr,			nullptr},
-	{"TxSROM",			"Nintendo"},	// TODO: MMC-3+TLS?
-	{"TQROM",			"Nintendo"},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Cheapocabra GTROM 512k flash board", "Membler Industries", MIRRORING_MAPPER_GTROM},	// Homebrew
+	{"Namcot 118 variant",		nullptr,		MIRRORING_MAPPER_HV},
+	{"NINA-03/06 multicart",	nullptr,		MIRRORING_MAPPER_HV},
+	{"MMC3 clone (scrambled registers)", nullptr,		MIRRORING_MAPPER_HV},
+	{"Kǎshèng SFC-02B/-03/-004 (MMC3 clone)", "Kǎshèng",	MIRRORING_MAPPER_HV},
+	{"SOMARI-P (Huang-1/Huang-2)",	"Gouder",		MIRRORING_MAPPER_HVAB},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"TxSROM",			"Nintendo",		MIRRORING_MAPPER_TxSROM},	// TODO: MMC-3+TLS?
+	{"TQROM",			"Nintendo",		MIRRORING_MAPPER_HV},
 
 	// Mappers 120-129
-	{nullptr,			nullptr},
-	{"Kǎshèng A9711 and A9713 (MMC3 clone)", "Kǎshèng"},
-	{nullptr,			nullptr},
-	{"Kǎshèng H2288 (MMC3 clone)",	"Kǎshèng"},
-	{nullptr,			nullptr},
-	{"Monty no Doki Doki Daisassō (FDS conversion)", "Whirlwind Manu"},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Kǎshèng A9711 and A9713 (MMC3 clone)", "Kǎshèng",	MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Kǎshèng H2288 (MMC3 clone)",	"Kǎshèng",		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Monty no Doki Doki Daisassō (FDS conversion)", "Whirlwind Manu", MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
 
 	// Mappers 130-139
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{"TXC 05-00002-010 ASIC",	"TXC"},
-	{"Jovial Race",			"Sachen"},
-	{"T4A54A, WX-KB4K, BS-5652 (MMC3 clone)", nullptr},
-	{nullptr,			nullptr},
-	{"Sachen 3011",			"Sachen"},
-	{"Sachen 8259D",		"Sachen"},
-	{"Sachen 8259B",		"Sachen"},
-	{"Sachen 8259C",		"Sachen"},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"TXC 05-00002-010 ASIC",	"TXC",			MIRRORING_HEADER},
+	{"Jovial Race",			"Sachen",		MIRRORING_HEADER},
+	{"T4A54A, WX-KB4K, BS-5652 (MMC3 clone)", nullptr,	MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Sachen 3011",			"Sachen",		MIRRORING_HEADER},
+	{"Sachen 8259D",		"Sachen",		MIRRORING_MAPPER_SACHEN8259},
+	{"Sachen 8259B",		"Sachen",		MIRRORING_MAPPER_SACHEN8259},
+	{"Sachen 8259C",		"Sachen",		MIRRORING_MAPPER_SACHEN8259},
 
 	// Mappers 140-149
-	{"Jaleco JF-11, JF-14 (GNROM variant)", "Jaleco"},
-	{"Sachen 8259A",		"Sachen"},
-	{"Kaiser KS202 (FDS conversions)", "Kaiser"},
-	{"Copy-protected NROM",		nullptr},
-	{"Death Race (Color Dreams variant)", "American Game Cartridges"},
-	{"Sidewinder (CNROM clone)",	"Sachen"},
-	{"Galactic Crusader (NINA-06 clone)", nullptr},
-	{"Sachen 3018",			"Sachen"},
-	{"Sachen SA-008-A, Tengen 800008",	"Sachen / Tengen"},
-	{"SA-0036 (CNROM clone)",	"Sachen"},
+	{"Jaleco JF-11, JF-14 (GNROM variant)", "Jaleco",	MIRRORING_HEADER},
+	{"Sachen 8259A",		"Sachen",		MIRRORING_MAPPER_SACHEN8259},
+	{"Kaiser KS202 (FDS conversions)", "Kaiser",		MIRRORING_HEADER},
+	{"Copy-protected NROM",		nullptr,		MIRRORING_HEADER},
+	{"Death Race (Color Dreams variant)", "American Game Cartridges", MIRRORING_HEADER},
+	{"Sidewinder (CNROM clone)",	"Sachen",		MIRRORING_HEADER},
+	{"Galactic Crusader (NINA-06 clone)", nullptr,		MIRRORING_HEADER},
+	{"Sachen 3018",			"Sachen",		MIRRORING_HEADER},
+	{"Sachen SA-008-A, Tengen 800008",	"Sachen / Tengen", MIRRORING_HEADER},
+	{"SA-0036 (CNROM clone)",	"Sachen",		MIRRORING_HEADER},
 
 	// Mappers 150-159
-	{"Sachen SA-015, SA-630",	"Sachen"},
-	{"VRC1 (Vs. System)",		"Konami"},
-	{"Kaiser KS202 (FDS conversion)", "Kaiser"},
-	{"Bandai FCG: LZ93D50 with SRAM", "Bandai"},
-	{"NAMCOT-3453",			"Namco"},
-	{"MMC1A",			"Nintendo"},
-	{"DIS23C01",			"Daou Infosys"},
-	{"Datach Joint ROM System",	"Bandai"},
-	{"Tengen 800037",		"Tengen"},
-	{"Bandai LZ93D50 with 24C01",	"Bandai"},
+	{"Sachen SA-015, SA-630",	"Sachen",		MIRRORING_MAPPER_SACHEN74LS374N},
+	{"VRC1 (Vs. System)",		"Konami",		MIRRORING_4SCREEN},
+	{"Kaiser KS202 (FDS conversion)", "Kaiser",		MIRRORING_MAPPER_AB},
+	{"Bandai FCG: LZ93D50 with SRAM", "Bandai",		MIRRORING_MAPPER_HVAB},
+	{"NAMCOT-3453",			"Namco",		MIRRORING_MAPPER_AB},
+	{"MMC1A",			"Nintendo",		MIRRORING_MAPPER_HVAB},
+	{"DIS23C01",			"Daou Infosys",		MIRRORING_MAPPER_DIS23C01},
+	{"Datach Joint ROM System",	"Bandai",		MIRRORING_MAPPER_HVAB},
+	{"Tengen 800037",		"Tengen",		MIRRORING_MAPPER_TxSROM},
+	{"Bandai LZ93D50 with 24C01",	"Bandai",		MIRRORING_MAPPER_HVAB},
 
 	// Mappers 160-169
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{"Nanjing",			"Nanjing"},
-	{"Waixing (unlicensed)",	"Waixing"},
-	{"Fire Emblem (unlicensed) (MMC2+MMC3 hybrid)", nullptr},
-	{"Subor (variant 1)",		"Subor"},
-	{"Subor (variant 2)",		"Subor"},
-	{"Racermate Challenge 2",	"Racermate, Inc."},
-	{"Yuxing",			"Yuxing"},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Nanjing",			"Nanjing",		MIRRORING_HEADER},
+	{"Waixing (unlicensed)",	"Waixing",		MIRRORING_HEADER},
+	{"Fire Emblem (unlicensed) (MMC2+MMC3 hybrid)", nullptr, MIRRORING_MAPPER_HV},
+	{"Subor (variant 1)",		"Subor",		MIRRORING_HEADER},
+	{"Subor (variant 2)",		"Subor",		MIRRORING_HEADER},
+	{"Racermate Challenge 2",	"Racermate, Inc.",	MIRRORING_HEADER},
+	{"Yuxing",			"Yuxing",		MIRRORING_UNKNOWN},
 
 	// Mappers 170-179
-	{nullptr,			nullptr},
-	{"Kaiser KS-7058",		"Kaiser"},
-	{"Super Mega P-4040",		nullptr},
-	{"Idea-Tek ET-xx",		"Idea-Tek"},
-	{"Multicart",			nullptr},
-	{nullptr,			nullptr},
-	{"Waixing multicart (MMC3 clone)", "Waixing"},
-	{"BNROM variant",		"Hénggé Diànzǐ"},
-	{"Waixing / Nanjing / Jncota / Henge Dianzi / GameStar", "Waixing / Nanjing / Jncota / Henge Dianzi / GameStar"},
-	{nullptr,			nullptr},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Kaiser KS-7058",		"Kaiser",		MIRRORING_HEADER},
+	{"Super Mega P-4040",		nullptr,		MIRRORING_MAPPER_HV},
+	{"Idea-Tek ET-xx",		"Idea-Tek",		MIRRORING_HEADER},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Waixing multicart (MMC3 clone)", "Waixing",		MIRRORING_MAPPER_HVAB},
+	{"BNROM variant",		"Hénggé Diànzǐ",	MIRRORING_MAPPER_HV},
+	{"Waixing / Nanjing / Jncota / Henge Dianzi / GameStar", "Waixing / Nanjing / Jncota / Henge Dianzi / GameStar", MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
 
 	// Mappers 180-189
-	{"Crazy Climber (UNROM clone)",	"Nichibutsu"},
-	{"Seicross v2 (FCEUX hack)",	"Nichibutsu"},
-	{"MMC3 clone (scrambled registers) (same as 114)", nullptr},
-	{"Suikan Pipe (VRC4e clone)",	nullptr},
-	{"Sunsoft-1",			"Sunsoft"},
-	{"CNROM with weak copy protection", nullptr},	// Submapper field indicates required value for CHR banking. (TODO: VROM-disable?)
-	{"Study Box",			"Fukutake Shoten"},
-	{"Kǎshèng A98402 (MMC3 clone)",	"Kǎshèng"},
-	{"Bandai Karaoke Studio",	"Bandai"},
-	{"Thunder Warrior (MMC3 clone)", nullptr},
+	{"Crazy Climber (UNROM clone)",	"Nichibutsu",		MIRRORING_HEADER},
+	{"Seicross v2 (FCEUX hack)",	"Nichibutsu",		MIRRORING_HEADER},
+	{"MMC3 clone (scrambled registers) (same as 114)", nullptr, MIRRORING_MAPPER_HV},
+	{"Suikan Pipe (VRC4e clone)",	nullptr,		MIRRORING_MAPPER_HVAB},
+	{"Sunsoft-1",			"Sunsoft",		MIRRORING_HEADER},
+	{"CNROM with weak copy protection", nullptr,		MIRRORING_HEADER},	// Submapper field indicates required value for CHR banking. (TODO: VROM-disable?)
+	{"Study Box",			"Fukutake Shoten",	MIRRORING_HEADER},
+	{"Kǎshèng A98402 (MMC3 clone)",	"Kǎshèng",		MIRRORING_MAPPER_HV},
+	{"Bandai Karaoke Studio",	"Bandai",		MIRRORING_MAPPER_HV},
+	{"Thunder Warrior (MMC3 clone)", nullptr,		MIRRORING_MAPPER_HV},
 
 	// Mappers 190-199
-	{"Magic Kid GooGoo",		nullptr},
-	{"MMC3 clone",			nullptr},
-	{"MMC3 clone",			nullptr},
-	{"NTDEC TC-112",		"NTDEC"},
-	{"MMC3 clone",			nullptr},
-	{"Waixing FS303 (MMC3 clone)",	"Waixing"},
-	{"Mario bootleg (MMC3 clone)",	nullptr},
-	{"Kǎshèng (MMC3 clone)",	"Kǎshèng"},
-	{"Tūnshí Tiāndì - Sānguó Wàizhuàn", nullptr},
-	{"Waixing (clone of either Mapper 004 or 176)", "Waixing"},
+	{"Magic Kid GooGoo",		nullptr,		MIRRORING_HEADER},
+	{"MMC3 clone",			nullptr,		MIRRORING_MAPPER_HV},
+	{"MMC3 clone",			nullptr,		MIRRORING_MAPPER_HV},
+	{"NTDEC TC-112",		"NTDEC",		MIRRORING_MAPPER_HV},
+	{"MMC3 clone",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Waixing FS303 (MMC3 clone)",	"Waixing",		MIRRORING_MAPPER_HV},
+	{"Mario bootleg (MMC3 clone)",	nullptr,		MIRRORING_MAPPER_HV},
+	{"Kǎshèng (MMC3 clone)",	"Kǎshèng",		MIRRORING_MAPPER_HV /* not sure */},
+	{"Tūnshí Tiāndì - Sānguó Wàizhuàn", nullptr,		MIRRORING_MAPPER_HV},
+	{"Waixing (clone of either Mapper 004 or 176)", "Waixing", MIRRORING_MAPPER_HVAB},
 
 	// Mappers 200-209
-	{"Multicart",			nullptr},
-	{"NROM-256 multicart",		nullptr},
-	{"150-in-1 multicart",		nullptr},
-	{"35-in-1 multicart",		nullptr},
-	{nullptr,			nullptr},
-	{"MMC3 multicart",		nullptr},
-	{"DxROM (Tengen MIMIC-1, Namcot 118)", "Nintendo"},
-	{"Fudou Myouou Den",		"Taito"},
-	{"Street Fighter IV (unlicensed) (MMC3 clone)", nullptr},
-	{"J.Y. Company (MMC2/MMC4 clone)", "J.Y. Company"},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"NROM-256 multicart",		nullptr,		MIRRORING_HEADER},
+	{"150-in-1 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{"35-in-1 multicart",		nullptr,		MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"MMC3 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{"DxROM (Tengen MIMIC-1, Namcot 118)", "Nintendo",	MIRRORING_HEADER},
+	{"Fudou Myouou Den",		"Taito",		MIRRORING_MAPPER_NAMCOT3425},
+	{"Street Fighter IV (unlicensed) (MMC3 clone)", nullptr, MIRRORING_MAPPER_HV},
+	{"J.Y. Company (MMC2/MMC4 clone)", "J.Y. Company",	MIRRORING_MAPPER_JY},
 
 	// Mappers 210-219
-	{"Namcot 175, 340",		"Namco"},
-	{"J.Y. Company (extended nametable control)", "J.Y. Company"},
-	{"BMC Super HiK 300-in-1",	nullptr},
-	{"(C)NROM-based multicart (same as 058)", nullptr},
-	{nullptr,			nullptr},
-	{"Sugar Softec (MMC3 clone)",	"Sugar Softec"},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
-	{"Magic Floor",			"Homebrew"},
-	{"Kǎshèng A9461 (MMC3 clone)",	"Kǎshèng"},
+	{"Namcot 175, 340",		"Namco",		MIRRORING_MAPPER_HVAB /* see submapper */},
+	{"J.Y. Company (extended nametable control)", "J.Y. Company", MIRRORING_MAPPER_JY},
+	{"BMC Super HiK 300-in-1",	nullptr,		MIRROIRNG_MAPPER_HV},
+	{"(C)NROM-based multicart (same as 058)", nullptr,	MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Sugar Softec (MMC3 clone)",	"Sugar Softec",		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Magic Floor",			"Homebrew",		MIRRORING_MAGICFLOOR},
+	{"Kǎshèng A9461 (MMC3 clone)",	"Kǎshèng",		MIRRORING_MAPPER_HV},
 
 	// Mappers 220-229
-	{"Summer Carnival '92 - Recca",	"Naxat Soft"},
-	{"NTDEC N625092",		"NTDEC"},
-	{"CTC-31 (VRC2 + 74xx)",	nullptr},
-	{nullptr,			nullptr},
-	{"Jncota KT-008",		"Jncota"},
-	{"Multicart",			nullptr},
-	{"Multicart",			nullptr},
-	{"Multicart",			nullptr},
-	{"Active Enterprises",		"Active Enterprises"},
-	{"BMC 31-IN-1",			nullptr},
+	{"Summer Carnival '92 - Recca",	"Naxat Soft",		MIRRORING_UNKNOWN /* TODO */},
+	{"NTDEC N625092",		"NTDEC",		MIRRORING_MAPPER_HV},
+	{"CTC-31 (VRC2 + 74xx)",	nullptr,		MIRRORING_MAPPER_HVAB},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Jncota KT-008",		"Jncota",		MIRRORING_UNKNOWN /* TODO */},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Active Enterprises",		"Active Enterprises",	MIRRORING_MAPPER_HV},
+	{"BMC 31-IN-1",			nullptr,		MIRRORING_MAPPER_HV},
 
 	// Mappers 230-239
-	{"Multicart",			nullptr},
-	{"Multicart",			nullptr},
-	{"Codemasters Quattro",		"Codemasters"},
-	{"Multicart",			nullptr},
-	{"Maxi 15 multicart",		nullptr},
-	{"Golden Game 150-in-1 multicart", nullptr},
-	{"Realtec 8155",		"Realtec"},
-	{"Teletubbies 420-in-1 multicart", nullptr},
-	{nullptr,			nullptr},
-	{nullptr,			nullptr},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Codemasters Quattro",		"Codemasters",		MIRRORING_HEADER},
+	{"Multicart",			nullptr,		MIRRORING_MAPPER_233},
+	{"Maxi 15 multicart",		nullptr,		MIRRORING_MAPPER_HV},
+	{"Golden Game 150-in-1 multicart", nullptr,		MIRRORING_MAPPER_235},
+	{"Realtec 8155",		"Realtec",		MIRRORING_MAPPER_HV},
+	{"Teletubbies 420-in-1 multicart", nullptr		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
 
 	// Mappers 240-249
-	{"Multicart",			nullptr},
-	{"BNROM variant (similar to 034)", nullptr},
-	{"Unlicensed",			nullptr},
-	{"Sachen SA-020A",		"Sachen"},
-	{nullptr,			nullptr},
-	{"MMC3 clone",			nullptr},
-	{"Fēngshénbǎng: Fúmó Sān Tàizǐ (C&E)", "C&E"},
-	{nullptr,			nullptr},
-	{"Kǎshèng SFC-02B/-03/-004 (MMC3 clone) (incorrect assignment; should be 115)", "Kǎshèng"},
-	{nullptr,			nullptr},
+	{"Multicart",			nullptr,		MIRRORING_HEADER},
+	{"BNROM variant (similar to 034)", nullptr,		MIRRORING_HEADER},
+	{"Unlicensed",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Sachen SA-020A",		"Sachen",		MIRRORING_MAPPER_SACHEN74LS374N},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"MMC3 clone",			nullptr,		MIRRORING_MAPPER_HV},
+	{"Fēngshénbǎng: Fúmó Sān Tàizǐ (C&E)", "C&E",		MIRRORING_HEADER},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Kǎshèng SFC-02B/-03/-004 (MMC3 clone) (incorrect assignment; should be 115)", "Kǎshèng", MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
 
 	// Mappers 250-255
-	{"Nitra (MMC3 clone)",		"Nitra"},
-	{nullptr,			nullptr},
-	{"Waixing - Sangokushi",	"Waixing"},
-	{"Dragon Ball Z: Kyōshū! Saiya-jin (VRC4 clone)", "Waixing"},
-	{"Pikachu Y2K of crypted ROMs",	nullptr},
-	{"110-in-1 multicart (same as 225)",		nullptr},
+	{"Nitra (MMC3 clone)",		"Nitra",		MIRRORING_MAPPER_HV},
+	{nullptr,			nullptr,		MIRRORING_UNKNOWN},
+	{"Waixing - Sangokushi",	"Waixing",		MIRRORING_MAPPER_HVAB},
+	{"Dragon Ball Z: Kyōshū! Saiya-jin (VRC4 clone)", "Waixing", MIRRORING_MAPPER_HVAB},
+	{"Pikachu Y2K of crypted ROMs",	nullptr,		MIRRORING_MAPPER_HV},
+	{"110-in-1 multicart (same as 225)", nullptr,		MIRRORING_MAPPER_HV},
 };
 
 /**
@@ -540,7 +587,7 @@ const NESMappersPrivate::MapperEntry NESMappersPrivate::mappers_plane1[] = {
 	// Mappers 340-349
 	{"35-in-1 multicart",		nullptr},
 	{"Simple 4-in-1 multicart",	nullptr},
-	{"COOLGIRL multicart (Homebrew)", "Homebrew"},	// Homebrew
+	{"COOLGIRL multicart (Homebrew)", "Homebrew",		MIRRORING_UNKNOWN /* FIXME: supports HVAB4 */},	// Homebrew
 	{nullptr,			nullptr},
 	{"Kuai Da Jin Ka Zhong Ji Tiao Zhan 3-in-1 multicart", nullptr},
 	{"New Star 6-in-1 Game Cartridge multicart", "New Star"},
@@ -728,9 +775,8 @@ const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::vrc4bd_vrc2c_su
 
 // Mapper 032: Irem G101
 const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::irem_g101_submappers[] = {
-	// TODO: Some field to indicate mirroring override?
 	{0, 0,   0, "Programmable mirroring"},
-	{1, 0,   0, "Fixed one-screen mirroring"},
+	{1, 0,   0, "Fixed one-screen mirroring", MIRRORING_1SCREEN_B},
 };
 
 // Mapper 034: BNROM / NINA-001
@@ -747,14 +793,14 @@ const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::sunsoft4_submap
 
 // Mapper 071: Codemasters
 const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::codemasters_submappers[] = {
-	{1, 0,   0, "Programmable one-screen mirroring (Fire Hawk)"},
+	{1, 0,   0, "Programmable one-screen mirroring (Fire Hawk)", MIRRORING_MAPPER_AB},
 };
 
 // Mapper 078: Cosmo Carrier / Holy Diver
 const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::mapper078_submappers[] = {
-	{1, 0,      0, "Programmable one-screen mirroring (Uchuusen: Cosmo Carrier)"},
+	{1, 0,      0, "Programmable one-screen mirroring (Uchuusen: Cosmo Carrier)", MIRRORING_MAPPER_AB},
 	{2, 0, 0xFFFF,  "Fixed vertical mirroring + WRAM"},
-	{3, 0,      0, "Programmable H/V mirroring (Holy Diver)"},
+	{3, 0,      0, "Programmable H/V mirroring (Holy Diver)", MIRRORING_MAPPER_HV},
 };
 
 // Mapper 083: Cony/Yoko
@@ -780,8 +826,8 @@ const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::mapper197_subma
 
 // Mapper 210: Namcot 175, 340
 const struct NESMappersPrivate::SubmapperInfo NESMappersPrivate::namcot_175_340_submappers[] = {
-	{1, 0,   0, "Namcot 175 (fixed mirroring)"},
-	{2, 0,   0, "Namcot 340 (programmable mirroring)"},
+	{1, 0,   0, "Namcot 175 (fixed mirroring)",        MIRRORING_HEADER},
+	{2, 0,   0, "Namcot 340 (programmable mirroring)", MIRRORING_MAPPER_HVAB},
 };
 
 // Mapper 215: Sugar Softec
@@ -1052,6 +1098,64 @@ const char *NESMappers::lookup_nes2_submapper(int mapper, int submapper)
 			NESMappersPrivate::SubmapperInfo_compar));
 	// TODO: Return the "deprecated" value?
 	return (res2 ? res2->desc : nullptr);
+}
+
+const char *NESMappers::lookup_ines_mirroring(int mapper, int submapper, bool vert, bool four)
+{
+	int mirror = MIRRORING_UNKNOWN; // TODO: fetch this from table
+	int submapper_mirror = MIRRORING_UNKNOWN; // TODO: fetch this from table
+
+	if (submapper_mirror != MIRRORING_UNKNOWN) // Override mapper's value
+		mirror = submapper_mirror;
+
+	// Handle some special cases
+	switch (mirror) {
+		case MIRRORING_UNKNOWN:
+			// Default to showing the header flags
+			mirror = MIRRORING_HEADER;
+			break;
+		case MIRRORING_UNROM512:
+			// xxxx0xx0 - Horizontal mirroring
+			// xxxx0xx1 - Vertical mirroring
+			// xxxx1xx0 - Mapper-controlled, single screen
+			// xxxx1xx1 - Four screens
+			mirror = four && !vert ? MIRRORING_MAPPER_AB : MIRRORING_HEADER;
+			break;
+		case MIRRORING_BANDAI_FAMILYTRAINER:
+			// Mapper 152 should be used instead of setting 4sc on this mapper (70).
+			mirror = four ? MIRRORING_MAPPER_AB : MIRRORING_HEADER;
+		case MIRRORING_MAGICFLOOR:
+			// Magic Floor maps CIRAM across the entire PPU address space
+			// CIRAM A10:   A10  A11  A12  A13
+			// iNES flag6: 0xx1 0xx0 1xx0 1xx1
+			//       $0000   aB   aa   aa   aa < pattern table 1
+			//       $0800   aB   BB   aa   aa
+			//       $1000   aB   aa   BB   aa < pattern table 2
+			//       $1800   aB   BB   BB   aa
+			//       $2000   aB   aa   aa   BB < nametables
+			//       $2800   aB   BB   aa   BB
+			//       $3000   aB   aa   BB   BB < unused memory
+			//       $3800   aB   BB   BB   BB
+			// Mirroring:  Vert Hori 1scA 1scB
+			//
+			// It's important to differentiate between 1scA and 1scB as it affects
+			// pattern table mapping.
+			mirror = four ? (vert ? MIRRORING_1SCREEN_B : MIRRORING_1SCREEN_A)
+				      : MIRRORING_HEADER;
+			break;
+	}
+
+	if (mirror == MIRRORING_1SCREEN_A)
+		return C_("NES|Mirroring", "Single Screen (A)");
+	if (mirror == MIRRORING_1SCREEN_B)
+		return C_("NES|Mirroring", "Single Screen (B)");
+	if (four || mirror == MIRRORING_4SCREEN)
+		return C_("NES|Mirroring", "Four Screeens");
+
+	if (mirror == MIRRORING_HEADER)
+		return vert ? C_("NES|Mirroring", "Vertical") : C_("NES|Mirroring", "Horizontal");
+
+	// TODO:
 }
 
 }
