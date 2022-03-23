@@ -87,6 +87,11 @@ class LuaPrivate final : public RomDataPrivate
 
 	private:
 		/**
+		 * Parses lua 2.x header into individual fields.
+		 */
+		void parse2(uint8_t version, uint8_t *p);
+
+		/**
 		 * Parses lua 3.x header into individual fields.
 		 */
 		void parse3(uint8_t version, uint8_t *p);
@@ -183,28 +188,34 @@ void LuaPrivate::parse()
 	uint8_t *p = header + 4;
 	uint8_t version = *p++;
 
-	/* We don't parse 2.x.
-	 *
-	 * Here is the header structure of 2.3/2.5 (2.5-only fields are marked with %)
-	 * - (4) # "\033Lua" magic
-	 * - (1) # version byte (0x23 or 0x25)
-	 * - (1) % size of word (MUST be 2)
-	 * - (1) % size of float (MUST be 4)
-	 * - (1) % pointer size (MUST match the host ptr size)
-	 * - (2) # test word 0x1234
-	 * - (4) # test float 0.123456789e-23
-	 * total size: 11 (2.3), 14 (2.5)
-	 *
-	 * Note that the float is an actual `float' type, not lua_Number (aka real).
-	 *
-	 * TODO: Actually implement it. I'd put it into a separate func.
-	 */
 	if (version < 0x31)
-		return;
-	else if (version < 0x40) // Versions 3.x
+		parse2(version, p);
+	else if (version < 0x40)
 		parse3(version, p);
 	else
 		parse4(version, p);
+}
+
+/*
+ * Parses lua 2.x header into individual fields.
+ */
+void LuaPrivate::parse2(uint8_t version, uint8_t *p) {
+	if (version == 0x25) {
+		// these two are hardcoded to be 2 and 4
+		p++; // word size
+		p++; // float size
+		size_t_size = *p++; // pointer size
+	}
+
+	const uint8_t *test_word = (const uint8_t*)"\x12\x34"; // 0x1234
+	if (compare(p, test_word, 2, 0))
+		endianness = 0;
+	else if (compare(p, test_word, 2, 1))
+		endianness = 1;
+
+	const uint8_t *test_float = (const uint8_t*)"\x17\xBF\x0A\x46"; // 0.123456789e-23
+	if (endianness != -1 && compare(p + 2, test_float, 4, !endianness))
+		is_float_swapped = true;
 }
 
 /**
