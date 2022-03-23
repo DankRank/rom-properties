@@ -70,6 +70,7 @@ class LuaPrivate final : public RomDataPrivate
 		 */
 		static Version to_version(uint8_t version);
 
+	private:
 		/**
 		 * Compares two byte ranges.
 		 * @param lhs buffer to be compared
@@ -80,6 +81,27 @@ class LuaPrivate final : public RomDataPrivate
 		 */
 		static bool compare(const uint8_t *lhs, const uint8_t *rhs, size_t len, int endianness);
 
+		/**
+		 * Figures out endianness by comparing an integer with a magic constant
+		 * @param test_int64 int64 big endian representation of magic
+		 * @param p number to check
+		 * @param len length of the number
+		 * @return the endianness
+		 */
+		static int detect_endianness_int(const char *test_int64, const uint8_t *p, size_t len);
+
+		/**
+		 * Figures out endianness and type by comparing a number with a magic constant
+		 * @param test_int64 int64 big endian representation of magic
+		 * @param test_float32 float32 big endian representation of magic
+		 * @param test_float64 float64 big endian representation of magic
+		 * @param p number to check
+		 * @param len length of the number
+		 * @param is_integral (out) whether number is int or float
+		 * @return the endianness
+		 */
+		static int detect_endianness(const char *test_int64, const char *test_float32, const char *test_float64, const uint8_t *p, size_t len, int *is_integral);
+	public:
 		/**
 		 * Parses lua header into individual fields.
 		 */
@@ -170,6 +192,67 @@ bool LuaPrivate::compare(const uint8_t *lhs, const uint8_t *rhs, size_t len, int
 }
 
 /**
+ * Figures out endianness by comparing an integer with a magic constant
+ * @param test_int64 int64 big endian representation of magic
+ * @param p number to check
+ * @param len length of the number
+ * @return the endianness
+ */
+int LuaPrivate::detect_endianness_int(const char *test_int64, const uint8_t *p, size_t len) {
+	const uint8_t *test_int = nullptr;
+	if (len == 8)
+		test_int = (const uint8_t*)test_int64;
+	else if (len == 4)
+		test_int = (const uint8_t*)test_int64 + 4;
+	else
+		return -1;
+
+	if (compare(p, test_int, len, 0))
+		return 0;
+	else if (compare(p, test_int, len, 1))
+		return 1;
+	else
+		return -1;
+}
+
+/**
+ * Figures out endianness and type by comparing a number with a magic constant
+ * @param test_int64 int64 big endian representation of magic
+ * @param test_float32 float32 big endian representation of magic
+ * @param test_float64 float64 big endian representation of magic
+ * @param p number to check
+ * @param len length of the number
+ * @param is_integral (out) whether number is int or float
+ * @return the endianness
+ */
+int LuaPrivate::detect_endianness(const char *test_int64, const char *test_float32, const char *test_float64, const uint8_t *p, size_t len, int *is_integral) {
+	const uint8_t *test_int = nullptr;
+	const uint8_t *test_float = nullptr;
+	if (len == 8) {
+		test_int = (const uint8_t*)test_int64;
+		test_float = (const uint8_t*)test_float64;
+	} else if (len == 4) {
+		test_int = (const uint8_t*)test_int64 + 4;
+		test_float = (const uint8_t*)test_float32;
+	} else {
+		*is_integral = -1;
+		return -1;
+	}
+	int endianness = -1;
+	if (compare(p, test_float, len, 0))
+		endianness = 0, *is_integral = 1;
+	else if (compare(p, test_float, len, 1))
+		endianness = 1, *is_integral = 1;
+	else if (compare(p, test_int, len, 0))
+		endianness = 0, *is_integral = 1;
+	else if (compare(p, test_int, len, 1))
+		endianness = 1, *is_integral = 1;
+	else
+		endianness = -1, *is_integral = -1;
+	return endianness;
+}
+
+/**
  * Parses lua header into individual fields.
  */
 void LuaPrivate::parse()
@@ -240,31 +323,9 @@ void LuaPrivate::parse3(uint8_t version, uint8_t *p) {
 		return;
 	}
 
-	// TODO: This is mostly copy-pasted from parse4, is there a way to deduplicate this code?
-	const uint8_t *test_int64, *test_float32, *test_float64;
 	// This is supposed to be 3.14159265358979323846e8 cast to lua_Number
-	test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x12\xB9\xB0\xA1";
-	test_float32 = (const uint8_t*)"\x4D\x95\xCD\x85";
-	test_float64 = (const uint8_t*)"\x41\xB2\xB9\xB0\xA1\x5B\xE6\x12";
-	const uint8_t *test_int = nullptr;
-	const uint8_t *test_float = nullptr;
-	if (Number_size == 8) {
-		test_int = test_int64;
-		test_float = test_float64;
-	} else if (Number_size == 4) {
-		test_int = test_int64 + 4;
-		test_float = test_float32;
-	}
-	if (test_int && test_float) {
-		if (compare(p, test_float, Number_size, 0))
-			endianness = 0, is_integral = 0;
-		else if (compare(p, test_float, Number_size, 1))
-			endianness = 1, is_integral = 0;
-		else if (compare(p, test_int, Number_size, 0))
-			endianness = 0, is_integral = 1;
-		else if (compare(p, test_int, Number_size, 1))
-			endianness = 1, is_integral = 1;
-	}
+	endianness = detect_endianness("\x00\x00\x00\x00\x12\xB9\xB0\xA1", "\x4D\x95\xCD\x85", "\x41\xB2\xB9\xB0\xA1\x5B\xE6\x12",
+		p, Number_size, &is_integral);
 }
 
 /**
@@ -322,19 +383,10 @@ void LuaPrivate::parse4(uint8_t version, uint8_t *p) {
 	
 	if (version >= 0x53) {
 		// A test number for lua_Integer (0x5678)
-		const uint8_t *test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x56\x78";
-		const uint8_t *test_int = nullptr;
-		if (Integer_size == 8)
-			test_int = test_int64;
-		else if (Integer_size == 4)
-			test_int = test_int64 + 4;
-		if (test_int) {
-			if (compare(p, test_int, Integer_size, 0))
-				endianness = 0;
-			else if (compare(p, test_int, Integer_size, 1))
-				endianness = 1;
-			p += Integer_size;
-		}
+		endianness = detect_endianness_int("\x00\x00\x00\x00\x00\x00\x56\x78", p, Number_size);
+		if (Integer_size != 8 && Integer_size != 4) // a check to avoid overflows
+			return;
+		p += Integer_size;
 		// Note that if this fails, we end up with endianness == -1, and so the test
 		// for lua_Number gets skipped.
 	}
@@ -350,42 +402,23 @@ void LuaPrivate::parse4(uint8_t version, uint8_t *p) {
 		// NOTE: 5.0 and earlier don't compare the fractional part of the test number.
 
 		// Pick the right set of constants based on version
-		const uint8_t *test_int64, *test_float32, *test_float64;
+		int ed = -1;
 		if (version == 0x40) {
 			// This is supposed to be 3.14159265358979323846e8 cast to lua_Number
-			test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x12\xB9\xB0\xA1";
-			test_float32 = (const uint8_t*)"\x4D\x95\xCD\x85";
-			test_float64 = (const uint8_t*)"\x41\xB2\xB9\xB0\xA1\x5B\xE6\x12";
+			ed = detect_endianness("\x00\x00\x00\x00\x12\xB9\xB0\xA1", "\x4D\x95\xCD\x85", "\x41\xB2\xB9\xB0\xA1\x5B\xE6\x12",
+				p, Number_size, &is_integral);
 		} else if (version == 0x50) {
 			// This is supposed to be 3.14159265358979323846e7 cast to lua_Number
-			test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x01\xDF\x5E\x76";
-			test_float32 = (const uint8_t*)"\x4B\xEF\xAF\x3B";
-			test_float64 = (const uint8_t*)"\x41\x7D\xF5\xE7\x68\x93\x09\xB6";
+			ed = detect_endianness("\x00\x00\x00\x00\x01\xDF\x5E\x76", "\x4B\xEF\xAF\x3B", "\x41\x7D\xF5\xE7\x68\x93\x09\xB6",
+				p, Number_size, &is_integral);
 		} else {
 			// This is supposed to be 370.5 cast to lua_Number
-			test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x01\x72";
-			test_float32 = (const uint8_t*)"\x43\xB9\x40\x00";
-			test_float64 = (const uint8_t*)"\x40\x77\x28\x00\x00\x00\x00\x00";
+			ed = detect_endianness("\x00\x00\x00\x00\x00\x00\x01\x72", "\x43\xB9\x40\x00", "\x40\x77\x28\x00\x00\x00\x00\x00",
+				p, Number_size, &is_integral);
 		}
-
-		const uint8_t *test_int = nullptr;
-		const uint8_t *test_float = nullptr;
-		if (Number_size == 8) {
-			test_int = test_int64;
-			test_float = test_float64;
-		} else if (Number_size == 4) {
-			test_int = test_int64 + 4;
-			test_float = test_float32;
-		}
-		if (test_int && test_float) {
-			if (compare(p, test_float, Number_size, endianness))
-				is_integral = 0;
-			else if (compare(p, test_int, Number_size, endianness))
-				is_integral = 1;
-			else if (compare(p, test_float, Number_size, !endianness))
-				is_integral = 0, is_float_swapped = true;
-		}
-		// End of header for 5.0, 5.3, 5.4
+		if (is_integral == 0 && ed != endianness)
+			is_float_swapped = true;
+		// End of header for 4.0, 5.0, 5.3, 5.4
 	}
 
 	if (version == 0x52) {
@@ -552,7 +585,6 @@ const char *const *Lua::supportedMimeTypes_static(void)
 		// FIXME: these are the MIME types for Lua source code
 		"application/x-lua",
 		"text/x-lua",
-
 		nullptr
 	};
 	return mimeTypes;
