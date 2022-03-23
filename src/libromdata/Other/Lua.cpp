@@ -3,7 +3,7 @@
  * Lua.cpp: Lua binary chunk reader.                                       *
  *                                                                         *
  * Copyright (c) 2016-2020 by David Korth.                                 *
- * Copyright (c) 2016-2020 by Egor.                                        *
+ * Copyright (c) 2016-2022 by Egor.                                        *
  * SPDX-License-Identifier: GPL-2.0-or-later                               *
  ***************************************************************************/
 
@@ -25,6 +25,8 @@ ROMDATA_IMPL(Lua)
 /* Actual header sizes:
  * 2.4: 11
  * 2.5: 14
+ * 3.1: 7+Number
+ * 3.2: 6+Number
  * 4.0: 13+Number
  * 5.0: 14+Number
  * 5.1: 12
@@ -73,7 +75,8 @@ class LuaPrivate final : public RomDataPrivate
 		 * @param lhs buffer to be compared
 		 * @param rhs buffer to compare with
 		 * @param len size of the buffers
-		 * @param endianness 0 is used for be==be or le==le comparisions, 1 is used for le==be.
+		 * @param endianness when set to 1, one of the buffers is reversed (used for comparing LE number to BE constant)
+		 * @return true if equal
 		 */
 		static bool compare(const uint8_t *lhs, const uint8_t *rhs, size_t len, int endianness);
 
@@ -82,9 +85,31 @@ class LuaPrivate final : public RomDataPrivate
 		 */
 		void parse();
 
+	private:
+		/**
+		 * Parses lua 3.x header into individual fields.
+		 */
+		void parse3(uint8_t version, uint8_t *p);
+
+		/**
+		 * Parses lua 4.x/5.x header into individual fields.
+		 */
+		void parse4(uint8_t version, uint8_t *p);
+
 	public:
 		// Lua header.
 		uint8_t header[LUA_HEADERSIZE];
+
+		int endianness = -1; // -1 - Unknown, 0 - BE, 1 - LE
+		int int_size = -1; // sizeof(int)
+		int size_t_size = -1; // sizeof(size_t)
+		int Instruction_size = -1; // sizeof(lua_Instruction)
+		bool weird_layout = false; // weird layout of the bits within lua_Instruction
+		int Integer_size = -1; // sizeof(lua_Integer)
+		int Number_size = -1; // sizeof(lua_Number), has a slightly different meaning for 3.x
+		int is_integral = -1; // lua_Number is: -1 - Unknown, 0 - float, 1 - integer, 2 - string (3.2)
+		bool is_float_swapped = false; // float endianness is swapped compared to integer
+		bool corrupted = false; // the LUA_TAIL is corrupted
 };
 
 /** LuaPrivate **/
@@ -99,21 +124,21 @@ LuaPrivate::LuaPrivate(Lua *q, IRpFile *file)
 /**
  * Converts version byte to Version enum
  */
-Version LuaPrivate::to_version(uint8_t version) {
+LuaPrivate::Version LuaPrivate::to_version(uint8_t version) {
 	switch (version) {
 	// Bytecode dumping was introduced in 2.3, which was never publicly released.
 	// 2.4 kept the same format, so we refer to the 0x23 format as "2.4".
-	case 0x23: return Lua2_4;
-	case 0x25: return Lua2_5; // Also used by 3.0
-	case 0x31: return Lua3_1;
-	case 0x32: return Lua3_2;
-	case 0x40: return Lua4_0;
-	case 0x50: return Lua5_0;
-	case 0x51: return Lua5_1;
-	case 0x52: return Lua5_2;
-	case 0x53: return Lua5_3;
-	case 0x54: return Lua5_4;
-	default:   return Unknown;
+	case 0x23: return Version::Lua2_4;
+	case 0x25: return Version::Lua2_5; // Also used by 3.0
+	case 0x31: return Version::Lua3_1;
+	case 0x32: return Version::Lua3_2;
+	case 0x40: return Version::Lua4_0;
+	case 0x50: return Version::Lua5_0;
+	case 0x51: return Version::Lua5_1;
+	case 0x52: return Version::Lua5_2;
+	case 0x53: return Version::Lua5_3;
+	case 0x54: return Version::Lua5_4;
+	default:   return Version::Unknown;
 	}
 }
 
@@ -122,7 +147,8 @@ Version LuaPrivate::to_version(uint8_t version) {
  * @param lhs buffer to be compared
  * @param rhs buffer to compare with
  * @param len size of the buffers
- * @param endianness 0 is used for be==be or le==le comparisions, 1 is used for le==be.
+ * @param endianness when set to 1, one of the buffers is reversed (used for comparing LE number to BE constant)
+ * @return true if equal
  */
 bool LuaPrivate::compare(const uint8_t *lhs, const uint8_t *rhs, size_t len, int endianness)
 {
@@ -154,8 +180,7 @@ void LuaPrivate::parse()
 	is_float_swapped = false;
 	corrupted = false;
 
-	uint8_t *p = header += 4;
-
+	uint8_t *p = header + 4;
 	uint8_t version = *p++;
 
 	/* We don't parse 2.x.
@@ -176,7 +201,65 @@ void LuaPrivate::parse()
 	 */
 	if (version < 0x31)
 		return;
+	else if (version < 0x40) // Versions 3.x
+		parse3(version, p);
+	else
+		parse4(version, p);
+}
 
+/**
+ * Parses lua 3.x header into individual fields.
+ */
+void LuaPrivate::parse3(uint8_t version, uint8_t *p) {
+	if (version == 0x31) {
+		uint8_t Number_type = *p++;
+		switch (Number_type) {
+			case 'l': Number_size = 4; endianness = 0; is_integral = 1; return;
+			case 'f': Number_size = 4; endianness = 0; is_integral = 0; return;
+			case 'd': Number_size = 8; endianness = 0; is_integral = 0; return;
+			case '?': break;
+			default: return;
+		}
+	}
+
+	Number_size = *p++;
+	if (version == 0x32 && !Number_size) {
+		Number_size = -1;
+		is_integral = 2;
+		return;
+	}
+
+	// TODO: This is mostly copy-pasted from parse4, is there a way to deduplicate this code?
+	const uint8_t *test_int64, *test_float32, *test_float64;
+	// This is supposed to be 3.14159265358979323846e8 cast to lua_Number
+	test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x12\xB9\xB0\xA1";
+	test_float32 = (const uint8_t*)"\x4D\x95\xCD\x85";
+	test_float64 = (const uint8_t*)"\x41\xB2\xB9\xB0\xA1\x5B\xE6\x12";
+	const uint8_t *test_int = nullptr;
+	const uint8_t *test_float = nullptr;
+	if (Number_size == 8) {
+		test_int = test_int64;
+		test_float = test_float64;
+	} else if (Number_size == 4) {
+		test_int = test_int64 + 4;
+		test_float = test_float32;
+	}
+	if (test_int && test_float) {
+		if (compare(p, test_float, Number_size, 0))
+			endianness = 0, is_integral = 0;
+		else if (compare(p, test_float, Number_size, 1))
+			endianness = 1, is_integral = 0;
+		else if (compare(p, test_int, Number_size, 0))
+			endianness = 0, is_integral = 1;
+		else if (compare(p, test_int, Number_size, 1))
+			endianness = 1, is_integral = 1;
+	}
+}
+
+/**
+ * Parses lua 4.x/5.x header into individual fields.
+ */
+void LuaPrivate::parse4(uint8_t version, uint8_t *p) {
 	// Format byte. 0 means official format. Apparently it's meant to be used by forks(?)
 	if (version >= 0x51)
 		if (*p++ != 0)
@@ -192,18 +275,19 @@ void LuaPrivate::parse()
 		p += sizeof(LUA_TAIL)-1;
 	}
 
-	if (versions < 0x53) {
+	if (version < 0x53) {
 		endianness = *p > 1 ? -1 : *p;
 		p++;
 	}
 
 	// Lua 5.4 encodes int/size_t as varints, so it doesn't need to know their size.
-	if (versions < 0x54) {
+	if (version < 0x54) {
 		int_size = *p++;
 		size_t_size = *p++;
 	}
 
 	Instruction_size = *p++;
+
 	if (version == 0x40) {
 		uint8_t INSTRUCTION_bits = *p++;
 		uint8_t OP_bits = *p++;
@@ -224,7 +308,7 @@ void LuaPrivate::parse()
 		Integer_size = *p++;
 
 	Number_size = *p++;
-
+	
 	if (version >= 0x53) {
 		// A test number for lua_Integer (0x5678)
 		const uint8_t *test_int64 = (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x56\x78";
@@ -300,41 +384,6 @@ void LuaPrivate::parse()
 	}
 }
 
-/**
- * Is character a valid JIS X 0201 codepoint?
- * @param c The character
- * @return Wether or not character is valid
- */
-bool inline VirtualBoyPrivate::isJISX0201(unsigned char c){
-	return (c >= ' ' && c <= '~') || (c > 0xA0 && c < 0xE0);
-}
-
-/**
- * Is character a valid Game ID character?
- * @param c The character
- * @return Wether or not character is valid
- */
-bool inline VirtualBoyPrivate::isPublisherID(char c){
-	// Valid characters:
-	// - Uppercase letters
-	// - Digits
-	return (ISUPPER(c) || ISDIGIT(c));
-}
-
-/**
- * Is character a valid Game ID character?
- * @param c The character
- * @return Wether or not character is valid
- */
-bool inline VirtualBoyPrivate::isGameID(char c){
-	// Valid characters:
-	// - Uppercase letters
-	// - Digits
-	// - Space (' ')
-	// - Hyphen ('-')
-	return (ISUPPER(c) || ISDIGIT(c) || c == ' ' || c == '-');
-}
-
 /** Lua **/
 
 /**
@@ -351,11 +400,12 @@ bool inline VirtualBoyPrivate::isGameID(char c){
  * @param file Open ROM file.
  */
 Lua::Lua(IRpFile *file)
-	: super(new Lua(this, file))
+	: super(new LuaPrivate(this, file))
 {
 	RP_D(Lua);
 	d->className = "Lua";
 	d->mimeType = "text/x-lua";	// unofficial
+	d->fileType = FileType::Executable; // FIXME: maybe another type should be introduced?
 
 	if (!d->file) {
 		// Could not ref() the file handle.
@@ -378,9 +428,9 @@ Lua::Lua(IRpFile *file)
 	info.header.size = sizeof(d->header);
 	info.header.pData = d->header;
 	info.ext = nullptr;	// Not needed for Lua.
-	info.szFile = nullptr;	// Not needed for Lua.
+	info.szFile = 0;	// Not needed for Lua.
 	d->version = static_cast<LuaPrivate::Version>(isRomSupported_static(&info));
-	d->isValid = ((int)d->romType >= 0);
+	d->isValid = ((int)d->version >= 0);
 
 	if (!d->isValid) {
 		UNREF_AND_NULL_NOCHK(d->file);
@@ -516,62 +566,36 @@ int Lua::loadFieldData(void)
 		return -EIO;
 	}
 
-	// Virtual Boy ROM header, excluding the vector table.
-	const VB_RomHeader *const romHeader = &d->romHeader;
-	d->fields->reserve(5);	// Maximum of 5 fields.
+	d->parse();
 
-	// Title
-	d->fields->addField_string(C_("RomData", "Title"),
-		cp1252_sjis_to_utf8(romHeader->title, sizeof(romHeader->title)));
+	d->fields->reserve(10);	// Maximum of 10 fields.
 
-	// Game ID and publisher.
-	string id6(romHeader->gameid, sizeof(romHeader->gameid));
-	id6.append(romHeader->publisher, sizeof(romHeader->publisher));
-	d->fields->addField_string(C_("RomData", "Game ID"), latin1_to_utf8(id6));
-
-	// Look up the publisher.
-	const char *const publisher = NintendoPublishers::lookup(romHeader->publisher);
-	string s_publisher;
-	if (publisher) {
-		s_publisher = publisher;
-	} else {
-		if (ISALNUM(romHeader->publisher[0]) &&
-		    ISALNUM(romHeader->publisher[1]))
-		{
-			s_publisher = rp_sprintf(C_("RomData", "Unknown (%.2s)"),
-				romHeader->publisher);
-		} else {
-			s_publisher = rp_sprintf(C_("RomData", "Unknown (%02X %02X)"),
-				static_cast<uint8_t>(romHeader->publisher[0]),
-				static_cast<uint8_t>(romHeader->publisher[1]));
-		}
-	}
-	d->fields->addField_string(C_("RomData", "Publisher"), s_publisher);
-
-	// Revision
-	d->fields->addField_string_numeric(C_("RomData", "Revision"),
-		romHeader->version, RomFields::Base::Dec, 2);
-
-	// Region
-	const char *s_region;
-	switch (romHeader->gameid[3]) {
-		case 'J':
-			s_region = C_("Region", "Japan");
-			break;
-		case 'E':
-			s_region = C_("Region", "USA");
-			break;
-		default:
-			s_region = nullptr;
-			break;
-	}
-	if (s_region) {
-		d->fields->addField_string(C_("RomData", "Region Code"), s_region);
-	} else {
-		d->fields->addField_string(C_("RomData", "Region Code"),
-			rp_sprintf(C_("RomData", "Unknown (0x%02X)"),
-				static_cast<uint8_t>(romHeader->gameid[3])));
-	}
+	if (d->endianness != -1)
+		d->fields->addField_string(C_("Lua", "Endianness"),
+			d->endianness ? C_("Lua", "Little-endian") : C_("Lua", "Big-endian"));
+	if (d->int_size != -1)
+		d->fields->addField_string_numeric(C_("Lua", "int size"), d->int_size);
+	if (d->size_t_size != -1)
+		d->fields->addField_string_numeric(C_("Lua", "size_t size"), d->size_t_size);
+	if (d->Instruction_size != -1)
+		d->fields->addField_string_numeric(C_("Lua", "lua_Instruction size"), d->Instruction_size);
+	if (d->Integer_size != -1)
+		d->fields->addField_string_numeric(C_("Lua", "lua_Integer size"), d->Integer_size);
+	if (d->Number_size != -1)
+		d->fields->addField_string_numeric(C_("Lua", "lua_Number size"), d->Number_size);
+	if (d->is_integral != -1)
+		d->fields->addField_string(C_("Lua", "lua_Number type"),
+			d->is_integral == 2 ? C_("Lua", "String") :
+			d->is_integral == 1 ? C_("Lua", "Integer") : C_("Lua", "Floating-point"));
+	if (d->is_float_swapped)
+		d->fields->addField_string(C_("RomData", "Warning"),
+			C_("Lua", "Floating-point values are byte-swapped"), RomFields::STRF_WARNING);
+	if (d->weird_layout)
+		d->fields->addField_string(C_("RomData", "Warning"),
+			C_("Lua", "Unusual instruction layout"), RomFields::STRF_WARNING);
+	if (d->corrupted)
+		d->fields->addField_string(C_("RomData", "Warning"),
+			C_("Lua", "File corrupted"), RomFields::STRF_WARNING);
 
 	return static_cast<int>(d->fields->count());
 }
