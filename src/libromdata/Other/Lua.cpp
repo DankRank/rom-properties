@@ -20,8 +20,6 @@ using std::vector;
 
 namespace LibRomData {
 
-ROMDATA_IMPL(Lua)
-
 /* Actual header sizes:
  * 2.4: 11
  * 2.5: 14
@@ -42,6 +40,12 @@ class LuaPrivate final : public RomDataPrivate
 {
 	public:
 		LuaPrivate(Lua *q, IRpFile *file);
+
+	public:
+		/** RomDataInfo **/
+		static const char *const exts[];
+		static const char *const mimeTypes[];
+		static const RomDataInfo romDataInfo;
 
 	private:
 		typedef RomDataPrivate super;
@@ -139,10 +143,33 @@ class LuaPrivate final : public RomDataPrivate
 		bool corrupted = false; // the LUA_TAIL is corrupted
 };
 
+ROMDATA_IMPL(Lua)
+
 /** LuaPrivate **/
 
+/* RomDataInfo */
+const char *const LuaPrivate::exts[] = {
+	// NOTE: These extensions may cause conflicts on
+	// Windows if fallback handling isn't working.
+	".lua",	// Lua source code.
+	".out", // from luac.out, the default output filename of luac.
+	".lub", // Lua binary
+	// TODO: Others?
+	nullptr
+};
+const char *const LuaPrivate::mimeTypes[] = {
+	// Unofficial MIME types from FreeDesktop.org.
+	// FIXME: these are the MIME types for Lua source code
+	"application/x-lua",
+	"text/x-lua",
+	nullptr
+};
+const RomDataInfo LuaPrivate::romDataInfo = {
+	"Lua", exts, mimeTypes
+};
+
 LuaPrivate::LuaPrivate(Lua *q, IRpFile *file)
-	: super(q, file)
+	: super(q, file, &romDataInfo)
 {
 	// Clear the header struct.
 	memset(&header, 0, sizeof(header));
@@ -447,7 +474,6 @@ Lua::Lua(IRpFile *file)
 	: super(new LuaPrivate(this, file))
 {
 	RP_D(Lua);
-	d->className = "Lua";
 	d->mimeType = "text/x-lua";	// unofficial
 	d->fileType = FileType::Executable; // FIXME: maybe another type should be introduced?
 
@@ -539,55 +565,6 @@ const char *Lua::systemName(unsigned int type) const
 	};
 
 	return sysNames[(int)d->version][type & SYSNAME_TYPE_MASK];
-}
-
-/**
- * Get a list of all supported file extensions.
- * This is to be used for file type registration;
- * subclasses don't explicitly check the extension.
- *
- * NOTE: The extensions include the leading dot,
- * e.g. ".bin" instead of "bin".
- *
- * NOTE 2: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *Lua::supportedFileExtensions_static(void)
-{
-	// NOTE: These extensions may cause conflicts on
-	// Windows if fallback handling isn't working.
-	static const char *const exts[] = {
-		".lua",	// Lua source code.
-		".out", // from luac.out, the default output filename of luac.
-		".lub", // Lua binary
-		// TODO: Others?
-		nullptr
-	};
-	return exts;
-}
-
-/**
- * Get a list of all supported MIME types.
- * This is to be used for metadata extractors that
- * must indicate which MIME types they support.
- *
- * NOTE: The array and the strings in the array should
- * *not* be freed by the caller.
- *
- * @return NULL-terminated array of all supported file extensions, or nullptr on error.
- */
-const char *const *Lua::supportedMimeTypes_static(void)
-{
-	static const char *const mimeTypes[] = {
-		// Unofficial MIME types from FreeDesktop.org.
-		// FIXME: these are the MIME types for Lua source code
-		"application/x-lua",
-		"text/x-lua",
-		nullptr
-	};
-	return mimeTypes;
 }
 
 /**
